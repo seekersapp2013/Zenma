@@ -1,0 +1,454 @@
+/* Sign Form Styles with Moving Sparkling Stars Animation */
+@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600");
+
+:root {
+  --color-primary: #BF1A65;
+  --color-dark-primary: #0f0e13;
+  --color-dark-secondary: #16151b;
+  --color-dark-tertiary: #1d1c22;
+}
+
+/* Moving Stars Animation Keyframes */
+@keyframes moveStars {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(100px) translateY(-50px);
+  }
+  50% {
+    transform: translateX(-50px) translateY(-100px);
+  }
+  75% {
+    transform: translateX(-100px) translateY(50px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes moveStarsReverse {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(-80px) translateY(60px);
+  }
+  50% {
+    transform: translateX(60px) translateY(80px);
+  }
+  75% {
+    transform: translateX(80px) translateY(-60px);
+  }
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes sparkleMove {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg) translateX(0) translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg) translateX(20px) translateY(-20px);
+  }
+}
+
+@keyframes twinkleMove {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(0) translateY(0);
+  }
+  33% {
+    opacity: 1;
+    transform: translateX(30px) translateY(-15px);
+  }
+  66% {
+    opacity: 0.6;
+    transform: translateX(-20px) translateY(25px);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Override body styles for sign page */
+body.sign-page {
+  font-family: 'Source Sans Pro', sans-serif !important;
+  background-color: var(--color-dark-primary) !important;
+  color: #fff !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* Sign Section with Space-themed Magenta Background */
+.sign {
+  display: block;
+  position: relative;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at center, #2d1b3d 0%, #1a0f26 30%, #0f0a1a 60%, #050308 100%),
+              linear-gradient(135deg, rgba(191, 26, 101, 0.15) 0%, rgba(45, 27, 61, 0.8) 50%, rgba(15, 10, 26, 0.95) 100%);
+  overflow: hidden;
+}
+
+/* Static Stars Layer 1 - Enhanced with magenta tints */
+.sign::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(191, 26, 101, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(191, 26, 101, 0.6), transparent),
+    radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 200px 60px, rgba(191, 26, 101, 0.9), transparent),
+    radial-gradient(2px 2px at 240px 90px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 280px 20px, rgba(191, 26, 101, 0.7), transparent),
+    radial-gradient(3px 3px at 50px 150px, rgba(191, 26, 101, 0.4), transparent),
+    radial-gradient(1px 1px at 320px 100px, rgba(255, 255, 255, 0.5), transparent);
+  background-repeat: repeat;
+  background-size: 300px 200px;
+  pointer-events: none;
+}
+
+/* Static Stars Layer 2 - Enhanced magenta nebula effect */
+.sign::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(1px 1px at 25px 25px, rgba(191, 26, 101, 0.9), transparent),
+    radial-gradient(2px 2px at 75px 75px, rgba(191, 26, 101, 0.7), transparent),
+    radial-gradient(1px 1px at 125px 25px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 175px 75px, rgba(191, 26, 101, 0.8), transparent),
+    radial-gradient(3px 3px at 225px 25px, rgba(191, 26, 101, 0.5), transparent),
+    radial-gradient(1px 1px at 275px 100px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 50px 150px, rgba(191, 26, 101, 0.6), transparent),
+    radial-gradient(1px 1px at 150px 120px, rgba(191, 26, 101, 0.9), transparent),
+    radial-gradient(4px 4px at 300px 50px, rgba(191, 26, 101, 0.3), transparent),
+    radial-gradient(2px 2px at 100px 180px, rgba(255, 255, 255, 0.4), transparent);
+  background-repeat: repeat;
+  background-size: 350px 180px;
+  pointer-events: none;
+}
+
+/* Additional cosmic dust layer with magenta hues */
+.sign .container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(1px 1px at 60px 40px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 120px 80px, rgba(191, 26, 101, 0.4), transparent),
+    radial-gradient(1px 1px at 180px 120px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(3px 3px at 240px 160px, rgba(191, 26, 101, 0.6), transparent),
+    radial-gradient(1px 1px at 300px 40px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(2px 2px at 80px 200px, rgba(191, 26, 101, 0.3), transparent),
+    radial-gradient(1px 1px at 220px 30px, rgba(255, 255, 255, 0.4), transparent);
+  background-repeat: repeat;
+  background-size: 400px 250px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sign__content {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 40px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.sign__form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(15, 14, 19, 0.85);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(191, 26, 101, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+  animation: float 6s ease-in-out infinite;
+}
+
+.sign__form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(191, 26, 101, 0.1), transparent);
+  animation: shimmer 3s infinite;
+}
+
+.sign__logo {
+  display: block;
+  margin-bottom: 30px;
+  filter: drop-shadow(0 0 15px rgba(191, 26, 101, 0.5));
+}
+
+.sign__logo img {
+  width: auto;
+  height: 28px;
+}
+
+.sign__group {
+  position: relative;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.sign__input {
+  width: 100%;
+  background-color: rgba(22, 21, 27, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  height: 50px;
+  padding: 0 20px;
+  transition: all 0.4s ease;
+  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+}
+
+.sign__input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: rgba(22, 21, 27, 0.95);
+  box-shadow: 
+    0 0 0 3px rgba(191, 26, 101, 0.2),
+    0 0 20px rgba(191, 26, 101, 0.3);
+}
+
+.sign__input::placeholder {
+  color: #c0c0c0;
+}
+
+/* Checkbox styles */
+.sign__group--checkbox {
+  width: 100%;
+  text-align: left;
+}
+
+.sign__group--checkbox input:not(:checked),
+.sign__group--checkbox input:checked {
+  position: absolute;
+  left: -9999px;
+}
+
+.sign__group--checkbox input:not(:checked) + label,
+.sign__group--checkbox input:checked + label {
+  font-size: 14px;
+  color: #fff;
+  font-weight: normal;
+  position: relative;
+  cursor: pointer;
+  padding-left: 34px;
+  line-height: 22px;
+  margin: 0;
+}
+
+.sign__group--checkbox input:not(:checked) + label:before,
+.sign__group--checkbox input:checked + label:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(22, 21, 27, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.sign__group--checkbox input:checked + label:before {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(191, 26, 101, 0.5);
+}
+
+.sign__group--checkbox input:not(:checked) + label:after,
+.sign__group--checkbox input:checked + label:after {
+  font-family: 'tabler-icons';
+  content: '\ea5e';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  transition: 0.4s ease;
+  color: #fff;
+}
+
+.sign__group--checkbox input:not(:checked) + label:after {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.sign__group--checkbox input:checked + label:after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.sign__btn {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  width: 100%;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary), #d91a72);
+  font-size: 14px;
+  color: #fff;
+  text-transform: uppercase;
+  border: none;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sign__btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.sign__btn:hover::before {
+  left: 100%;
+}
+
+.sign__btn:hover {
+  background: linear-gradient(135deg, #d91a72, var(--color-primary));
+  box-shadow: 
+    0 4px 20px rgba(191, 26, 101, 0.5),
+    0 0 30px rgba(191, 26, 101, 0.3);
+  transform: translateY(-2px);
+}
+
+.sign__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sign__btn:disabled:hover {
+  background: linear-gradient(135deg, var(--color-primary), #d91a72);
+  box-shadow: none;
+}
+
+.sign__text {
+  display: block;
+  margin-top: 20px;
+  font-size: 14px;
+  line-height: 24px;
+  color: #fff;
+  text-align: center;
+}
+
+.sign__text a {
+  position: relative;
+  color: var(--color-primary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sign__text a:hover {
+  color: #d91a72;
+  text-decoration: underline;
+  text-shadow: 0 0 8px rgba(191, 26, 101, 0.6);
+}
+
+/* Container responsive */
+.container {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  position: relative;
+}
+
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+}
+
+@media (min-width: 992px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1140px;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -
