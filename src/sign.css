@@ -2,7 +2,7 @@
 @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600");
 
 :root {
-  --color-primary: #BF1A65;
+  --color-primary: #ff1493;
   --color-dark-primary: #0f0e13;
   --color-dark-secondary: #16151b;
   --color-dark-tertiary: #1d1c22;
@@ -451,4 +451,15 @@ body.sign-page {
 .row {
   display: flex;
   flex-wrap: wrap;
-  margin-right: -
+  margin-right: -15px;
+  margin-left: -15px;
+}
+
+.col-12 {
+  position: relative;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  flex: 0 0 100%;
+  max-width: 100%;
+}

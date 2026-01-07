@@ -39,7 +39,7 @@ export function SignInForm() {
                 }}
               >
                 <a href="#" className="sign__logo">
-                  <span style={{ color: '#BF1A65', fontWeight: 'bold', fontSize: '28px' }}>ZEN</span>
+                  <span style={{ color: '#ff1493', fontWeight: 'bold', fontSize: '28px' }}>ZEN</span>
                   <span style={{ color: 'white', fontWeight: 'bold', fontSize: '28px' }}>MA</span>
                 </a>
 
