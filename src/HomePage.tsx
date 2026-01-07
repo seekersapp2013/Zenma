@@ -219,7 +219,7 @@ export function HomePage({ background = true }: HomePageProps) {
                       </ul>
                     </Authenticated>
                     <Unauthenticated>
-                      <a className="header__sign-in header__sign-in--user" href="/" role="button">
+                      <a className="header__sign-in header__sign-in--user" href="/login" role="button">
                         <i className="ti ti-user"></i>
                         <span>Login</span>
                       </a>

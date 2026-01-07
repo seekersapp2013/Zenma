@@ -2,11 +2,13 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { SignUpWizard } from "./SignUpWizard";
 import "./sign.css";
 
 export function SignInForm() {
   const { signIn } = useAuthActions();
+  const navigate = useNavigate();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -28,16 +30,21 @@ export function SignInForm() {
                   setSubmitting(true);
                   const formData = new FormData(e.target as HTMLFormElement);
                   formData.set("flow", "signIn");
-                  void signIn("password", formData).catch((error) => {
-                    let toastTitle = "";
-                    if (error.message.includes("Invalid password")) {
-                      toastTitle = "Invalid password. Please try again.";
-                    } else {
-                      toastTitle = "Could not sign in, did you mean to sign up?";
-                    }
-                    toast.error(toastTitle);
-                    setSubmitting(false);
-                  });
+                  void signIn("password", formData)
+                    .then(() => {
+                      // Redirect to home page after successful login
+                      navigate("/");
+                    })
+                    .catch((error) => {
+                      let toastTitle = "";
+                      if (error.message.includes("Invalid password")) {
+                        toastTitle = "Invalid password. Please try again.";
+                      } else {
+                        toastTitle = "Could not sign in, did you mean to sign up?";
+                      }
+                      toast.error(toastTitle);
+                      setSubmitting(false);
+                    });
                 }}
               >
                 <a href="#" className="sign__logo">

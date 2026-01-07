@@ -14,6 +14,7 @@ export default function App() {
     <>
       <Routes>
         <Route path="/" element={<HomeRoute />} />
+        <Route path="/login" element={<SignInForm />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
         <Route path="/:slug" element={<DynamicPageRoute />} />
@@ -39,23 +40,18 @@ function HomeRoute() {
   console.log("HomeRoute - profile:", loggedInUser?.profile);
   console.log("HomeRoute - role:", loggedInUser?.profile?.role);
 
-  return (
-    <>
-      <Authenticated>
-        {/* Check if user has completed profile setup */}
-        {!loggedInUser?.profile ? (
-          <UserOnboarding />
-        ) : loggedInUser.profile.role === "admin" ? (
-          <AdminDashboard />
-        ) : (
-          <HomePage />
-        )}
-      </Authenticated>
-      <Unauthenticated>
-        <SignInForm />
-      </Unauthenticated>
-    </>
-  );
+  // If user is authenticated but hasn't completed profile setup
+  if (loggedInUser && !loggedInUser.profile) {
+    return <UserOnboarding />;
+  }
+
+  // If user is authenticated and is an admin
+  if (loggedInUser?.profile?.role === "admin") {
+    return <AdminDashboard />;
+  }
+
+  // Always show HomePage (whether authenticated or not)
+  return <HomePage />;
 }
 
 function AdminDashboardRoute() {
