@@ -22,6 +22,17 @@ const applicationTables = {
   })
     .index("by_page", ["pageId"])
     .index("by_page_and_order", ["pageId", "order"]),
+
+  userProfiles: defineTable({
+    userId: v.id("users"),
+    username: v.string(),
+    role: v.union(v.literal("admin"), v.literal("user")),
+    interests: v.array(v.string()),
+    profileCompleted: v.boolean(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_username", ["username"])
+    .index("by_role", ["role"]),
 };
 
 export default defineSchema({

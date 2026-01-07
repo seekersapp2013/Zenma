@@ -2,12 +2,24 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth } from "convex/react";
 
-export function SignOutButton() {
+interface SignOutButtonProps {
+  variant?: 'default' | 'dropdown';
+}
+
+export function SignOutButton({ variant = 'default' }: SignOutButtonProps) {
   const { isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  if (variant === 'dropdown') {
+    return (
+      <a href="#" onClick={(e) => { e.preventDefault(); void signOut(); }}>
+        <i className="ti ti-logout"></i>Logout
+      </a>
+    );
   }
 
   return (

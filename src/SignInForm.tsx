@@ -2,6 +2,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SignUpWizard } from "./SignUpWizard";
 import "./sign.css";
 
 export function SignInForm() {
@@ -9,6 +10,10 @@ export function SignInForm() {
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+
+  if (flow === "signUp") {
+    return <SignUpWizard onBack={() => setFlow("signIn")} />;
+  }
 
   return (
     <div className="sign section--bg">
@@ -22,16 +27,13 @@ export function SignInForm() {
                   e.preventDefault();
                   setSubmitting(true);
                   const formData = new FormData(e.target as HTMLFormElement);
-                  formData.set("flow", flow);
+                  formData.set("flow", "signIn");
                   void signIn("password", formData).catch((error) => {
                     let toastTitle = "";
                     if (error.message.includes("Invalid password")) {
                       toastTitle = "Invalid password. Please try again.";
                     } else {
-                      toastTitle =
-                        flow === "signIn"
-                          ? "Could not sign in, did you mean to sign up?"
-                          : "Could not sign up, did you mean to sign in?";
+                      toastTitle = "Could not sign in, did you mean to sign up?";
                     }
                     toast.error(toastTitle);
                     setSubmitting(false);
@@ -75,27 +77,25 @@ export function SignInForm() {
                 </div>
 
                 <button className="sign__btn" type="submit" disabled={submitting}>
-                  {flow === "signIn" ? "Sign in" : "Sign up"}
+                  {submitting ? "Signing in..." : "Sign in"}
                 </button>
 
                 <span className="sign__text">
-                  {flow === "signIn" ? "Don't have an account? " : "Already have an account? "}
+                  Don't have an account?{" "}
                   <a 
                     href="#" 
                     onClick={(e) => {
                       e.preventDefault();
-                      setFlow(flow === "signIn" ? "signUp" : "signIn");
+                      setFlow("signUp");
                     }}
                   >
-                    {flow === "signIn" ? "Sign up!" : "Sign in!"}
+                    Sign up!
                   </a>
                 </span>
 
-                {flow === "signIn" && (
-                  <span className="sign__text">
-                    <a href="#" onClick={(e) => e.preventDefault()}>Forgot password?</a>
-                  </span>
-                )}
+                <span className="sign__text">
+                  <a href="#" onClick={(e) => e.preventDefault()}>Forgot password?</a>
+                </span>
               </form>
             </div>
           </div>

@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as content from "../content.js";
+import type * as debug from "../debug.js";
 import type * as http from "../http.js";
 import type * as pages from "../pages.js";
 import type * as router from "../router.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   content: typeof content;
+  debug: typeof debug;
   http: typeof http;
   pages: typeof pages;
   router: typeof router;

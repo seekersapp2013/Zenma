@@ -1,4 +1,7 @@
 import { useEffect } from 'react';
+import { Authenticated, Unauthenticated, useQuery } from "convex/react";
+import { api } from "../convex/_generated/api";
+import { SignOutButton } from "./SignOutButton";
 import './sign.css';
 
 interface HomePageProps {
@@ -6,6 +9,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ background = true }: HomePageProps) {
+  const loggedInUser = useQuery(api.auth.loggedInUser);
   useEffect(() => {
     // Load Bootstrap CSS
     const bootstrapCSS = document.createElement('link');
@@ -194,18 +198,32 @@ export function HomePage({ background = true }: HomePageProps) {
 
                   {/* dropdown */}
                   <div className="header__profile">
-                    <a className="header__sign-in header__sign-in--user" href="/admin" role="button" target="_blank">
-                      <i className="ti ti-user"></i>
-                      <span>Login</span>
-                    </a>
-
-                    <ul className="dropdown-menu dropdown-menu-end header__dropdown-menu header__dropdown-menu--user">
-                      <li><a href="profile.html"><i className="ti ti-ghost"></i>Profile</a></li>
-                      <li><a href="profile.html"><i className="ti ti-stereo-glasses"></i>Subscription</a></li>
-                      <li><a href="profile.html"><i className="ti ti-bookmark"></i>Favorites</a></li>
-                      <li><a href="profile.html"><i className="ti ti-settings"></i>Settings</a></li>
-                      <li><a href="#"><i className="ti ti-logout"></i>Logout</a></li>
-                    </ul>
+                    <Authenticated>
+                      <div 
+                        className="header__sign-in header__sign-in--user" 
+                        role="button"
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false"
+                      >
+                        <i className="ti ti-user"></i>
+                        <span>
+                          {loggedInUser?.profile?.username || loggedInUser?.name || 'User'}
+                        </span>
+                      </div>
+                      <ul className="dropdown-menu dropdown-menu-end header__dropdown-menu header__dropdown-menu--user">
+                        <li><a href="profile.html"><i className="ti ti-ghost"></i>Profile</a></li>
+                        <li><a href="profile.html"><i className="ti ti-stereo-glasses"></i>Subscription</a></li>
+                        <li><a href="profile.html"><i className="ti ti-bookmark"></i>Favorites</a></li>
+                        <li><a href="profile.html"><i className="ti ti-settings"></i>Settings</a></li>
+                        <li><SignOutButton variant="dropdown" /></li>
+                      </ul>
+                    </Authenticated>
+                    <Unauthenticated>
+                      <a className="header__sign-in header__sign-in--user" href="/" role="button">
+                        <i className="ti ti-user"></i>
+                        <span>Login</span>
+                      </a>
+                    </Unauthenticated>
                   </div>
                   {/* end dropdown */}
                 </div>

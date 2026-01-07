@@ -463,3 +463,30 @@ body.sign-page {
   flex: 0 0 100%;
   max-width: 100%;
 }
+/* Secondary button styles */
+.sign__btn--secondary {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.sign__btn--secondary:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 4px 20px rgba(255, 255, 255, 0.1),
+    0 0 30px rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.sign__btn--secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sign__btn--secondary:disabled:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
