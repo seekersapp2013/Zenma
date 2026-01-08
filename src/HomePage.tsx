@@ -4,38 +4,55 @@ import { api } from "../convex/_generated/api";
 import { SignOutButton } from "./SignOutButton";
 import './sign.css';
 
-interface HomePageProps {
-  background?: boolean;
-}
-
-export function HomePage({ background = true }: HomePageProps) {
+export function HomePage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  
   useEffect(() => {
-    // Load Bootstrap CSS
-    const bootstrapCSS = document.createElement('link');
-    bootstrapCSS.rel = 'stylesheet';
-    bootstrapCSS.href = '/css/bootstrap.min.css';
-    document.head.appendChild(bootstrapCSS);
+    // Check if CSS files are already loaded to avoid duplicates
+    const isStylesheetLoaded = (href: string) => {
+      return document.querySelector(`link[href="${href}"]`) !== null;
+    };
 
-    // Load other CSS files
-    const cssFiles = [
-      '/css/splide.min.css',
-      '/css/slimselect.css',
-      '/css/plyr.css',
-      '/css/photoswipe.css',
-      '/css/default-skin.css',
+    // Essential CSS files that should load immediately
+    const essentialCssFiles = [
+      '/css/bootstrap.min.css',
       '/css/main.css',
       '/webfont/tabler-icons.min.css'
     ];
 
-    cssFiles.forEach(href => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      document.head.appendChild(link);
+    // Non-essential CSS files that can load after
+    const nonEssentialCssFiles = [
+      '/css/splide.min.css',
+      '/css/slimselect.css',
+      '/css/plyr.css',
+      '/css/photoswipe.css',
+      '/css/default-skin.css'
+    ];
+
+    // Load essential CSS files first with high priority
+    essentialCssFiles.forEach(href => {
+      if (!isStylesheetLoaded(href)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.media = 'all';
+        document.head.appendChild(link);
+      }
     });
 
-    // Load JavaScript files
+    // Load non-essential CSS files after a short delay
+    setTimeout(() => {
+      nonEssentialCssFiles.forEach(href => {
+        if (!isStylesheetLoaded(href)) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          document.head.appendChild(link);
+        }
+      });
+    }, 100);
+
+    // Load JavaScript files with better error handling
     const jsFiles = [
       '/js/bootstrap.bundle.min.js',
       '/js/splide.min.js',
@@ -47,43 +64,106 @@ export function HomePage({ background = true }: HomePageProps) {
       '/js/main.js'
     ];
 
-    const loadScript = (src: string) => {
-      return new Promise((resolve, reject) => {
+    // Load scripts with better performance
+    jsFiles.forEach((src, index) => {
+      // Check if script is already loaded
+      if (!document.querySelector(`script[src="${src}"]`)) {
         const script = document.createElement('script');
         script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.body.appendChild(script);
-      });
-    };
-
-    // Load scripts sequentially
-    const loadScripts = async () => {
-      for (const src of jsFiles) {
-        try {
-          await loadScript(src);
-        } catch (error) {
-          console.error(`Failed to load script: ${src}`, error);
-        }
+        script.async = true;
+        script.defer = true; // Better for performance
+        script.onerror = () => console.warn(`Failed to load script: ${src}`);
+        
+        // Add small delay between script loads to prevent blocking
+        setTimeout(() => {
+          document.body.appendChild(script);
+        }, index * 50);
       }
-    };
-
-    loadScripts();
+    });
 
     // Cleanup function
     return () => {
-      // Remove added CSS links
+      // Only remove links/scripts that were added by this component
       const links = document.querySelectorAll('link[href^="/css/"], link[href^="/webfont/"]');
-      links.forEach(link => link.remove());
+      links.forEach(link => {
+        if (link.getAttribute('data-added-by') !== 'other') {
+          link.remove();
+        }
+      });
       
-      // Remove added scripts
       const scripts = document.querySelectorAll('script[src^="/js/"]');
-      scripts.forEach(script => script.remove());
+      scripts.forEach(script => {
+        if (script.getAttribute('data-added-by') !== 'other') {
+          script.remove();
+        }
+      });
     };
   }, []);
 
   return (
     <div>
+      {/* Critical CSS for immediate card rendering */}
+      <style>{`
+        /* Prevent FOUC for title */
+        .home__title {
+          color: #fff !important;
+          text-transform: uppercase !important;
+          font-weight: 300 !important;
+          font-size: 32px !important;
+          line-height: 42px !important;
+          margin: 0 !important;
+          padding-right: 100px !important;
+        }
+        .home__title b {
+          font-weight: 600 !important;
+        }
+        
+        /* Responsive title sizes */
+        @media (min-width: 768px) {
+          .home__title {
+            font-size: 36px !important;
+            padding-right: 120px !important;
+          }
+        }
+        @media (min-width: 1200px) {
+          .home__title {
+            font-size: 42px !important;
+          }
+        }
+        
+        /* Card styles */
+        .item {
+          opacity: 1 !important;
+          visibility: visible !important;
+          transform: none !important;
+        }
+        .item__cover {
+          position: relative;
+          overflow: hidden;
+          border-radius: 8px;
+        }
+        .item__cover img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .splide__list {
+          display: flex !important;
+          gap: 15px;
+        }
+        .splide__slide {
+          flex: 0 0 auto;
+          min-width: 200px;
+        }
+        /* Ensure cards are visible immediately */
+        .home__carousel .splide__track,
+        .home__carousel .splide__list,
+        .section__carousel .splide__track,
+        .section__carousel .splide__list {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+      `}</style>
       {/* header */}
       <header className="header">
         <div className="container">
@@ -244,8 +324,10 @@ export function HomePage({ background = true }: HomePageProps) {
       {/* end header */}
 
       {/* home */}
-      <div className={background ? 'sign' : ''}>
-        <section className="home home--bg" style={{ position: 'relative', zIndex: 2 }}>
+      <div className="sign">
+        <section className="home" style={{ position: 'relative', zIndex: 2, backgroundColor: 'transparent' }}>
+
+
           <div className="container">
             <div className="row">
               {/* home title */}
