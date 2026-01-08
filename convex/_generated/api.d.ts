@@ -9,11 +9,15 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as categories from "../categories.js";
 import type * as content from "../content.js";
 import type * as debug from "../debug.js";
+import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as items from "../items.js";
 import type * as pages from "../pages.js";
 import type * as router from "../router.js";
+import type * as seed from "../seed.js";
 
 import type {
   ApiFromModules,
@@ -23,11 +27,15 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  categories: typeof categories;
   content: typeof content;
   debug: typeof debug;
+  files: typeof files;
   http: typeof http;
+  items: typeof items;
   pages: typeof pages;
   router: typeof router;
+  seed: typeof seed;
 }>;
 
 /**

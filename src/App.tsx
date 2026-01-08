@@ -1,10 +1,11 @@
 import { Routes, Route, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
-import { HomePage } from "./HomePage";
+import { DynamicHomePage } from "./DynamicHomePage";
 import { Admin } from "./Admin";
 import { AdminDashboard } from "./AdminDashboard";
 import { UserOnboarding } from "./UserOnboarding";
 import { PageView } from "./PageView";
+import { ItemDetails } from "./ItemDetails";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/login" element={<SignInForm />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
+        <Route path="/details/:slug" element={<ItemDetails />} />
         <Route path="/:slug" element={<DynamicPageRoute />} />
       </Routes>
       <Toaster />
@@ -50,8 +52,8 @@ function HomeRoute() {
     return <AdminDashboard />;
   }
 
-  // Always show HomePage (whether authenticated or not)
-  return <HomePage />;
+  // Always show DynamicHomePage (whether authenticated or not)
+  return <DynamicHomePage />;
 }
 
 function AdminDashboardRoute() {

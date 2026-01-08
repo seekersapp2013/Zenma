@@ -33,6 +33,26 @@ const applicationTables = {
     .index("by_user", ["userId"])
     .index("by_username", ["username"])
     .index("by_role", ["role"]),
+
+  categories: defineTable({
+    type: v.union(v.literal("featured"), v.literal("full"), v.literal("short")),
+    title: v.string(),
+    order: v.number(),
+    createdBy: v.id("users"),
+  })
+    .index("by_order", ["order"])
+    .index("by_type", ["type"]),
+
+  items: defineTable({
+    categoryId: v.id("categories"),
+    title: v.string(),
+    slug: v.string(),
+    imageId: v.id("_storage"),
+    genres: v.array(v.string()),
+    createdBy: v.id("users"),
+  })
+    .index("by_category", ["categoryId"])
+    .index("by_slug", ["slug"]),
 };
 
 export default defineSchema({
