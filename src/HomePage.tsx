@@ -141,10 +141,18 @@ export function HomePage() {
           position: relative;
           overflow: hidden;
           border-radius: 8px;
+          /* Ensure consistent aspect ratio */
+          aspect-ratio: 2/3;
+          width: 100%;
         }
         .item__cover img {
+          position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
-          height: auto;
+          height: 100%;
+          object-fit: cover;
+          object-position: center;
           display: block;
         }
         .splide__list {
