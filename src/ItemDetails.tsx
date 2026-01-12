@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery } from "convex/react";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { api } from "../convex/_generated/api";
@@ -11,6 +11,8 @@ import './sign.css';
 export function ItemDetails() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const playerRef = useRef<HTMLVideoElement>(null);
+  const plyrInstanceRef = useRef<any>(null);
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const item = useQuery(api.items.getItemBySlug, { slug: slug || "" });
   const relatedItems = useQuery(
@@ -23,7 +25,7 @@ export function ItemDetails() {
   );
 
   useEffect(() => {
-    // Add video placeholder styles
+    // Add video placeholder and player styles
     const style = document.createElement('style');
     style.textContent = `
       .video-placeholder {
@@ -38,6 +40,120 @@ export function ItemDetails() {
       }
       .video-placeholder__content {
         padding: 20px;
+      }
+      
+      /* Custom video player styling to match poster height */
+      .video-player-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 386px;
+      }
+      
+      .video-player-container video,
+      .video-player-container .plyr {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 386px !important;
+        object-fit: cover;
+        border-radius: 6px;
+      }
+      
+      /* Ensure consistent height at different breakpoints - override existing CSS */
+      @media (min-width: 1200px) {
+        .video-player-container {
+          min-height: 386px;
+        }
+        .video-player-container video,
+        .video-player-container .plyr,
+        .video-player-container .plyr video {
+          height: 386px !important;
+          min-height: 386px !important;
+          max-height: 386px !important;
+        }
+      }
+      
+      @media (min-width: 1400px) {
+        .video-player-container {
+          min-height: 366px;
+        }
+        .video-player-container video,
+        .video-player-container .plyr,
+        .video-player-container .plyr video {
+          height: 366px !important;
+          min-height: 366px !important;
+          max-height: 366px !important;
+        }
+      }
+      
+      /* Ensure video wrapper maintains height */
+      .video-player-container .plyr__video-wrapper {
+        height: 100% !important;
+        min-height: inherit !important;
+      }
+      
+      /* Maintain aspect ratio while filling container */
+      .video-player-container .plyr__video-wrapper video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+      }
+      
+      /* Override Plyr styles with magenta theme */
+      .plyr--video .plyr__control.plyr__tab-focus,
+      .plyr--video .plyr__control:hover,
+      .plyr--video .plyr__control[aria-expanded="true"] {
+        background: #ff1493 !important;
+      }
+      
+      .plyr--video .plyr__control--overlaid {
+        background-color: rgba(255, 20, 147, 0.8) !important;
+        border-color: rgba(255, 20, 147, 0.3) !important;
+        color: #fff !important;
+      }
+      
+      .plyr--video .plyr__control--overlaid:hover,
+      .plyr--video .plyr__control--overlaid.plyr__tab-focus {
+        background-color: rgba(255, 20, 147, 0.9) !important;
+        border-color: rgba(255, 20, 147, 0.5) !important;
+      }
+      
+      .plyr--video .plyr__control--overlaid:before {
+        background-color: #ff1493 !important;
+        color: #fff !important;
+      }
+      
+      .plyr--full-ui input[type="range"] {
+        color: #ff1493 !important;
+      }
+      
+      .plyr__progress__played {
+        background-color: #ff1493 !important;
+      }
+      
+      .plyr__volume--display {
+        background: #ff1493 !important;
+      }
+      
+      .plyr__menu__container .plyr__control[role="menuitemradio"][aria-checked="true"]::before {
+        background-color: #ff1493 !important;
+      }
+      
+      /* Ensure video maintains aspect ratio and fills container */
+      .plyr__video-wrapper {
+        background: #222028 !important;
+        height: 100% !important;
+      }
+      
+      .plyr__poster {
+        background-color: #222028 !important;
+        background-size: cover !important;
+        background-position: center !important;
+      }
+      
+      .plyr--video {
+        background: #222028 !important;
+        height: 100% !important;
       }
     `;
     document.head.appendChild(style);
@@ -86,34 +202,39 @@ export function ItemDetails() {
       });
     }, 100);
 
-    // Load JavaScript files with better error handling
+    // Load JavaScript files with better error handling and ensure Plyr is loaded
     const jsFiles = [
       '/js/bootstrap.bundle.min.js',
       '/js/splide.min.js',
       '/js/slimselect.min.js',
       '/js/smooth-scrollbar.js',
-      '/js/plyr.min.js',
+      '/js/plyr.min.js', // Plyr must be loaded before main.js
       '/js/photoswipe.min.js',
       '/js/photoswipe-ui-default.min.js',
       '/js/main.js'
     ];
 
-    // Load scripts with better performance
-    jsFiles.forEach((src, index) => {
-      // Check if script is already loaded
-      if (!document.querySelector(`script[src="${src}"]`)) {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        script.defer = true;
-        script.onerror = () => console.warn(`Failed to load script: ${src}`);
-        
-        // Add small delay between script loads to prevent blocking
-        setTimeout(() => {
-          document.body.appendChild(script);
-        }, index * 50);
+    // Load scripts sequentially to ensure proper order
+    const loadScriptsSequentially = async () => {
+      for (let i = 0; i < jsFiles.length; i++) {
+        const src = jsFiles[i];
+        if (!document.querySelector(`script[src="${src}"]`)) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = false; // Ensure sequential loading
+            script.onload = () => resolve(void 0);
+            script.onerror = () => {
+              console.warn(`Failed to load script: ${src}`);
+              resolve(void 0); // Continue even if one script fails
+            };
+            document.body.appendChild(script);
+          });
+        }
       }
-    });
+    };
+
+    loadScriptsSequentially();
 
     // Cleanup function
     return () => {
@@ -136,12 +257,122 @@ export function ItemDetails() {
       // Remove added styles
       const styles = document.querySelectorAll('style');
       styles.forEach(style => {
-        if (style.textContent?.includes('.video-placeholder')) {
+        if (style.textContent?.includes('.video-placeholder') || style.textContent?.includes('.video-player-container')) {
           style.remove();
         }
       });
     };
   }, []);
+
+  // Initialize Plyr video player
+  useEffect(() => {
+    if (playerRef.current && item?.videoSources && item.videoSources.length > 0) {
+      // Wait for Plyr to be available
+      const initializePlayer = () => {
+        if ((window as any).Plyr && !plyrInstanceRef.current) {
+          try {
+            plyrInstanceRef.current = new (window as any).Plyr(playerRef.current, {
+              controls: [
+                'play-large',
+                'play',
+                'progress',
+                'current-time',
+                'duration',
+                'mute',
+                'volume',
+                'settings',
+                'fullscreen'
+              ],
+              settings: ['quality', 'speed'],
+              quality: {
+                default: 720,
+                options: item.videoSources?.map(source => parseInt(source.quality.replace('p', ''))) || []
+              },
+              ratio: null, // Let CSS handle the sizing
+              fullscreen: {
+                enabled: true,
+                fallback: true,
+                iosNative: false
+              }
+            });
+
+            // Force height consistency after Plyr initialization
+            setTimeout(() => {
+              if (plyrInstanceRef.current && playerRef.current) {
+                const plyrElement = playerRef.current.closest('.plyr');
+                if (plyrElement) {
+                  const container = plyrElement.closest('.video-player-container');
+                  if (container) {
+                    const containerHeight = window.getComputedStyle(container).height;
+                    (plyrElement as HTMLElement).style.height = containerHeight;
+                    (plyrElement as HTMLElement).style.minHeight = containerHeight;
+                    (plyrElement as HTMLElement).style.maxHeight = containerHeight;
+                  }
+                }
+              }
+            }, 100);
+
+            // Add resize observer to maintain height consistency
+            if (playerRef.current) {
+              const container = playerRef.current.closest('.video-player-container');
+              if (container && window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(() => {
+                  if (plyrInstanceRef.current && playerRef.current) {
+                    const plyrElement = playerRef.current.closest('.plyr');
+                    if (plyrElement && container) {
+                      const containerHeight = window.getComputedStyle(container).height;
+                      (plyrElement as HTMLElement).style.height = containerHeight;
+                      (plyrElement as HTMLElement).style.minHeight = containerHeight;
+                      (plyrElement as HTMLElement).style.maxHeight = containerHeight;
+                    }
+                  }
+                });
+                resizeObserver.observe(container);
+                
+                // Store observer for cleanup
+                (plyrInstanceRef.current as any)._resizeObserver = resizeObserver;
+              }
+            }
+          } catch (error) {
+            console.warn('Failed to initialize Plyr:', error);
+          }
+        }
+      };
+
+      // Check if Plyr is already loaded
+      if ((window as any).Plyr) {
+        initializePlayer();
+      } else {
+        // Wait for Plyr to load
+        const checkPlyr = setInterval(() => {
+          if ((window as any).Plyr) {
+            clearInterval(checkPlyr);
+            initializePlayer();
+          }
+        }, 100);
+
+        // Cleanup interval after 10 seconds
+        setTimeout(() => clearInterval(checkPlyr), 10000);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (plyrInstanceRef.current) {
+        try {
+          // Cleanup resize observer
+          if ((plyrInstanceRef.current as any)._resizeObserver) {
+            (plyrInstanceRef.current as any)._resizeObserver.disconnect();
+          }
+          
+          plyrInstanceRef.current.destroy();
+          plyrInstanceRef.current = null;
+        } catch (error) {
+          console.warn('Failed to destroy Plyr instance:', error);
+        }
+      }
+    };
+  }, [item?.videoSources]);
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -387,40 +618,43 @@ export function ItemDetails() {
             {/* player */}
             <div className="col-12 col-xl-6">
               {item.videoSources && item.videoSources.length > 0 ? (
-                <video 
-                  controls 
-                  crossOrigin="anonymous" 
-                  playsInline 
-                  poster={item.posterImageUrl ?? undefined} 
-                  id="player"
-                >
-                  {/* Video files */}
-                  {item.videoSources.map((source, index) => (
-                    <source 
-                      key={index}
-                      src={source.url ?? ""} 
-                      type={source.type} 
-                      data-size={source.quality.replace('p', '')} 
-                    />
-                  ))}
-
-                  {/* Caption files */}
-                  {item.captions && item.captions.length > 0 && (
-                    item.captions.map((caption, index) => (
-                      <track 
+                <div className="video-player-container">
+                  <video 
+                    ref={playerRef}
+                    controls 
+                    crossOrigin="anonymous" 
+                    playsInline 
+                    poster={item.posterImageUrl ?? undefined} 
+                    id="player"
+                  >
+                    {/* Video files */}
+                    {item.videoSources.map((source, index) => (
+                      <source 
                         key={index}
-                        kind="captions" 
-                        label={caption.label} 
-                        srcLang={caption.srcLang} 
-                        src={caption.src} 
-                        {...(caption.default ? { default: true } : {})}
+                        src={source.url ?? ""} 
+                        type={source.type} 
+                        {...({ 'data-size': source.quality.replace('p', '') } as any)}
                       />
-                    ))
-                  )}
+                    ))}
 
-                  {/* Fallback for browsers that don't support the <video> element */}
-                  <a href={item.videoSources[0]?.url ?? undefined} download>Download</a>
-                </video>
+                    {/* Caption files */}
+                    {item.captions && item.captions.length > 0 && (
+                      item.captions.map((caption, index) => (
+                        <track 
+                          key={index}
+                          kind="captions" 
+                          label={caption.label} 
+                          srcLang={caption.srcLang} 
+                          src={caption.src} 
+                          {...(caption.default ? { default: true } : {})}
+                        />
+                      ))
+                    )}
+
+                    {/* Fallback for browsers that don't support the <video> element */}
+                    <a href={item.videoSources[0]?.url ?? undefined} download>Download</a>
+                  </video>
+                </div>
               ) : (
                 <div className="video-placeholder">
                   <div className="video-placeholder__content">
