@@ -75,6 +75,47 @@ const applicationTables = {
   })
     .index("by_category", ["categoryId"])
     .index("by_slug", ["slug"]),
+
+  comments: defineTable({
+    itemId: v.id("items"),
+    userId: v.id("users"),
+    content: v.string(),
+    parentCommentId: v.optional(v.id("comments")), // For replies
+    quotedCommentId: v.optional(v.id("comments")), // For quotes
+    quotedText: v.optional(v.string()), // Quoted text content
+    upvotes: v.number(),
+    downvotes: v.number(),
+    createdAt: v.number(), // timestamp
+  })
+    .index("by_item", ["itemId"])
+    .index("by_user", ["userId"])
+    .index("by_parent", ["parentCommentId"])
+    .index("by_item_and_created", ["itemId", "createdAt"]),
+
+  commentVotes: defineTable({
+    commentId: v.id("comments"),
+    userId: v.id("users"),
+    voteType: v.union(v.literal("up"), v.literal("down")),
+  })
+    .index("by_comment", ["commentId"])
+    .index("by_user_and_comment", ["userId", "commentId"]),
+
+  // App settings for admin configuration
+  appSettings: defineTable({
+    key: v.string(), // e.g., "title", "favicon", "colorScheme"
+    value: v.string(),
+    updatedBy: v.id("users"),
+    updatedAt: v.number(),
+  })
+    .index("by_key", ["key"]),
+
+  // Banned words list
+  bannedWords: defineTable({
+    word: v.string(),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_word", ["word"]),
 };
 
 export default defineSchema({

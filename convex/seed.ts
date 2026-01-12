@@ -14,6 +14,22 @@ export const seedData = mutation({
       return "Data already seeded";
     }
 
+    // Create default app settings
+    const defaultSettings = [
+      { key: "title", value: "Zenma - Movie Platform" },
+      { key: "favicon", value: "/logo.svg" },
+      { key: "colorScheme", value: "default" },
+    ];
+
+    for (const setting of defaultSettings) {
+      await ctx.db.insert("appSettings", {
+        key: setting.key,
+        value: setting.value,
+        updatedBy: userId,
+        updatedAt: Date.now(),
+      });
+    }
+
     // Create sample categories
     const featuredCategory = await ctx.db.insert("categories", {
       type: "featured",
@@ -36,7 +52,7 @@ export const seedData = mutation({
       createdBy: userId,
     });
 
-    return "Sample categories created! You can now add items with images through the admin interface.";
+    return "Sample categories and app settings created! You can now add items with images through the admin interface.";
   },
 });
 

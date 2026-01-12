@@ -1,12 +1,17 @@
 import { useEffect } from 'react';
 import { useQuery } from "convex/react";
+import { Authenticated, Unauthenticated } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useParams, useNavigate } from "react-router-dom";
+import { Comments } from './components/Comments';
+import { Reviews } from './components/Reviews';
+import { SignOutButton } from './SignOutButton';
 import './sign.css';
 
 export function ItemDetails() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const loggedInUser = useQuery(api.auth.loggedInUser);
   const item = useQuery(api.items.getItemBySlug, { slug: slug || "" });
   const relatedItems = useQuery(
     api.items.getRelatedItemsByGenre, 
@@ -37,31 +42,51 @@ export function ItemDetails() {
     `;
     document.head.appendChild(style);
 
-    // Load Bootstrap CSS
-    const bootstrapCSS = document.createElement('link');
-    bootstrapCSS.rel = 'stylesheet';
-    bootstrapCSS.href = '/css/bootstrap.min.css';
-    document.head.appendChild(bootstrapCSS);
+    // Check if CSS files are already loaded to avoid duplicates
+    const isStylesheetLoaded = (href: string) => {
+      return document.querySelector(`link[href="${href}"]`) !== null;
+    };
 
-    // Load other CSS files
-    const cssFiles = [
-      '/css/splide.min.css',
-      '/css/slimselect.css',
-      '/css/plyr.css',
-      '/css/photoswipe.css',
-      '/css/default-skin.css',
+    // Essential CSS files that should load immediately
+    const essentialCssFiles = [
+      '/css/bootstrap.min.css',
       '/css/main.css',
       '/webfont/tabler-icons.min.css'
     ];
 
-    cssFiles.forEach(href => {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = href;
-      document.head.appendChild(link);
+    // Non-essential CSS files that can load after
+    const nonEssentialCssFiles = [
+      '/css/splide.min.css',
+      '/css/slimselect.css',
+      '/css/plyr.css',
+      '/css/photoswipe.css',
+      '/css/default-skin.css'
+    ];
+
+    // Load essential CSS files first
+    essentialCssFiles.forEach(href => {
+      if (!isStylesheetLoaded(href)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.media = 'all';
+        document.head.appendChild(link);
+      }
     });
 
-    // Load JavaScript files
+    // Load non-essential CSS files after a short delay
+    setTimeout(() => {
+      nonEssentialCssFiles.forEach(href => {
+        if (!isStylesheetLoaded(href)) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          document.head.appendChild(link);
+        }
+      });
+    }, 100);
+
+    // Load JavaScript files with better error handling
     const jsFiles = [
       '/js/bootstrap.bundle.min.js',
       '/js/splide.min.js',
@@ -73,38 +98,40 @@ export function ItemDetails() {
       '/js/main.js'
     ];
 
-    const loadScript = (src: string) => {
-      return new Promise((resolve, reject) => {
+    // Load scripts with better performance
+    jsFiles.forEach((src, index) => {
+      // Check if script is already loaded
+      if (!document.querySelector(`script[src="${src}"]`)) {
         const script = document.createElement('script');
         script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.body.appendChild(script);
-      });
-    };
-
-    // Load scripts sequentially
-    const loadScripts = async () => {
-      for (const src of jsFiles) {
-        try {
-          await loadScript(src);
-        } catch (error) {
-          console.error(`Failed to load script: ${src}`, error);
-        }
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => console.warn(`Failed to load script: ${src}`);
+        
+        // Add small delay between script loads to prevent blocking
+        setTimeout(() => {
+          document.body.appendChild(script);
+        }, index * 50);
       }
-    };
-
-    loadScripts();
+    });
 
     // Cleanup function
     return () => {
       // Remove added CSS links
       const links = document.querySelectorAll('link[href^="/css/"], link[href^="/webfont/"]');
-      links.forEach(link => link.remove());
+      links.forEach(link => {
+        if (link.getAttribute('data-added-by') !== 'other') {
+          link.remove();
+        }
+      });
       
       // Remove added scripts
       const scripts = document.querySelectorAll('script[src^="/js/"]');
-      scripts.forEach(script => script.remove());
+      scripts.forEach(script => {
+        if (script.getAttribute('data-added-by') !== 'other') {
+          script.remove();
+        }
+      });
       
       // Remove added styles
       const styles = document.querySelectorAll('style');
@@ -235,10 +262,37 @@ export function ItemDetails() {
                     </ul>
                   </div>
 
-                  <a className="header__sign-in" href="/login" role="button">
-                    <i className="ti ti-user"></i>
-                    <span>Sign in</span>
-                  </a>
+                  <div className="header__profile">
+                    <Authenticated>
+                      <div 
+                        className="header__sign-in header__sign-in--user" 
+                        role="button"
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false"
+                      >
+                        <i className="ti ti-user"></i>
+                        <span>
+                          {loggedInUser?.profile?.username || loggedInUser?.name || 'User'}
+                        </span>
+                      </div>
+                      <ul className="dropdown-menu dropdown-menu-end header__dropdown-menu header__dropdown-menu--user">
+                        <li><a href="/profile"><i className="ti ti-ghost"></i>Profile</a></li>
+                        <li><a href="/profile"><i className="ti ti-stereo-glasses"></i>Subscription</a></li>
+                        <li><a href="/profile"><i className="ti ti-bookmark"></i>Favorites</a></li>
+                        <li><a href="/profile"><i className="ti ti-settings"></i>Settings</a></li>
+                        {loggedInUser?.profile?.role === "admin" && (
+                          <li><a href="/admin-dashboard"><i className="ti ti-settings-cog"></i>Admin Dashboard</a></li>
+                        )}
+                        <li><SignOutButton variant="dropdown" /></li>
+                      </ul>
+                    </Authenticated>
+                    <Unauthenticated>
+                      <a className="header__sign-in header__sign-in--user" href="/login" role="button">
+                        <i className="ti ti-user"></i>
+                        <span>Login</span>
+                      </a>
+                    </Unauthenticated>
+                  </div>
                 </div>
                 {/* end header auth */}
 
@@ -415,257 +469,11 @@ export function ItemDetails() {
               {/* content tabs */}
               <div className="tab-content">
                 <div className="tab-pane fade show active" id="tab-1" role="tabpanel" aria-labelledby="1-tab" tabIndex={0}>
-                  <div className="row">
-                    {/* comments */}
-                    <div className="col-12">
-                      <div className="comments">
-                        <ul className="comments__list">
-                          <li className="comments__item">
-                            <div className="comments__autor">
-                              <img className="comments__avatar" src="img/user.svg" alt="" />
-                              <span className="comments__name">John Doe</span>
-                              <span className="comments__time">30.08.2018, 17:53</span>
-                            </div>
-                            <p className="comments__text">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.</p>
-                            <div className="comments__actions">
-                              <div className="comments__rate">
-                                <button type="button"><i className="ti ti-thumb-up"></i>12</button>
-                                <button type="button">7<i className="ti ti-thumb-down"></i></button>
-                              </div>
-                              <button type="button"><i className="ti ti-arrow-forward-up"></i>Reply</button>
-                              <button type="button"><i className="ti ti-quote"></i>Quote</button>
-                            </div>
-                          </li>
-
-                          <li className="comments__item comments__item--answer">
-                            <div className="comments__autor">
-                              <img className="comments__avatar" src="img/user.svg" alt="" />
-                              <span className="comments__name">John Doe</span>
-                              <span className="comments__time">24.08.2018, 16:41</span>
-                            </div>
-                            <p className="comments__text">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
-                            <div className="comments__actions">
-                              <div className="comments__rate">
-                                <button type="button"><i className="ti ti-thumb-up"></i>8</button>
-                                <button type="button">3<i className="ti ti-thumb-down"></i></button>
-                              </div>
-                              <button type="button"><i className="ti ti-arrow-forward-up"></i>Reply</button>
-                              <button type="button"><i className="ti ti-quote"></i>Quote</button>
-                            </div>
-                          </li>
-
-                          <li className="comments__item comments__item--quote">
-                            <div className="comments__autor">
-                              <img className="comments__avatar" src="img/user.svg" alt="" />
-                              <span className="comments__name">John Doe</span>
-                              <span className="comments__time">11.08.2018, 11:11</span>
-                            </div>
-                            <p className="comments__text"><span>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</span>It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
-                            <div className="comments__actions">
-                              <div className="comments__rate">
-                                <button type="button"><i className="ti ti-thumb-up"></i>11</button>
-                                <button type="button">1<i className="ti ti-thumb-down"></i></button>
-                              </div>
-                              <button type="button"><i className="ti ti-arrow-forward-up"></i>Reply</button>
-                              <button type="button"><i className="ti ti-quote"></i>Quote</button>
-                            </div>
-                          </li>
-
-                          <li className="comments__item">
-                            <div className="comments__autor">
-                              <img className="comments__avatar" src="img/user.svg" alt="" />
-                              <span className="comments__name">John Doe</span>
-                              <span className="comments__time">07.08.2018, 14:33</span>
-                            </div>
-                            <p className="comments__text">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.</p>
-                            <div className="comments__actions">
-                              <div className="comments__rate">
-                                <button type="button"><i className="ti ti-thumb-up"></i>99</button>
-                                <button type="button">35<i className="ti ti-thumb-down"></i></button>
-                              </div>
-                              <button type="button"><i className="ti ti-arrow-forward-up"></i>Reply</button>
-                              <button type="button"><i className="ti ti-quote"></i>Quote</button>
-                            </div>
-                          </li>
-
-                          <li className="comments__item">
-                            <div className="comments__autor">
-                              <img className="comments__avatar" src="img/user.svg" alt="" />
-                              <span className="comments__name">John Doe</span>
-                              <span className="comments__time">02.08.2018, 15:24</span>
-                            </div>
-                            <p className="comments__text">Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for 'lorem ipsum' will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).</p>
-                            <div className="comments__actions">
-                              <div className="comments__rate">
-                                <button type="button"><i className="ti ti-thumb-up"></i>74</button>
-                                <button type="button">13<i className="ti ti-thumb-down"></i></button>
-                              </div>
-                              <button type="button"><i className="ti ti-arrow-forward-up"></i>Reply</button>
-                              <button type="button"><i className="ti ti-quote"></i>Quote</button>
-                            </div>
-                          </li>
-                        </ul>
-
-                        {/* paginator mobile */}
-                        <div className="paginator-mob paginator-mob--comments">
-                          <span className="paginator-mob__pages">5 of 628</span>
-
-                          <ul className="paginator-mob__nav">
-                            <li>
-                              <a href="#">
-                                <i className="ti ti-chevron-left"></i>
-                                <span>Prev</span>
-                              </a>
-                            </li>
-                            <li>
-                              <a href="#">
-                                <span>Next</span>
-                                <i className="ti ti-chevron-right"></i>
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
-                        {/* end paginator mobile */}
-
-                        {/* paginator desktop */}
-                        <ul className="paginator paginator--comments">
-                          <li className="paginator__item paginator__item--prev">
-                            <a href="#"><i className="ti ti-chevron-left"></i></a>
-                          </li>
-                          <li className="paginator__item"><a href="#">1</a></li>
-                          <li className="paginator__item paginator__item--active"><a href="#">2</a></li>
-                          <li className="paginator__item"><a href="#">3</a></li>
-                          <li className="paginator__item"><a href="#">4</a></li>
-                          <li className="paginator__item"><span>...</span></li>
-                          <li className="paginator__item"><a href="#">36</a></li>
-                          <li className="paginator__item paginator__item--next">
-                            <a href="#"><i className="ti ti-chevron-right"></i></a>
-                          </li>
-                        </ul>
-                        {/* end paginator desktop */}
-
-                        <form action="#" className="sign__form sign__form--comments">
-                          <div className="sign__group">
-                            <textarea id="text" name="text" className="sign__textarea" placeholder="Add comment"></textarea>
-                          </div>
-
-                          <button type="button" className="sign__btn sign__btn--small">Send</button>
-                        </form>
-                      </div>
-                    </div>
-                    {/* end comments */}
-                  </div>
+                  <Comments itemId={item._id} />
                 </div>
 
                 <div className="tab-pane fade" id="tab-2" role="tabpanel" aria-labelledby="2-tab" tabIndex={0}>
-                  <div className="row">
-                    {/* reviews */}
-                    <div className="col-12">
-                      <div className="reviews">
-                        <ul className="reviews__list">
-                          <li className="reviews__item">
-                            <div className="reviews__autor">
-                              <img className="reviews__avatar" src="img/user.svg" alt="" />
-                              <span className="reviews__name">Best Marvel movie in my opinion</span>
-                              <span className="reviews__time">24.08.2018, 17:53 by John Doe</span>
-
-                              <span className="reviews__rating reviews__rating--yellow">6</span>
-                            </div>
-                            <p className="reviews__text">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.</p>
-                          </li>
-
-                          <li className="reviews__item">
-                            <div className="reviews__autor">
-                              <img className="reviews__avatar" src="img/user.svg" alt="" />
-                              <span className="reviews__name">Best Marvel movie in my opinion</span>
-                              <span className="reviews__time">24.08.2018, 17:53 by John Doe</span>
-
-                              <span className="reviews__rating reviews__rating--green">9</span>
-                            </div>
-                            <p className="reviews__text">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.</p>
-                          </li>
-
-                          <li className="reviews__item">
-                            <div className="reviews__autor">
-                              <img className="reviews__avatar" src="img/user.svg" alt="" />
-                              <span className="reviews__name">Best Marvel movie in my opinion</span>
-                              <span className="reviews__time">24.08.2018, 17:53 by John Doe</span>
-
-                              <span className="reviews__rating reviews__rating--red">5</span>
-                            </div>
-                            <p className="reviews__text">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing hidden in the middle of text.</p>
-                          </li>
-                        </ul>
-
-                        {/* paginator mobile */}
-                        <div className="paginator-mob paginator-mob--comments">
-                          <span className="paginator-mob__pages">5 of 628</span>
-
-                          <ul className="paginator-mob__nav">
-                            <li>
-                              <a href="#">
-                                <i className="ti ti-chevron-left"></i>
-                                <span>Prev</span>
-                              </a>
-                            </li>
-                            <li>
-                              <a href="#">
-                                <span>Next</span>
-                                <i className="ti ti-chevron-right"></i>
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
-                        {/* end paginator mobile */}
-
-                        {/* paginator desktop */}
-                        <ul className="paginator paginator--comments">
-                          <li className="paginator__item paginator__item--prev">
-                            <a href="#"><i className="ti ti-chevron-left"></i></a>
-                          </li>
-                          <li className="paginator__item"><a href="#">1</a></li>
-                          <li className="paginator__item paginator__item--active"><a href="#">2</a></li>
-                          <li className="paginator__item"><a href="#">3</a></li>
-                          <li className="paginator__item"><a href="#">4</a></li>
-                          <li className="paginator__item"><span>...</span></li>
-                          <li className="paginator__item"><a href="#">36</a></li>
-                          <li className="paginator__item paginator__item--next">
-                            <a href="#"><i className="ti ti-chevron-right"></i></a>
-                          </li>
-                        </ul>
-                        {/* end paginator desktop */}
-
-                        <form action="#" className="sign__form sign__form--comments">
-                          <div className="sign__group">
-                            <input type="text" className="sign__input" placeholder="Title" />
-                          </div>
-
-                          <div className="sign__group">
-                            <select className="sign__select" name="rating" id="rating">
-                              <option value="0">Rating</option>
-                              <option value="1">1 star</option>
-                              <option value="2">2 stars</option>
-                              <option value="3">3 stars</option>
-                              <option value="4">4 stars</option>
-                              <option value="5">5 stars</option>
-                              <option value="6">6 stars</option>
-                              <option value="7">7 stars</option>
-                              <option value="8">8 stars</option>
-                              <option value="9">9 stars</option>
-                              <option value="10">10 stars</option>
-                            </select>
-                          </div>
-
-                          <div className="sign__group">
-                            <textarea id="textreview" name="textreview" className="sign__textarea" placeholder="Add review"></textarea>
-                          </div>
-
-                          <button type="button" className="sign__btn sign__btn--small">Send</button>
-                        </form>
-                      </div>
-                    </div>
-                    {/* end reviews */}
-                  </div>
+                  <Reviews />
                 </div>
               </div>
               {/* end content tabs */}

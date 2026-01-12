@@ -4,6 +4,8 @@ import { api } from "../convex/_generated/api";
 import { SignOutButton } from "./SignOutButton";
 import { useNavigate } from "react-router-dom";
 import { CategoryManagement } from "./CategoryManagement";
+import { CommentsManagement } from "./components/CommentsManagement";
+import { GeneralSettings } from "./components/GeneralSettings";
 
 export function AdminDashboard() {
   const navigate = useNavigate();
@@ -39,6 +41,8 @@ export function AdminDashboard() {
     switch (activeTab) {
       case "categories":
         return <CategoryManagement />;
+      case "comments":
+        return <CommentsManagement />;
       case "dashboard":
       default:
         return <DashboardContent navigate={navigate} />;
@@ -50,12 +54,20 @@ export function AdminDashboard() {
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-md">
         <div className="p-4 border-b">
-          <button 
-            onClick={() => navigate('/')}
-            className="text-xl font-bold text-pink-600 hover:text-pink-700"
-          >
-            Zenma Admin
-          </button>
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => navigate('/site')}
+              className="text-xl font-bold text-pink-600 hover:text-pink-700"
+            >
+              Zenma Admin
+            </button>
+            <button 
+              onClick={() => navigate('/site')}
+              className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+            >
+              View Site
+            </button>
+          </div>
         </div>
         
         <nav className="p-4">
@@ -82,6 +94,18 @@ export function AdminDashboard() {
                 }`}
               >
                 Categories
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setActiveTab("comments")}
+                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+                  activeTab === "comments" 
+                    ? "bg-blue-100 text-blue-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Comments
               </button>
             </li>
           </ul>
@@ -190,18 +214,13 @@ function DashboardContent({ navigate }: { navigate: (path: string) => void }) {
         </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* General Settings */}
       <div className="bg-white rounded-lg shadow-md border border-gray-200">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-gray-900">General Settings</h3>
         </div>
         <div className="p-6">
-          <div className="text-center text-gray-500 py-8">
-            <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p>No recent activity to display</p>
-          </div>
+          <GeneralSettings />
         </div>
       </div>
     </div>

@@ -9,12 +9,17 @@ import { ItemDetails } from "./ItemDetails";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
+import { useAppSettings } from "./hooks/useAppSettings";
 
 export default function App() {
+  // Initialize app settings (title, favicon, theme)
+  useAppSettings();
+  
   return (
     <>
       <Routes>
         <Route path="/" element={<HomeRoute />} />
+        <Route path="/site" element={<DynamicHomePage />} />
         <Route path="/login" element={<SignInForm />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
@@ -37,22 +42,17 @@ function HomeRoute() {
     );
   }
 
-  // Debug logging
-  console.log("HomeRoute - loggedInUser:", loggedInUser);
-  console.log("HomeRoute - profile:", loggedInUser?.profile);
-  console.log("HomeRoute - role:", loggedInUser?.profile?.role);
-
   // If user is authenticated but hasn't completed profile setup
   if (loggedInUser && !loggedInUser.profile) {
     return <UserOnboarding />;
   }
 
-  // If user is authenticated and is an admin
+  // If user is authenticated and is an admin (first user), redirect to AdminDashboard
   if (loggedInUser?.profile?.role === "admin") {
     return <AdminDashboard />;
   }
 
-  // Always show DynamicHomePage (whether authenticated or not)
+  // Regular users and unauthenticated users see DynamicHomePage
   return <DynamicHomePage />;
 }
 
