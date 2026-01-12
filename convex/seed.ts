@@ -39,3 +39,30 @@ export const seedData = mutation({
     return "Sample categories created! You can now add items with images through the admin interface.";
   },
 });
+
+// Helper mutation to update existing items with new fields
+export const updateItemsWithNewFields = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const items = await ctx.db.query("items").collect();
+    
+    for (const item of items) {
+      // Add sample data for the new fields if they don't exist
+      await ctx.db.patch(item._id, {
+        description: item.description || "An exciting story that will keep you on the edge of your seat. Follow the journey of our protagonists as they navigate through challenges and discover the true meaning of courage and friendship.",
+        director: item.director || "Christopher Nolan",
+        cast: item.cast || ["Leonardo DiCaprio", "Marion Cotillard", "Tom Hardy", "Ellen Page", "Michael Caine"],
+        premiereYear: item.premiereYear || 2023,
+        runningTime: item.runningTime || 148,
+        country: item.country || "USA",
+        rating: item.rating || 8.4,
+      });
+    }
+
+    return `Updated ${items.length} items with new fields`;
+  },
+});

@@ -34,13 +34,33 @@ export const getItemBySlug = query({
 
     if (!item) return null;
 
-    // Also get the category information and image URL
+    // Also get the category information and resolve all storage URLs
     const category = await ctx.db.get(item.categoryId);
     const imageUrl = await ctx.storage.getUrl(item.imageId);
+    
+    // Resolve poster image URL - use storage ID if available, else use direct URL
+    const posterImageUrl = item.posterImageId 
+      ? await ctx.storage.getUrl(item.posterImageId)
+      : item.posterImageUrl || null;
+
+    // Resolve video source URLs - use storage ID if available, else use direct URL
+    const videoSources = item.videoSources 
+      ? await Promise.all(
+          item.videoSources.map(async (source) => ({
+            url: source.videoId 
+              ? await ctx.storage.getUrl(source.videoId)
+              : source.url || "",
+            quality: source.quality,
+            type: source.type,
+          }))
+        )
+      : null;
     
     return {
       ...item,
       imageUrl,
+      posterImageUrl,
+      videoSources,
       category,
     };
   },
@@ -53,6 +73,27 @@ export const createItem = mutation({
     title: v.string(),
     imageId: v.id("_storage"),
     genres: v.array(v.string()),
+    description: v.optional(v.string()),
+    director: v.optional(v.string()),
+    cast: v.optional(v.array(v.string())),
+    premiereYear: v.optional(v.number()),
+    runningTime: v.optional(v.number()),
+    country: v.optional(v.string()),
+    rating: v.optional(v.number()),
+    posterImageId: v.optional(v.id("_storage")),
+    posterImageUrl: v.optional(v.string()),
+    videoSources: v.optional(v.array(v.object({
+      videoId: v.optional(v.id("_storage")),
+      url: v.optional(v.string()),
+      quality: v.string(),
+      type: v.string(),
+    }))),
+    captions: v.optional(v.array(v.object({
+      label: v.string(),
+      srcLang: v.string(),
+      src: v.string(),
+      default: v.optional(v.boolean()),
+    }))),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -87,6 +128,17 @@ export const createItem = mutation({
       slug: finalSlug,
       imageId: args.imageId,
       genres: args.genres,
+      description: args.description,
+      director: args.director,
+      cast: args.cast,
+      premiereYear: args.premiereYear,
+      runningTime: args.runningTime,
+      country: args.country,
+      rating: args.rating,
+      posterImageId: args.posterImageId,
+      posterImageUrl: args.posterImageUrl,
+      videoSources: args.videoSources,
+      captions: args.captions,
       createdBy: userId,
     });
   },
@@ -99,6 +151,27 @@ export const updateItem = mutation({
     title: v.string(),
     imageId: v.id("_storage"),
     genres: v.array(v.string()),
+    description: v.optional(v.string()),
+    director: v.optional(v.string()),
+    cast: v.optional(v.array(v.string())),
+    premiereYear: v.optional(v.number()),
+    runningTime: v.optional(v.number()),
+    country: v.optional(v.string()),
+    rating: v.optional(v.number()),
+    posterImageId: v.optional(v.id("_storage")),
+    posterImageUrl: v.optional(v.string()),
+    videoSources: v.optional(v.array(v.object({
+      videoId: v.optional(v.id("_storage")),
+      url: v.optional(v.string()),
+      quality: v.string(),
+      type: v.string(),
+    }))),
+    captions: v.optional(v.array(v.object({
+      label: v.string(),
+      srcLang: v.string(),
+      src: v.string(),
+      default: v.optional(v.boolean()),
+    }))),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -132,11 +205,70 @@ export const updateItem = mutation({
       slug: finalSlug,
       imageId: args.imageId,
       genres: args.genres,
+      description: args.description,
+      director: args.director,
+      cast: args.cast,
+      premiereYear: args.premiereYear,
+      runningTime: args.runningTime,
+      country: args.country,
+      rating: args.rating,
+      posterImageId: args.posterImageId,
+      posterImageUrl: args.posterImageUrl,
+      videoSources: args.videoSources,
+      captions: args.captions,
     });
   },
 });
 
-// Delete an item
+// Query to get related items by genre (excluding current item)
+export const getRelatedItemsByGenre = query({
+  args: { 
+    genres: v.array(v.string()),
+    excludeItemId: v.id("items"),
+    limit: v.optional(v.number())
+  },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 6;
+    
+    // Get all items that share at least one genre with the current item
+    const allItems = await ctx.db.query("items").collect();
+    
+    const relatedItems = allItems
+      .filter(item => {
+        // Exclude the current item
+        if (item._id === args.excludeItemId) return false;
+        
+        // Check if item has at least one matching genre
+        return item.genres.some(genre => args.genres.includes(genre));
+      })
+      .slice(0, limit);
+
+    // Get image URLs for all related items
+    const itemsWithImages = await Promise.all(
+      relatedItems.map(async (item) => ({
+        ...item,
+        imageUrl: await ctx.storage.getUrl(item.imageId),
+        posterImageUrl: item.posterImageId 
+          ? await ctx.storage.getUrl(item.posterImageId)
+          : item.posterImageUrl || null,
+        videoSources: item.videoSources 
+          ? await Promise.all(
+              item.videoSources.map(async (source) => ({
+                url: source.videoId 
+                  ? await ctx.storage.getUrl(source.videoId)
+                  : source.url || "",
+                quality: source.quality,
+                type: source.type,
+              }))
+            )
+          : null,
+      }))
+    );
+
+    return itemsWithImages;
+  },
+});
+
 export const deleteItem = mutation({
   args: { itemId: v.id("items") },
   handler: async (ctx, args) => {

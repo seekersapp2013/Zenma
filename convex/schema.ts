@@ -49,6 +49,28 @@ const applicationTables = {
     slug: v.string(),
     imageId: v.id("_storage"),
     genres: v.array(v.string()),
+    description: v.optional(v.string()),
+    director: v.optional(v.string()),
+    cast: v.optional(v.array(v.string())),
+    premiereYear: v.optional(v.number()),
+    runningTime: v.optional(v.number()), // in minutes
+    country: v.optional(v.string()),
+    rating: v.optional(v.number()), // e.g., 8.4
+    // Video player fields - hybrid approach (either storage ID or direct URL)
+    posterImageId: v.optional(v.id("_storage")), // For uploaded files
+    posterImageUrl: v.optional(v.string()), // For direct URLs
+    videoSources: v.optional(v.array(v.object({
+      videoId: v.optional(v.id("_storage")), // For uploaded files
+      url: v.optional(v.string()), // For direct URLs
+      quality: v.string(), // e.g., "576p", "720p", "1080p"
+      type: v.string(), // e.g., "video/mp4"
+    }))),
+    captions: v.optional(v.array(v.object({
+      label: v.string(), // e.g., "English", "Français"
+      srcLang: v.string(), // e.g., "en", "fr"
+      src: v.string(), // URL to .vtt file
+      default: v.optional(v.boolean()),
+    }))),
     createdBy: v.id("users"),
   })
     .index("by_category", ["categoryId"])

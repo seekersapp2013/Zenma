@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
-import { FileUpload } from "./components/FileUpload";
+import { ItemWizard } from "./ItemWizard";
 import {
   DndContext,
   closestCenter,
@@ -28,26 +28,18 @@ interface CategoryFormData {
   title: string;
 }
 
-interface ItemFormData {
-  title: string;
-  imageId: Id<"_storage"> | null;
-  genres: string[];
-}
-
 export function CategoryManagement() {
   const [showCategoryForm, setShowCategoryForm] = useState(false);
-  const [showItemForm, setShowItemForm] = useState<Id<"categories"> | null>(null);
-  const [editingItem, setEditingItem] = useState<Id<"items"> | null>(null);
+  const [showItemWizard, setShowItemWizard] = useState<Id<"categories"> | null>(null);
+  const [editingItem, setEditingItem] = useState<{
+    itemId: Id<"items">;
+    categoryId: Id<"categories">;
+    data: any;
+  } | null>(null);
   const [categoryForm, setCategoryForm] = useState<CategoryFormData>({
     type: "featured",
     title: "",
   });
-  const [itemForm, setItemForm] = useState<ItemFormData>({
-    title: "",
-    imageId: null,
-    genres: [],
-  });
-  const [genreInput, setGenreInput] = useState("");
 
   const categories = useQuery(api.categories.getCategories);
   const createCategory = useMutation(api.categories.createCategory);
@@ -100,49 +92,14 @@ export function CategoryManagement() {
     }
   };
 
-  const handleCreateItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!itemForm.title.trim() || !itemForm.imageId || !showItemForm) return;
-
-    try {
-      if (editingItem) {
-        await updateItem({
-          itemId: editingItem,
-          title: itemForm.title,
-          imageId: itemForm.imageId,
-          genres: itemForm.genres,
-        });
-      } else {
-        await createItem({
-          categoryId: showItemForm,
-          title: itemForm.title,
-          imageId: itemForm.imageId,
-          genres: itemForm.genres,
-        });
-      }
-      setItemForm({ title: "", imageId: null, genres: [] });
-      setShowItemForm(null);
-      setEditingItem(null);
-    } catch (error) {
-      console.error("Error saving item:", error);
-    }
+  const handleWizardSuccess = () => {
+    setShowItemWizard(null);
+    setEditingItem(null);
   };
 
-  const addGenre = () => {
-    if (genreInput.trim() && !itemForm.genres.includes(genreInput.trim())) {
-      setItemForm(prev => ({
-        ...prev,
-        genres: [...prev.genres, genreInput.trim()]
-      }));
-      setGenreInput("");
-    }
-  };
-
-  const removeGenre = (genre: string) => {
-    setItemForm(prev => ({
-      ...prev,
-      genres: prev.genres.filter(g => g !== genre)
-    }));
+  const handleWizardClose = () => {
+    setShowItemWizard(null);
+    setEditingItem(null);
   };
 
   const formatTitle = (title: string) => {
@@ -248,100 +205,15 @@ export function CategoryManagement() {
         </div>
       )}
 
-      {/* Item Form Modal */}
-      {showItemForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
-              {editingItem ? "Edit Item" : "Add New Item"}
-            </h2>
-            <form onSubmit={handleCreateItem}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={itemForm.title}
-                  onChange={(e) => setItemForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Movie/Show title"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Image
-                </label>
-                <FileUpload
-                  onUploadComplete={(storageId) => setItemForm(prev => ({ ...prev, imageId: storageId }))}
-                  currentImageUrl={editingItem ? undefined : undefined} // We'll handle this in the edit case
-                />
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Genres
-                </label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={genreInput}
-                    onChange={(e) => setGenreInput(e.target.value)}
-                    placeholder="Add genre"
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGenre())}
-                  />
-                  <button
-                    type="button"
-                    onClick={addGenre}
-                    className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {itemForm.genres.map((genre) => (
-                    <span
-                      key={genre}
-                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm flex items-center gap-1"
-                    >
-                      {genre}
-                      <button
-                        type="button"
-                        onClick={() => removeGenre(genre)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={!itemForm.imageId}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {editingItem ? "Update Item" : "Create Item"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowItemForm(null);
-                    setEditingItem(null);
-                    setItemForm({ title: "", imageId: null, genres: [] });
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {/* Item Wizard */}
+      {showItemWizard && (
+        <ItemWizard
+          categoryId={showItemWizard}
+          editingItem={editingItem?.itemId || null}
+          initialData={editingItem?.data}
+          onClose={handleWizardClose}
+          onSuccess={handleWizardSuccess}
+        />
       )}
 
       {/* Categories List with Drag and Drop */}
@@ -360,15 +232,29 @@ export function CategoryManagement() {
                 key={category._id}
                 category={category}
                 onDelete={() => deleteCategory({ categoryId: category._id })}
-                onAddItem={() => setShowItemForm(category._id)}
+                onAddItem={() => setShowItemWizard(category._id)}
                 onEditItem={(item) => {
-                  setEditingItem(item._id);
-                  setItemForm({
-                    title: item.title,
-                    imageId: item.imageId,
-                    genres: item.genres,
+                  setEditingItem({
+                    itemId: item._id,
+                    categoryId: category._id,
+                    data: {
+                      title: item.title,
+                      imageId: item.imageId,
+                      genres: item.genres,
+                      description: item.description || "",
+                      director: item.director || "",
+                      cast: item.cast || [],
+                      premiereYear: item.premiereYear || null,
+                      runningTime: item.runningTime || null,
+                      country: item.country || "",
+                      rating: item.rating || null,
+                      posterImageId: item.posterImageId || null,
+                      posterImageUrl: item.posterImageUrl || "",
+                      videoSources: item.videoSources || [],
+                      captions: item.captions || [],
+                    }
                   });
-                  setShowItemForm(category._id);
+                  setShowItemWizard(category._id);
                 }}
                 onDeleteItem={(itemId) => deleteItem({ itemId })}
                 formatTitle={formatTitle}
