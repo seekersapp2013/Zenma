@@ -29,10 +29,15 @@ const applicationTables = {
     role: v.union(v.literal("admin"), v.literal("user")),
     interests: v.array(v.string()),
     profileCompleted: v.boolean(),
+    isBanned: v.optional(v.boolean()),
+    bannedAt: v.optional(v.number()),
+    bannedBy: v.optional(v.id("users")),
+    banReason: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_username", ["username"])
-    .index("by_role", ["role"]),
+    .index("by_role", ["role"])
+    .index("by_banned", ["isBanned"]),
 
   categories: defineTable({
     type: v.union(v.literal("featured"), v.literal("full"), v.literal("short")),

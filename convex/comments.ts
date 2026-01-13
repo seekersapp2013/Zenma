@@ -200,6 +200,16 @@ export const addComment = mutation({
       throw new Error("Must be logged in to comment");
     }
 
+    // Check if user is banned
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (userProfile && userProfile.isBanned === true) {
+      throw new Error("You have been banned from the platform. Please contact admin for details.");
+    }
+
     // Validate content
     if (!args.content.trim()) {
       throw new Error("Comment content cannot be empty");

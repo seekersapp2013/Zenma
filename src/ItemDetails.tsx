@@ -777,8 +777,8 @@ export function ItemDetails() {
                         {item.directorsWithDetails && item.directorsWithDetails.length > 0 && (
                           <li className="item__meta-directors">
                             <span>Directors:</span>
-                            <div className="item__people-scroll-container">
-                              <div className="item__people-list">
+                            <div className="">
+                              <div className="">
                                 {item.directorsWithDetails.map((director, index) => (
                                   <div key={director.name} className="item__person">
                                    

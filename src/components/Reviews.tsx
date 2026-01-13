@@ -37,20 +37,20 @@ export function Reviews({ itemId }: ReviewsProps) {
   const [editContent, setEditContent] = useState("");
   const [editRating, setEditRating] = useState(0);
 
-  const reviews = useQuery(api.reviews?.getReviews, itemId ? {
+  const reviews = useQuery(api.reviews.getReviews, itemId ? {
     itemId,
     page: currentPage,
     limit: 5,
   } : "skip");
 
-  const bannedWords = useQuery(api.settings?.getBannedWords) || [];
+  const bannedWords = useQuery(api.settings.getBannedWords) || [];
   const loggedInUser = useQuery(api.auth.loggedInUser);
 
-  const addReview = useMutation(api.reviews?.addReview);
-  const editReview = useMutation(api.reviews?.editReview);
-  const deleteReview = useMutation(api.reviews?.deleteReview);
-  const adminDeleteReview = useMutation(api.reviews?.adminDeleteReview);
-  const voteReview = useMutation(api.reviews?.voteReview);
+  const addReview = useMutation(api.reviews.addReview);
+  const editReview = useMutation(api.reviews.editReview);
+  const deleteReview = useMutation(api.reviews.deleteReview);
+  const adminDeleteReview = useMutation(api.reviews.adminDeleteReview);
+  const voteReview = useMutation(api.reviews.voteReview);
 
   // Don't render anything if itemId is not provided
   if (!itemId) {

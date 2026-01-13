@@ -860,56 +860,68 @@ body::-webkit-scrollbar-thumb {
 .catalog__btn i {
   font-size: 20px;
 }
+.catalog__btn svg {
+  width: 14px;
+  height: 14px;
+}
 .catalog__btn:last-child {
   margin-right: 0;
 }
 .catalog__btn--delete {
   background-color: rgba(235,87,87,0.1);
 }
-.catalog__btn--delete i {
+.catalog__btn--delete i,
+.catalog__btn--delete svg {
   color: #eb5757;
 }
 .catalog__btn--delete:hover {
   background-color: rgba(235,87,87,0.2);
 }
-.catalog__btn--delete:hover i {
+.catalog__btn--delete:hover i,
+.catalog__btn--delete:hover svg {
   color: #eb5757;
 }
 .catalog__btn--edit {
   background-color: rgba(55,150,246,0.1);
 }
-.catalog__btn--edit i {
+.catalog__btn--edit i,
+.catalog__btn--edit svg {
   color: #3796f6;
 }
 .catalog__btn--edit:hover {
   background-color: rgba(55,150,246,0.2);
 }
-.catalog__btn--edit:hover i {
+.catalog__btn--edit:hover i,
+.catalog__btn--edit:hover svg {
   color: #3796f6;
 }
 .catalog__btn--banned {
-  background-color: rgba(41,180,116,0.1);
+  background-color: rgba(255,193,7,0.1);
 }
-.catalog__btn--banned i {
-  color: #29b474;
+.catalog__btn--banned i,
+.catalog__btn--banned svg {
+  color: #ffc107;
 }
 .catalog__btn--banned:hover {
-  background-color: rgba(41,180,116,0.2);
+  background-color: rgba(255,193,7,0.2);
 }
-.catalog__btn--banned:hover i {
-  color: #29b474;
+.catalog__btn--banned:hover i,
+.catalog__btn--banned:hover svg {
+  color: #ffc107;
 }
 .catalog__btn--view {
-  background-color: rgba(255,195,18,0.1);
+  background-color: rgba(40,167,69,0.1);
 }
-.catalog__btn--view i {
-  color: rgba(255,195,18,0.8);
+.catalog__btn--view i,
+.catalog__btn--view svg {
+  color: #28a745;
 }
 .catalog__btn--view:hover {
-  background-color: rgba(255,195,18,0.2);
+  background-color: rgba(40,167,69,0.2);
 }
-.catalog__btn--view:hover i {
-  color: #ffc312;
+.catalog__btn--view:hover i,
+.catalog__btn--view:hover svg {
+  color: #28a745;
 }
 @media (min-width: 768px) {
   .catalog__table {

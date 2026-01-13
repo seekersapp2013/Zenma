@@ -48,19 +48,19 @@ export function Comments({ itemId }: CommentsProps) {
   const [editingComment, setEditingComment] = useState<Id<"comments"> | null>(null);
   const [editText, setEditText] = useState("");
 
-  const comments = useQuery(api.comments?.getComments, itemId ? {
+  const comments = useQuery(api.comments.getComments, itemId ? {
     itemId,
     page: currentPage,
     limit: 10,
   } : "skip");
 
-  const bannedWords = useQuery(api.settings?.getBannedWords) || [];
+  const bannedWords = useQuery(api.settings.getBannedWords) || [];
   const loggedInUser = useQuery(api.auth.loggedInUser);
 
-  const addComment = useMutation(api.comments?.addComment);
-  const editComment = useMutation(api.comments?.editComment);
-  const deleteComment = useMutation(api.comments?.deleteComment);
-  const voteComment = useMutation(api.comments?.voteComment);
+  const addComment = useMutation(api.comments.addComment);
+  const editComment = useMutation(api.comments.editComment);
+  const deleteComment = useMutation(api.comments.deleteComment);
+  const voteComment = useMutation(api.comments.voteComment);
 
   // Don't render anything if itemId is not provided
   if (!itemId) {
