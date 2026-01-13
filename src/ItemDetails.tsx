@@ -163,6 +163,22 @@ export function ItemDetails() {
         margin-bottom: 1rem;
       }
       
+      /* Cast section below description */
+      .item__cast-section {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #2a2937;
+      }
+      
+      .item__cast-title {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
       .item__people-scroll-container {
         max-height: 200px;
         overflow-y: auto;
@@ -765,25 +781,7 @@ export function ItemDetails() {
                               <div className="item__people-list">
                                 {item.directorsWithDetails.map((director, index) => (
                                   <div key={director.name} className="item__person">
-                                    <a 
-                                      href={`/director/${director.slug}`} 
-                                      className="item__person-avatar-link"
-                                      title={director.name}
-                                    >
-                                      <div className="item__person-avatar">
-                                        {director.imageUrl ? (
-                                          <img 
-                                            src={director.imageUrl} 
-                                            alt={director.name}
-                                            className="item__person-image"
-                                          />
-                                        ) : (
-                                          <div className="item__person-placeholder">
-                                            <i className="ti ti-user"></i>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </a>
+                                   
                                     <a 
                                       href={`/director/${director.slug}`} 
                                       className="item__person-name"
@@ -791,52 +789,6 @@ export function ItemDetails() {
                                     >
                                       {director.name}
                                     </a>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </li>
-                        )}
-                        {item.castWithDetails && item.castWithDetails.length > 0 && (
-                          <li className="item__meta-cast">
-                            <span>Cast:</span>
-                            <div className="item__people-scroll-container">
-                              <div className="item__people-list">
-                                {item.castWithDetails.map((actor, index) => (
-                                  <div key={`${actor.name}-${actor.castName || index}`} className="item__person">
-                                    <a 
-                                      href={`/actor/${actor.slug}`} 
-                                      className="item__person-avatar-link"
-                                      title={`${actor.name}${actor.castName ? ` as ${actor.castName}` : ''}`}
-                                    >
-                                      <div className="item__person-avatar">
-                                        {actor.imageUrl ? (
-                                          <img 
-                                            src={actor.imageUrl} 
-                                            alt={actor.name}
-                                            className="item__person-image"
-                                          />
-                                        ) : (
-                                          <div className="item__person-placeholder">
-                                            <i className="ti ti-user"></i>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </a>
-                                    <div className="item__person-info">
-                                      {actor.castName && (
-                                        <div className="item__person-character" title={`Character: ${actor.castName}`}>
-                                          {actor.castName}
-                                        </div>
-                                      )}
-                                      <a 
-                                        href={`/actor/${actor.slug}`} 
-                                        className="item__person-name"
-                                        title={actor.name}
-                                      >
-                                        {actor.name}
-                                      </a>
-                                    </div>
                                   </div>
                                 ))}
                               </div>
@@ -869,6 +821,54 @@ export function ItemDetails() {
                           <p>No description available.</p>
                         )}
                       </div>
+
+                      {/* Cast section moved below description */}
+                      {item.castWithDetails && item.castWithDetails.length > 0 && (
+                        <div className="item__cast-section">
+                          <h4 className="item__cast-title">Cast</h4>
+                          <div className="item__people-scroll-container">
+                            <div className="item__people-list">
+                              {item.castWithDetails.map((actor, index) => (
+                                <div key={`${actor.name}-${actor.castName || index}`} className="item__person">
+                                  <a 
+                                    href={`/actor/${actor.slug}`} 
+                                    className="item__person-avatar-link"
+                                    title={`${actor.name}${actor.castName ? ` as ${actor.castName}` : ''}`}
+                                  >
+                                    <div className="item__person-avatar">
+                                      {actor.imageUrl ? (
+                                        <img 
+                                          src={actor.imageUrl} 
+                                          alt={actor.name}
+                                          className="item__person-image"
+                                        />
+                                      ) : (
+                                        <div className="item__person-placeholder">
+                                          <i className="ti ti-user"></i>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </a>
+                                  <div className="item__person-info">
+                                    {actor.castName && (
+                                      <div className="item__person-character" title={`Character: ${actor.castName}`}>
+                                        {actor.castName}
+                                      </div>
+                                    )}
+                                    <a 
+                                      href={`/actor/${actor.slug}`} 
+                                      className="item__person-name"
+                                      title={actor.name}
+                                    >
+                                      {actor.name}
+                                    </a>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   {/* end card content */}
