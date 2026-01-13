@@ -159,8 +159,16 @@ export function ItemDetails() {
       /* Professional People List Styling */
       .item__meta-directors,
       .item__meta-cast {
-        display: block !important;
+        display: flex !important;
+        align-items: flex-start;
+        gap: 0.5rem;
         margin-bottom: 1rem;
+      }
+      
+      .item__meta-directors > span,
+      .item__meta-cast > span {
+        flex-shrink: 0;
+        min-width: fit-content;
       }
       
       /* Cast section below description */
@@ -183,8 +191,9 @@ export function ItemDetails() {
         max-height: 200px;
         overflow-y: auto;
         overflow-x: hidden;
-        margin-top: 0.5rem;
+        margin-top: 0;
         padding-right: 5px;
+        flex: 1;
         /* Custom scrollbar styling */
         scrollbar-width: thin;
         scrollbar-color: #ff1493 #222028;
@@ -777,8 +786,8 @@ export function ItemDetails() {
                         {item.directorsWithDetails && item.directorsWithDetails.length > 0 && (
                           <li className="item__meta-directors">
                             <span>Directors:</span>
-                            <div className="">
-                              <div className="">
+                            <div className="item__people-scroll-container">
+                              <div className="item__people-list">
                                 {item.directorsWithDetails.map((director, index) => (
                                   <div key={director.name} className="item__person">
                                    

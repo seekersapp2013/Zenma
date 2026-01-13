@@ -15,12 +15,15 @@
  */
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
+import { useAuthActions } from "@convex-dev/auth/react";
 
 interface SidebarProps {
   currentPage: string;
 }
 
 export function Sidebar({ currentPage }: SidebarProps) {
+  const { signOut } = useAuthActions();
+  
   // Get counts for sidebar
   const categories = useQuery(api.categories.getCategories);
   const allItems = useQuery(api.items.getAllItemsWithCategories);
@@ -103,7 +106,12 @@ export function Sidebar({ currentPage }: SidebarProps) {
           <span>Admin</span>
           <p>Content Management</p>
         </div>
-        <button className="sidebar__user-btn" type="button">
+        <button 
+          className="sidebar__user-btn" 
+          type="button"
+          onClick={() => void signOut()}
+          title="Sign Out"
+        >
           <i className="ti ti-logout"></i>
         </button>
       </div>
