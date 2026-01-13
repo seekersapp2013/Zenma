@@ -4,9 +4,14 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { formatTimeAgo } from "../utils/timeUtils";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { AdminLayout } from "../AdminLayout";
 
 export function CommentsManagement() {
+  const navigate = useNavigate();
+  const loggedInUser = useQuery(api.auth.loggedInUser);
   const [selectedItemId, setSelectedItemId] = useState<Id<"items"> | null>(null);
+  const [showItemComments, setShowItemComments] = useState(false);
   
   const itemsWithComments = useQuery(api.comments?.getItemsWithCommentCounts);
   const itemComments = useQuery(
@@ -15,6 +20,40 @@ export function CommentsManagement() {
   );
   
   const deleteComment = useMutation(api.comments?.adminDeleteComment);
+
+  if (loggedInUser === undefined) {
+    return (
+      <div className="d-flex align-items-center justify-content-center p-4">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loggedInUser?.profile || loggedInUser.profile.role !== "admin") {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#1a1a1a',
+        color: '#fff'
+      }}>
+        <div className="text-center">
+          <h2 className="mb-4">Access Denied</h2>
+          <p className="mb-4">You don't have permission to access the admin dashboard.</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="btn btn-primary"
+          >
+            Go to Homepage
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleDeleteComment = async (commentId: Id<"comments">) => {
     if (!confirm("Are you sure you want to delete this comment? This action cannot be undone.")) {
@@ -30,166 +69,225 @@ export function CommentsManagement() {
     }
   };
 
-  const selectedItem = itemsWithComments?.find(item => item._id === selectedItemId);
+  const handleViewComments = (itemId: Id<"items">) => {
+    setSelectedItemId(itemId);
+    setShowItemComments(true);
+  };
+
+  const handleBackToItems = () => {
+    setShowItemComments(false);
+    setSelectedItemId(null);
+  };
 
   if (itemsWithComments === undefined) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <AdminLayout currentPage="comments" pageTitle="Comments">
+        <div className="d-flex align-items-center justify-content-center p-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
         </div>
-      </div>
+      </AdminLayout>
+    );
+  }
+
+  const totalComments = itemsWithComments.reduce((sum, item) => sum + item.commentCount, 0);
+  const selectedItem = itemsWithComments?.find(item => item._id === selectedItemId);
+
+  if (showItemComments && selectedItem) {
+    return (
+      <AdminLayout 
+        currentPage="comments" 
+        pageTitle={`Comments for "${selectedItem.title}"`}
+        totalCount={itemComments?.length || 0}
+        titleActions={
+          <button 
+            onClick={handleBackToItems}
+            className="main__title-link main__title-link--wrap"
+          >
+            <i className="ti ti-arrow-left"></i> Back to Items
+          </button>
+        }
+      >
+        {/* Comments Table */}
+        <div className="catalog catalog--1">
+          {itemComments === undefined ? (
+            <div className="d-flex align-items-center justify-content-center p-4">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          ) : itemComments && itemComments.length > 0 ? (
+            <table className="catalog__table">
+              <thead>
+                <tr>
+                  <th>USER</th>
+                  <th>COMMENT</th>
+                  <th>VOTES</th>
+                  <th>DATE</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {itemComments.map((comment) => (
+                  <tr key={comment._id}>
+                    <td>
+                      <div className="catalog__user">
+                        <div className="catalog__avatar">
+                          <div className="catalog__avatar-placeholder">
+                            {comment.username.charAt(0).toUpperCase()}
+                          </div>
+                        </div>
+                        <div className="catalog__meta">
+                          <h3>{comment.username}</h3>
+                          {comment.isReply && (
+                            <span className="badge bg-secondary">Reply</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="catalog__text">
+                        <p style={{ marginBottom: '8px' }}>{comment.content}</p>
+                        {comment.repliesCount > 0 && (
+                          <small className="text-muted">
+                            <i className="ti ti-message"></i> {comment.repliesCount} {comment.repliesCount === 1 ? 'reply' : 'replies'}
+                          </small>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="catalog__text">
+                        <div className="d-flex align-items-center gap-3">
+                          <span className="text-success">
+                            <i className="ti ti-thumb-up"></i> {comment.upvotes}
+                          </span>
+                          <span className="text-danger">
+                            <i className="ti ti-thumb-down"></i> {comment.downvotes}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="catalog__text">
+                        {formatTimeAgo(comment.createdAt)}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="catalog__btns">
+                        <button 
+                          type="button" 
+                          className="catalog__btn catalog__btn--delete" 
+                          onClick={() => handleDeleteComment(comment._id)}
+                          title="Delete Comment"
+                        >
+                          <i className="ti ti-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-5">
+              <i className="ti ti-message" style={{ fontSize: '3rem', opacity: 0.3, marginBottom: '1rem' }}></i>
+              <h4 className="text-white mb-2">No Comments</h4>
+              <p className="text-muted">This item doesn't have any comments yet.</p>
+            </div>
+          )}
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Comments Management</h1>
-        <p className="text-gray-600">View and manage comments across all items</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Items List */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">Items with Comments</h3>
-            <p className="text-sm text-gray-600 mt-1">Click an item to view its comments</p>
-          </div>
-          
-          <div className="max-h-96 overflow-y-auto">
-            {itemsWithComments && itemsWithComments.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {itemsWithComments.map((item) => (
-                  <button
-                    key={item._id}
-                    onClick={() => setSelectedItemId(item._id)}
-                    className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${
-                      selectedItemId === item._id ? 'bg-blue-50 border-r-4 border-blue-500' : ''
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900 truncate">
-                          {item.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {item.genres?.join(', ') || 'No genres'}
-                        </p>
-                      </div>
-                      <div className="ml-4 flex-shrink-0">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {item.commentCount} {item.commentCount === 1 ? 'comment' : 'comments'}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <p>No items with comments found</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Comments List */}
-        <div className="bg-white rounded-lg shadow-md border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              {selectedItem ? `Comments for "${selectedItem.title}"` : 'Select an Item'}
-            </h3>
-            {selectedItem && (
-              <p className="text-sm text-gray-600 mt-1">
-                {itemComments?.length || 0} total comments
-              </p>
-            )}
-          </div>
-          
-          <div className="max-h-96 overflow-y-auto">
-            {!selectedItemId ? (
-              <div className="p-8 text-center text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-1l-4 4z" />
-                </svg>
-                <p>Select an item to view its comments</p>
-              </div>
-            ) : itemComments === undefined ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              </div>
-            ) : itemComments && itemComments.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {itemComments.map((comment) => (
-                  <div key={comment._id} className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">
-                          {comment.username}
-                        </span>
-                        {comment.isReply && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                            Reply
-                          </span>
+    <AdminLayout 
+      currentPage="comments" 
+      pageTitle="Comments Management" 
+      totalCount={totalComments}
+    >
+      {/* Items with Comments Table */}
+      <div className="catalog catalog--1">
+        {itemsWithComments && itemsWithComments.length > 0 ? (
+          <table className="catalog__table">
+            <thead>
+              <tr>
+                <th>ITEM</th>
+                <th>GENRES</th>
+                <th>COMMENTS</th>
+                <th>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {itemsWithComments.map((item) => (
+                <tr 
+                  key={item._id}
+                  onClick={() => handleViewComments(item._id)}
+                  style={{ cursor: 'pointer' }}
+                  className="catalog__row--clickable"
+                >
+                  <td>
+                    <div className="catalog__user">
+                      <div className="catalog__avatar">
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.title} />
+                        ) : (
+                          <div className="catalog__avatar-placeholder">
+                            <i className="ti ti-movie"></i>
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">
-                          {formatTimeAgo(comment.createdAt)}
-                        </span>
-                        <button
-                          onClick={() => handleDeleteComment(comment._id)}
-                          className="text-red-600 hover:text-red-800 text-xs font-medium"
-                        >
-                          Delete
-                        </button>
+                      <div className="catalog__meta">
+                        <h3>{item.title}</h3>
+                        <span>{item.premiereYear || 'Unknown Year'}</span>
                       </div>
                     </div>
-                    
-                    <p className="text-sm text-gray-700 mb-2">
-                      {comment.content}
-                    </p>
-                    
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                        </svg>
-                        {comment.upvotes}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018c.163 0 .326.02.485.06L17 4m-7 10v2a2 2 0 002 2h.095c.5 0 .905-.405.905-.905 0-.714.211-1.412.608-2.006L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                        </svg>
-                        {comment.downvotes}
-                      </span>
-                      {comment.repliesCount > 0 && (
-                        <span className="flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                          </svg>
-                          {comment.repliesCount} {comment.repliesCount === 1 ? 'reply' : 'replies'}
+                  </td>
+                  <td>
+                    <div className="catalog__text">
+                      {item.genres?.slice(0, 3).map((genre, index) => (
+                        <span key={genre}>
+                          {genre}
+                          {index < Math.min(item.genres.length, 3) - 1 && ', '}
                         </span>
+                      )) || 'No genres'}
+                      {item.genres && item.genres.length > 3 && (
+                        <span className="text-muted"> +{item.genres.length - 3} more</span>
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <p>No comments found for this item</p>
-              </div>
-            )}
+                  </td>
+                  <td>
+                    <div className="catalog__text">
+                      <span className="badge bg-primary">
+                        {item.commentCount} {item.commentCount === 1 ? 'comment' : 'comments'}
+                      </span>
+                    </div>
+                  </td>
+                  <td onClick={(e) => e.stopPropagation()}>
+                    <div className="catalog__btns">
+                      <button 
+                        type="button" 
+                        className="catalog__btn catalog__btn--view"
+                        onClick={() => handleViewComments(item._id)}
+                        title="View Comments"
+                      >
+                        <i className="ti ti-eye"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="text-center py-5">
+            <i className="ti ti-message" style={{ fontSize: '4rem', opacity: 0.3, marginBottom: '2rem' }}></i>
+            <h4 className="text-white mb-3">No Comments Yet</h4>
+            <p className="text-muted">No items have received comments yet. Comments will appear here once users start engaging with your content.</p>
           </div>
-        </div>
+        )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

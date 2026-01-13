@@ -299,10 +299,7 @@ export function HomePage() {
                         </span>
                       </div>
                       <ul className="dropdown-menu dropdown-menu-end header__dropdown-menu header__dropdown-menu--user">
-                        <li><a href="profile.html"><i className="ti ti-ghost"></i>Profile</a></li>
-                        <li><a href="profile.html"><i className="ti ti-stereo-glasses"></i>Subscription</a></li>
-                        <li><a href="profile.html"><i className="ti ti-bookmark"></i>Favorites</a></li>
-                        <li><a href="profile.html"><i className="ti ti-settings"></i>Settings</a></li>
+                    
                         <li><SignOutButton variant="dropdown" /></li>
                       </ul>
                     </Authenticated>

@@ -969,7 +969,7 @@ export function ItemDetails() {
                 </div>
 
                 <div className="tab-pane fade" id="tab-2" role="tabpanel" aria-labelledby="2-tab" tabIndex={0}>
-                  <Reviews />
+                  <Reviews itemId={item._id} />
                 </div>
               </div>
               {/* end content tabs */}

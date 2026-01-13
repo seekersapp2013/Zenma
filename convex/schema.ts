@@ -103,6 +103,29 @@ const applicationTables = {
     .index("by_comment", ["commentId"])
     .index("by_user_and_comment", ["userId", "commentId"]),
 
+  reviews: defineTable({
+    itemId: v.id("items"),
+    userId: v.id("users"),
+    title: v.string(),
+    content: v.string(),
+    rating: v.number(), // 1-10 stars
+    upvotes: v.number(),
+    downvotes: v.number(),
+    createdAt: v.number(), // timestamp
+  })
+    .index("by_item", ["itemId"])
+    .index("by_user", ["userId"])
+    .index("by_item_and_created", ["itemId", "createdAt"])
+    .index("by_rating", ["rating"]),
+
+  reviewVotes: defineTable({
+    reviewId: v.id("reviews"),
+    userId: v.id("users"),
+    voteType: v.union(v.literal("up"), v.literal("down")),
+  })
+    .index("by_review", ["reviewId"])
+    .index("by_user_and_review", ["userId", "reviewId"]),
+
   // App settings for admin configuration
   appSettings: defineTable({
     key: v.string(), // e.g., "title", "favicon", "colorScheme"

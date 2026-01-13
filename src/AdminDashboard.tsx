@@ -1,36 +1,54 @@
-import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { SignOutButton } from "./SignOutButton";
 import { useNavigate } from "react-router-dom";
-import { CategoryManagement } from "./CategoryManagement";
-import { CommentsManagement } from "./components/CommentsManagement";
-import { ActorsManagement } from "./components/ActorsManagement";
-import { DirectorsManagement } from "./components/DirectorsManagement";
-import { GeneralSettings } from "./components/GeneralSettings";
+import { AdminLayout } from "./AdminLayout";
 
 export function AdminDashboard() {
   const navigate = useNavigate();
   const loggedInUser = useQuery(api.auth.loggedInUser);
-  const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Get counts for dashboard stats
+  const categories = useQuery(api.categories.getCategories);
+  const allItems = useQuery(api.items.getAllItemsWithCategories);
+  const allComments = useQuery(api.comments.getAllComments);
+  const allReviews = useQuery(api.reviews.getAllReviews);
+  const allActors = useQuery(api.actors.getAllActors);
+  const allDirectors = useQuery(api.directors.getAllDirectors);
+  const allUsers = useQuery(api.auth.getAllUsers);
+
+  const totalItems = allItems?.reduce((total, category) => total + category.items.length, 0) || 0;
+  const totalComments = allComments?.length || 0;
+  const totalReviews = allReviews?.length || 0;
+  const totalActors = allActors?.length || 0;
+  const totalDirectors = allDirectors?.length || 0;
+  const totalUsers = allUsers?.length || 0;
 
   if (loggedInUser === undefined) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="d-flex align-items-center justify-content-center p-4">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
       </div>
     );
   }
 
   if (!loggedInUser?.profile || loggedInUser.profile.role !== "admin") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#1a1a1a',
+        color: '#fff'
+      }}>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-4">You don't have permission to access the admin dashboard.</p>
+          <h2 className="mb-4">Access Denied</h2>
+          <p className="mb-4">You don't have permission to access the admin dashboard.</p>
           <button 
             onClick={() => navigate('/')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="btn btn-primary"
           >
             Go to Homepage
           </button>
@@ -39,220 +57,237 @@ export function AdminDashboard() {
     );
   }
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case "categories":
-        return <CategoryManagement />;
-      case "comments":
-        return <CommentsManagement />;
-      case "actors":
-        return <ActorsManagement />;
-      case "directors":
-        return <DirectorsManagement />;
-      case "dashboard":
-      default:
-        return <DashboardContent navigate={navigate} />;
-    }
+  const stats = {
+    categories: categories?.length || 0,
+    items: totalItems,
+    comments: totalComments,
+    reviews: totalReviews,
+    actors: totalActors,
+    directors: totalDirectors,
+    users: totalUsers
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md">
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between">
-            <button 
-              onClick={() => navigate('/site')}
-              className="text-xl font-bold text-pink-600 hover:text-pink-700"
-            >
-              Zenma Admin
-            </button>
-            <button 
-              onClick={() => navigate('/site')}
-              className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
-            >
-              View Site
-            </button>
-          </div>
-        </div>
-        
-        <nav className="p-4">
-          <ul className="space-y-2">
-            <li>
-              <button
-                onClick={() => setActiveTab("dashboard")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeTab === "dashboard" 
-                    ? "bg-blue-100 text-blue-700" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setActiveTab("categories")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeTab === "categories" 
-                    ? "bg-blue-100 text-blue-700" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Categories
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setActiveTab("actors")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeTab === "actors" 
-                    ? "bg-blue-100 text-blue-700" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Actors
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setActiveTab("directors")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeTab === "directors" 
-                    ? "bg-blue-100 text-blue-700" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Directors
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => setActiveTab("comments")}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
-                  activeTab === "comments" 
-                    ? "bg-blue-100 text-blue-700" 
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                Comments
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-sm h-16 flex justify-between items-center px-6 border-b">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Admin Dashboard</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Welcome, {loggedInUser.profile.username}
-            </span>
-            <SignOutButton />
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-auto">
-          {renderContent()}
-        </main>
-      </div>
-    </div>
+    <AdminLayout 
+      currentPage="dashboard" 
+      pageTitle="Dashboard" 
+      titleActions={
+        <span className="main__title-stat">Admin Overview</span>
+      }
+    >
+      <DashboardContent 
+        navigate={navigate} 
+        stats={stats}
+      />
+    </AdminLayout>
   );
 }
 
-function DashboardContent({ navigate }: { navigate: (path: string) => void }) {
+function DashboardContent({ 
+  navigate, 
+  stats 
+}: { 
+  navigate: (path: string) => void;
+  stats: {
+    categories: number;
+    items: number;
+    comments: number;
+    reviews: number;
+    actors: number;
+    directors: number;
+    users: number;
+  };
+}) {
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage your platform and users</p>
-      </div>
+    <div className="container-fluid">
+      <div className="row">
+        {/* Stats Cards */}
+        <div className="col-12">
+          <div className="row">
+            {/* Categories Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Categories</span>
+                <p>{stats.categories}</p>
+                <i className="ti ti-category"></i>
+              </div>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {/* Category Management Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Category Management</h3>
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+            {/* Items Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Total Items</span>
+                <p>{stats.items}</p>
+                <i className="ti ti-movie"></i>
+              </div>
+            </div>
+
+            {/* Users Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Users</span>
+                <p>{stats.users}</p>
+                <i className="ti ti-users"></i>
+              </div>
+            </div>
+
+            {/* Comments Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Comments</span>
+                <p>{stats.comments}</p>
+                <i className="ti ti-message"></i>
+              </div>
+            </div>
+
+            {/* Reviews Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Reviews</span>
+                <p>{stats.reviews}</p>
+                <i className="ti ti-star-half-filled"></i>
+              </div>
+            </div>
+
+            {/* Actors Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Actors</span>
+                <p>{stats.actors}</p>
+                <i className="ti ti-user"></i>
+              </div>
+            </div>
+
+            {/* Directors Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Directors</span>
+                <p>{stats.directors}</p>
+                <i className="ti ti-video"></i>
+              </div>
+            </div>
+
+            {/* Settings Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Settings</span>
+                <p>Manage</p>
+                <i className="ti ti-settings"></i>
+              </div>
             </div>
           </div>
-          <p className="text-gray-600 text-sm mb-4">Manage homepage categories and content</p>
-          <button 
-            onClick={() => {}}
-            className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors"
-          >
-            Manage Categories
-          </button>
         </div>
 
-        {/* User Management Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-            <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-              </svg>
+        {/* Quick Actions */}
+        <div className="col-12">
+          <div className="catalog catalog--1">
+            <div className="row">
+              <div className="col-12">
+                <h3 className="catalog__title">Quick Actions</h3>
+              </div>
+            </div>
+            
+            <div className="row">
+              <div className="col-12 col-md-6 col-lg-4">
+                <div className="card" style={{ backgroundColor: '#2b2b2b', border: '1px solid #404040' }}>
+                  <div className="card-body text-center">
+                    <i className="ti ti-category" style={{ fontSize: '2rem', color: '#007bff', marginBottom: '1rem' }}></i>
+                    <h5 className="card-title text-white">Manage Categories</h5>
+                    <p className="card-text text-muted">Create and organize content categories</p>
+                    <button 
+                      onClick={() => navigate('/categories')}
+                      className="btn btn-primary"
+                    >
+                      Go to Categories
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6 col-lg-4">
+                <div className="card" style={{ backgroundColor: '#2b2b2b', border: '1px solid #404040' }}>
+                  <div className="card-body text-center">
+                    <i className="ti ti-user" style={{ fontSize: '2rem', color: '#28a745', marginBottom: '1rem' }}></i>
+                    <h5 className="card-title text-white">Manage Actors</h5>
+                    <p className="card-text text-muted">Add and edit actor profiles</p>
+                    <button 
+                      onClick={() => navigate('/actors')}
+                      className="btn btn-success"
+                    >
+                      Go to Actors
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6 col-lg-4">
+                <div className="card" style={{ backgroundColor: '#2b2b2b', border: '1px solid #404040' }}>
+                  <div className="card-body text-center">
+                    <i className="ti ti-video" style={{ fontSize: '2rem', color: '#ffc107', marginBottom: '1rem' }}></i>
+                    <h5 className="card-title text-white">Manage Directors</h5>
+                    <p className="card-text text-muted">Add and edit director profiles</p>
+                    <button 
+                      onClick={() => navigate('/directors')}
+                      className="btn btn-warning"
+                    >
+                      Go to Directors
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6 col-lg-4">
+                <div className="card" style={{ backgroundColor: '#2b2b2b', border: '1px solid #404040' }}>
+                  <div className="card-body text-center">
+                    <i className="ti ti-message" style={{ fontSize: '2rem', color: '#17a2b8', marginBottom: '1rem' }}></i>
+                    <h5 className="card-title text-white">Manage Comments</h5>
+                    <p className="card-text text-muted">Moderate user comments</p>
+                    <button 
+                      onClick={() => navigate('/comments')}
+                      className="btn btn-info"
+                    >
+                      Go to Comments
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6 col-lg-4">
+                <div className="card" style={{ backgroundColor: '#2b2b2b', border: '1px solid #404040' }}>
+                  <div className="card-body text-center">
+                    <i className="ti ti-star-half-filled" style={{ fontSize: '2rem', color: '#fd7e14', marginBottom: '1rem' }}></i>
+                    <h5 className="card-title text-white">Manage Reviews</h5>
+                    <p className="card-text text-muted">Moderate user reviews</p>
+                    <button 
+                      onClick={() => navigate('/reviews')}
+                      className="btn btn-warning"
+                    >
+                      Go to Reviews
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6 col-lg-4">
+                <div className="card" style={{ backgroundColor: '#2b2b2b', border: '1px solid #404040' }}>
+                  <div className="card-body text-center">
+                    <i className="ti ti-settings" style={{ fontSize: '2rem', color: '#6c757d', marginBottom: '1rem' }}></i>
+                    <h5 className="card-title text-white">Settings</h5>
+                    <p className="card-text text-muted">Configure app settings</p>
+                    <button 
+                      onClick={() => navigate('/settings')}
+                      className="btn btn-secondary"
+                    >
+                      Go to Settings
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-          <p className="text-gray-600 text-sm mb-4">View and manage all registered users</p>
-          <button className="w-full bg-pink-600 text-white py-2 px-4 rounded-md hover:bg-pink-700 transition-colors">
-            Manage Users
-          </button>
-        </div>
-
-        {/* Content Management Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Content Management</h3>
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-gray-600 text-sm mb-4">Manage all pages and content</p>
-          <button 
-            onClick={() => navigate('/admin')}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Manage Content
-          </button>
-        </div>
-
-        {/* Analytics Card */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Analytics</h3>
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-gray-600 text-sm mb-4">View platform statistics</p>
-          <button className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
-            View Analytics
-          </button>
-        </div>
-      </div>
-
-      {/* General Settings */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">General Settings</h3>
-        </div>
-        <div className="p-6">
-          <GeneralSettings />
         </div>
       </div>
     </div>
   );
 }
+

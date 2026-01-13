@@ -90,3 +90,42 @@ export const checkUsernameAvailable = query({
     return !existingProfile;
   },
 });
+
+// Admin: Get all users
+export const getAllUsers = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be logged in");
+    }
+
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (userProfile?.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+
+    const users = await ctx.db.query("users").collect();
+    
+    // Get profiles for each user
+    const usersWithProfiles = await Promise.all(
+      users.map(async (user) => {
+        const profile = await ctx.db
+          .query("userProfiles")
+          .withIndex("by_user", (q) => q.eq("userId", user._id))
+          .first();
+        
+        return {
+          ...user,
+          profile,
+        };
+      })
+    );
+
+    return usersWithProfiles;
+  },
+});

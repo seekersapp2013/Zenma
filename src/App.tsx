@@ -3,6 +3,14 @@ import { Toaster } from "sonner";
 import { DynamicHomePage } from "./DynamicHomePage";
 import { Admin } from "./Admin";
 import { AdminDashboard } from "./AdminDashboard";
+import { CategoryManagement } from "./CategoryManagement";
+import { Users } from "./Users";
+import { Settings } from "./Settings";
+import { Catalog } from "./Catalog";
+import { Actors } from "./Actors";
+import { Directors } from "./Directors";
+import { Comments } from "./Comments";
+import { Reviews } from "./Reviews";
 import { UserOnboarding } from "./UserOnboarding";
 import { PageView } from "./PageView";
 import { ItemDetails } from "./ItemDetails";
@@ -24,7 +32,16 @@ export default function App() {
         <Route path="/site" element={<DynamicHomePage />} />
         <Route path="/login" element={<SignInForm />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/dashboard" element={<AdminDashboardRoute />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
+        <Route path="/categories" element={<AdminRoute><CategoryManagement /></AdminRoute>} />
+        <Route path="/catalog" element={<AdminRoute><Catalog /></AdminRoute>} />
+        <Route path="/actors" element={<AdminRoute><Actors /></AdminRoute>} />
+        <Route path="/directors" element={<AdminRoute><Directors /></AdminRoute>} />
+        <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
+        <Route path="/comments" element={<AdminRoute><Comments /></AdminRoute>} />
+        <Route path="/reviews" element={<AdminRoute><Reviews /></AdminRoute>} />
+        <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
         <Route path="/actor/:slug" element={<Actor />} />
         <Route path="/actor" element={<Actor />} />
         <Route path="/director/:slug" element={<Director />} />
@@ -67,6 +84,19 @@ function AdminDashboardRoute() {
     <>
       <Authenticated>
         <AdminDashboard />
+      </Authenticated>
+      <Unauthenticated>
+        <SignInForm />
+      </Unauthenticated>
+    </>
+  );
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <Authenticated>
+        {children}
       </Authenticated>
       <Unauthenticated>
         <SignInForm />

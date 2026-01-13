@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { ItemWizard } from "./ItemWizard";
+import { AdminLayout } from "./AdminLayout";
 import {
   DndContext,
   closestCenter,
@@ -44,11 +45,57 @@ export function CategoryManagement() {
   const categories = useQuery(api.categories.getCategories);
   const createCategory = useMutation(api.categories.createCategory);
   const deleteCategory = useMutation(api.categories.deleteCategory);
-  const updateCategory = useMutation(api.categories.updateCategory);
   const updateCategoryOrder = useMutation(api.categories.updateCategoryOrder);
-  const createItem = useMutation(api.items.createItem);
-  const updateItem = useMutation(api.items.updateItem);
   const deleteItem = useMutation(api.items.deleteItem);
+
+  // Add custom CSS for dropdown and form elements
+  useEffect(() => {
+    const customCSS = `
+      .sign__input select {
+        background-color: #2b2b2b !important;
+        color: #fff !important;
+        border-color: #404040 !important;
+      }
+      .sign__input select option {
+        background-color: #2b2b2b !important;
+        color: #fff !important;
+      }
+      /* Custom scrollbar for items dropdown */
+      .items-dropdown::-webkit-scrollbar {
+        width: 8px;
+      }
+      .items-dropdown::-webkit-scrollbar-track {
+        background: #1a1a1a;
+        border-radius: 4px;
+      }
+      .items-dropdown::-webkit-scrollbar-thumb {
+        background: #404040;
+        border-radius: 4px;
+      }
+      .items-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      /* Firefox scrollbar */
+      .items-dropdown {
+        scrollbar-width: thin;
+        scrollbar-color: #404040 #1a1a1a;
+      }
+    `;
+    
+    const styleElement = document.createElement('style');
+    styleElement.textContent = customCSS;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      // Remove custom styles on cleanup
+      const customStyle = document.querySelector('style');
+      if (customStyle && customStyle.textContent?.includes('items-dropdown')) {
+        customStyle.remove();
+      }
+    };
+  }, []);
+
+
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -128,79 +175,158 @@ export function CategoryManagement() {
 
   if (categories === undefined) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="d-flex align-items-center justify-content-center p-4">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
-        <button
+    <AdminLayout 
+      currentPage="categories" 
+      pageTitle="Categories" 
+      totalCount={categories?.length}
+      titleActions={
+        <button 
           onClick={() => setShowCategoryForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="main__title-link main__title-link--wrap"
         >
           Add Category
         </button>
+      }
+    >
+      {/* Categories Table */}
+      <div className="catalog catalog--1">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={categories?.map(c => c._id) || []}
+            strategy={verticalListSortingStrategy}
+          >
+            <table className="catalog__table">
+              <thead>
+                <tr>
+                  <th>ORDER</th>
+                  <th>TITLE</th>
+                  <th>ITEMS COUNT</th>
+                  <th>CREATED DATE</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories?.map((category, index) => (
+                  <SortableCategoryRow
+                    key={category._id}
+                    category={category}
+                    index={index}
+                    onDelete={() => deleteCategory({ categoryId: category._id })}
+                    onAddItem={() => setShowItemWizard(category._id)}
+                    onEditItem={(item) => {
+                      setEditingItem({
+                        itemId: item._id,
+                        categoryId: category._id,
+                        data: {
+                          title: item.title,
+                          imageId: item.imageId,
+                          genres: item.genres,
+                          description: item.description || "",
+                          director: item.director || "",
+                          cast: item.cast || [],
+                          premiereYear: item.premiereYear || undefined,
+                          runningTime: item.runningTime || undefined,
+                          country: item.country || "",
+                          rating: item.rating || undefined,
+                          posterImageId: item.posterImageId || undefined,
+                          posterImageUrl: item.posterImageUrl || undefined,
+                          videoSources: item.videoSources || [],
+                          captions: item.captions || [],
+                        }
+                      });
+                      setShowItemWizard(category._id);
+                    }}
+                    onDeleteItem={(itemId) => deleteItem({ itemId })}
+                    formatTitle={formatTitle}
+                    getTypeDescription={getTypeDescription}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </SortableContext>
+        </DndContext>
       </div>
 
       {/* Category Form Modal */}
       {showCategoryForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Create New Category</h2>
-            <form onSubmit={handleCreateCategory}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Type
-                </label>
-                <select
-                  value={categoryForm.type}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, type: e.target.value as any }))}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="featured">Featured (Hero Carousel)</option>
-                  <option value="full">Full (Grid Layout)</option>
-                  <option value="short">Short (Horizontal Carousel)</option>
-                </select>
-                <p className="text-sm text-gray-500 mt-1">
-                  {getTypeDescription(categoryForm.type)}
-                </p>
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal__content">
+                <form onSubmit={handleCreateCategory} className="modal__form">
+                  <h4 className="modal__title">Create New Category</h4>
+                  
+                  <div className="row">
+                    <div className="col-12">
+                      <div className="sign__group">
+                        <label className="sign__label">Type</label>
+                        <select
+                          value={categoryForm.type}
+                          onChange={(e) => setCategoryForm(prev => ({ ...prev, type: e.target.value as any }))}
+                          className="sign__input"
+                          style={{
+                            backgroundColor: '#2b2b2b',
+                            color: '#ffffff',
+                            border: '1px solid #404040',
+                            borderRadius: '4px'
+                          }}
+                        >
+                          <option value="featured" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Featured (Hero Carousel)</option>
+                          <option value="full" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Full (Grid Layout)</option>
+                          <option value="short" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Short (Horizontal Carousel)</option>
+                        </select>
+                        <small className="form-text text-muted">
+                          {getTypeDescription(categoryForm.type)}
+                        </small>
+                      </div>
+                    </div>
+                    
+                    <div className="col-12">
+                      <div className="sign__group">
+                        <label className="sign__label">Title</label>
+                        <input
+                          type="text"
+                          value={categoryForm.title}
+                          onChange={(e) => setCategoryForm(prev => ({ ...prev, title: e.target.value }))}
+                          placeholder="e.g., NEW OF THIS SEASON"
+                          className="sign__input"
+                          required
+                        />
+                        <small className="form-text text-muted">
+                          Use &lt;b&gt;word&lt;/b&gt; to make words bold
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal__btns">
+                    <button className="modal__btn modal__btn--apply" type="submit">
+                      <span>Create Category</span>
+                    </button>
+                    <button 
+                      className="modal__btn modal__btn--dismiss" 
+                      type="button" 
+                      onClick={() => setShowCategoryForm(false)}
+                    >
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                </form>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={categoryForm.title}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g., NEW OF THIS SEASON"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Use &lt;b&gt;word&lt;/b&gt; to make words bold
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Create Category
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCategoryForm(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -209,67 +335,19 @@ export function CategoryManagement() {
       {showItemWizard && (
         <ItemWizard
           categoryId={showItemWizard}
-          editingItem={editingItem?.itemId || null}
+          editingItem={editingItem?.itemId || undefined}
           initialData={editingItem?.data}
           onClose={handleWizardClose}
           onSuccess={handleWizardSuccess}
         />
       )}
-
-      {/* Categories List with Drag and Drop */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={categories.map(c => c._id)}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className="space-y-6">
-            {categories.map((category) => (
-              <SortableCategoryCard
-                key={category._id}
-                category={category}
-                onDelete={() => deleteCategory({ categoryId: category._id })}
-                onAddItem={() => setShowItemWizard(category._id)}
-                onEditItem={(item) => {
-                  setEditingItem({
-                    itemId: item._id,
-                    categoryId: category._id,
-                    data: {
-                      title: item.title,
-                      imageId: item.imageId,
-                      genres: item.genres,
-                      description: item.description || "",
-                      director: item.director || "",
-                      cast: item.cast || [],
-                      premiereYear: item.premiereYear || null,
-                      runningTime: item.runningTime || null,
-                      country: item.country || "",
-                      rating: item.rating || null,
-                      posterImageId: item.posterImageId || null,
-                      posterImageUrl: item.posterImageUrl || "",
-                      videoSources: item.videoSources || [],
-                      captions: item.captions || [],
-                    }
-                  });
-                  setShowItemWizard(category._id);
-                }}
-                onDeleteItem={(itemId) => deleteItem({ itemId })}
-                formatTitle={formatTitle}
-                getTypeDescription={getTypeDescription}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-    </div>
+    </AdminLayout>
   );
 }
 
-function SortableCategoryCard({ 
+function SortableCategoryRow({ 
   category, 
+  index,
   onDelete, 
   onAddItem, 
   onEditItem, 
@@ -278,6 +356,7 @@ function SortableCategoryCard({
   getTypeDescription 
 }: {
   category: any;
+  index: number;
   onDelete: () => void;
   onAddItem: () => void;
   onEditItem: (item: any) => void;
@@ -299,93 +378,192 @@ function SortableCategoryCard({
   };
 
   const items = useQuery(api.items.getItemsByCategory, { categoryId: category._id });
+  const [showItems, setShowItems] = useState(false);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="bg-white rounded-lg shadow-md border border-gray-200 p-6"
-    >
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <button
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M7 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM17 14a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
-            </svg>
-          </button>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {formatTitle(category.title)}
-            </h3>
-            <p className="text-sm text-gray-500 capitalize">
-              {category.type} - {getTypeDescription(category.type)}
-            </p>
+    <>
+      <tr ref={setNodeRef} style={style}>
+        <td>
+          <div className="catalog__text d-flex align-items-center">
+            <button
+              {...attributes}
+              {...listeners}
+              className="btn btn-sm btn-outline-secondary me-2"
+              style={{ cursor: 'grab' }}
+            >
+              <i className="ti ti-grip-vertical"></i>
+            </button>
+            {index + 1}
           </div>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={onAddItem}
-            className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm"
-          >
-            Add Item
-          </button>
-          <button
-            onClick={onDelete}
-            className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition-colors text-sm"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-
-      {items === undefined ? (
-        <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-        </div>
-      ) : items.length === 0 ? (
-        <p className="text-gray-500 text-center py-4">No items in this category</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => (
-            <div key={item._id} className="border border-gray-200 rounded-md p-3">
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="w-full h-32 object-cover rounded-md mb-2"
-              />
-              <h4 className="font-medium text-gray-900 mb-1">{item.title}</h4>
-              <div className="flex flex-wrap gap-1 mb-2">
-                {item.genres.map((genre) => (
-                  <span
-                    key={genre}
-                    className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs"
-                  >
-                    {genre}
-                  </span>
-                ))}
+        </td>
+        <td>
+          <div className="catalog__text">
+            <button 
+              onClick={() => setShowItems(!showItems)}
+              className="btn btn-link p-0 text-start"
+              style={{ textDecoration: 'none' }}
+            >
+              {formatTitle(category.title)}
+            </button>
+          </div>
+        </td>
+        <td>
+          <div className="catalog__text">
+            {items === undefined ? (
+              <div className="spinner-border spinner-border-sm" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onEditItem(item)}
-                  className="bg-blue-600 text-white px-2 py-1 rounded-md hover:bg-blue-700 transition-colors text-xs"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onDeleteItem(item._id)}
-                  className="bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 transition-colors text-xs"
-                >
-                  Delete
-                </button>
-              </div>
+            ) : (
+              items.length
+            )}
+          </div>
+        </td>
+        <td>
+          <div className="catalog__text">
+            {formatDate(category._creationTime)}
+          </div>
+        </td>
+        <td>
+          <div className="catalog__btns">
+            <button 
+              type="button" 
+              className="catalog__btn catalog__btn--view"
+              onClick={() => setShowItems(!showItems)}
+              title="View Items"
+            >
+              <i className="ti ti-eye"></i>
+            </button>
+            <button 
+              type="button" 
+              className="catalog__btn catalog__btn--edit"
+              onClick={onAddItem}
+              title="Add Item"
+            >
+              <i className="ti ti-plus"></i>
+            </button>
+            <button 
+              type="button" 
+              className="catalog__btn catalog__btn--delete" 
+              onClick={onDelete}
+              title="Delete Category"
+            >
+              <i className="ti ti-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      
+      {/* Items Row - Expandable */}
+      {showItems && (
+        <tr>
+          <td colSpan={5}>
+            <div 
+              className="p-3 items-dropdown"
+              style={{
+                backgroundColor: '#2b2b2b',
+                borderTop: '1px solid #404040',
+                maxHeight: '400px',
+                overflowY: 'auto'
+              }}
+            >
+              <h6 className="mb-3 text-white">Items in this category:</h6>
+              {items === undefined ? (
+                <div className="text-center py-3">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : items.length === 0 ? (
+                <p className="text-muted text-center py-3">No items in this category</p>
+              ) : (
+                <div className="row g-3">
+                  {items.map((item) => (
+                    <div key={item._id} className="col-md-4 col-lg-3">
+                      <div 
+                        className="card h-100"
+                        style={{
+                          backgroundColor: '#1a1a1a',
+                          border: '1px solid #404040',
+                          borderRadius: '8px'
+                        }}
+                      >
+                        <img
+                          src={item.imageUrl || '/admin/img/placeholder.jpg'}
+                          alt={item.title}
+                          className="card-img-top"
+                          style={{ 
+                            height: '150px', 
+                            objectFit: 'cover',
+                            borderTopLeftRadius: '8px',
+                            borderTopRightRadius: '8px'
+                          }}
+                        />
+                        <div className="card-body p-2">
+                          <h6 
+                            className="card-title mb-1 text-white" 
+                            style={{ fontSize: '0.875rem' }}
+                          >
+                            {item.title}
+                          </h6>
+                          <div className="mb-2">
+                            {item.genres.slice(0, 2).map((genre) => (
+                              <span
+                                key={genre}
+                                className="badge me-1"
+                                style={{ 
+                                  fontSize: '0.7rem',
+                                  backgroundColor: '#404040',
+                                  color: '#fff'
+                                }}
+                              >
+                                {genre}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="d-flex gap-1">
+                            <button
+                              onClick={() => onEditItem(item)}
+                              className="btn btn-sm flex-fill"
+                              style={{ 
+                                fontSize: '0.75rem',
+                                backgroundColor: '#007bff',
+                                borderColor: '#007bff',
+                                color: '#fff'
+                              }}
+                            >
+                              <i className="ti ti-edit"></i>
+                            </button>
+                            <button
+                              onClick={() => onDeleteItem(item._id)}
+                              className="btn btn-sm flex-fill"
+                              style={{ 
+                                fontSize: '0.75rem',
+                                backgroundColor: '#dc3545',
+                                borderColor: '#dc3545',
+                                color: '#fff'
+                              }}
+                            >
+                              <i className="ti ti-trash"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
+          </td>
+        </tr>
       )}
-    </div>
+    </>
   );
 }

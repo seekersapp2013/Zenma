@@ -244,3 +244,25 @@ export const deleteActor = mutation({
     return args.id;
   },
 });
+
+// Admin: Get all actors
+export const getAllActors = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be logged in");
+    }
+
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (userProfile?.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+
+    return await ctx.db.query("actors").collect();
+  },
+});

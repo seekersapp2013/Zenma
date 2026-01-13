@@ -2,11 +2,49 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { useNavigate } from "react-router-dom";
+import { AdminLayout } from "../AdminLayout";
 
 export function DirectorsManagement() {
+  const navigate = useNavigate();
+  const loggedInUser = useQuery(api.auth.loggedInUser);
   const directors = useQuery(api.directors.getDirectors);
   const [showForm, setShowForm] = useState(false);
   const [editingDirector, setEditingDirector] = useState<any>(null);
+
+  if (loggedInUser === undefined) {
+    return (
+      <div className="d-flex align-items-center justify-content-center p-4">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loggedInUser?.profile || loggedInUser.profile.role !== "admin") {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#1a1a1a',
+        color: '#fff'
+      }}>
+        <div className="text-center">
+          <h2 className="mb-4">Access Denied</h2>
+          <p className="mb-4">You don't have permission to access the admin dashboard.</p>
+          <button 
+            onClick={() => navigate('/')}
+            className="btn btn-primary"
+          >
+            Go to Homepage
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddDirector = () => {
     setEditingDirector(null);
@@ -25,27 +63,30 @@ export function DirectorsManagement() {
 
   if (directors === undefined) {
     return (
-      <div className="p-6">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <AdminLayout currentPage="directors" pageTitle="Directors">
+        <div className="d-flex align-items-center justify-content-center p-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Directors Management</h1>
-          <p className="text-gray-600">Manage directors and their information</p>
-        </div>
-        <button
+    <AdminLayout 
+      currentPage="directors" 
+      pageTitle="Directors" 
+      totalCount={directors.length}
+      titleActions={
+        <button 
           onClick={handleAddDirector}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="main__title-link main__title-link--wrap"
         >
-          Add New Director
+          Add Director
         </button>
-      </div>
-
+      }
+    >
       {showForm && (
         <DirectorForm
           director={editingDirector}
@@ -53,47 +94,36 @@ export function DirectorsManagement() {
         />
       )}
 
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Director
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Career
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Age
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Movies
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {directors.map((director) => (
-                <DirectorRow
-                  key={director._id}
-                  director={director}
-                  onEdit={() => handleEditDirector(director)}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Directors Table */}
+      <div className="catalog catalog--1">
+        <table className="catalog__table">
+          <thead>
+            <tr>
+              <th>DIRECTOR</th>
+              <th>CAREER</th>
+              <th>AGE</th>
+              <th>MOVIES</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {directors.map((director) => (
+              <DirectorRow
+                key={director._id}
+                director={director}
+                onEdit={() => handleEditDirector(director)}
+              />
+            ))}
+          </tbody>
+        </table>
         
         {directors.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-500">No directors found. Add your first director!</p>
+            <p className="text-muted">No directors found. Add your first director!</p>
           </div>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }
 
@@ -117,52 +147,52 @@ function DirectorRow({ director, onEdit }: { director: any; onEdit: () => void }
 
   return (
     <tr>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10">
+      <td>
+        <div className="catalog__user">
+          <div className="catalog__avatar">
             {director.imageUrl ? (
-              <img
-                className="h-10 w-10 rounded-full object-cover"
-                src={director.imageUrl}
-                alt={director.name}
-              />
+              <img src={director.imageUrl} alt={director.name} />
             ) : (
-              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-gray-600 font-medium">
-                  {director.name.charAt(0)}
-                </span>
+              <div className="catalog__avatar-placeholder">
+                {director.name.charAt(0)}
               </div>
             )}
           </div>
-          <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">{director.name}</div>
-            <div className="text-sm text-gray-500">{director.placeOfBirth}</div>
+          <div className="catalog__meta">
+            <h3>{director.name}</h3>
+            <span>{director.placeOfBirth}</span>
           </div>
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {director.career}
+      <td>
+        <div className="catalog__text">{director.career}</div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {director.age || 'N/A'}
+      <td>
+        <div className="catalog__text">{director.age || 'N/A'}</div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {director.totalMovies || 'N/A'}
+      <td>
+        <div className="catalog__text">{director.totalMovies || 'N/A'}</div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        <button
-          onClick={onEdit}
-          className="text-blue-600 hover:text-blue-900 mr-4"
-        >
-          Edit
-        </button>
-        <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="text-red-600 hover:text-red-900 disabled:opacity-50"
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
-        </button>
+      <td>
+        <div className="catalog__btns">
+          <button 
+            type="button" 
+            className="catalog__btn catalog__btn--edit"
+            onClick={onEdit}
+            title="Edit Director"
+          >
+            <i className="ti ti-edit"></i>
+          </button>
+          <button 
+            type="button" 
+            className="catalog__btn catalog__btn--delete" 
+            onClick={handleDelete}
+            disabled={isDeleting}
+            title="Delete Director"
+          >
+            <i className="ti ti-trash"></i>
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -258,242 +288,236 @@ function DirectorForm({ director, onClose }: { director?: any; onClose: () => vo
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">
-            {director ? "Edit Director" : "Add New Director"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-        </div>
+    <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1}>
+      <div className="modal-dialog modal-dialog-centered modal-lg">
+        <div className="modal-content">
+          <div className="modal__content">
+            <form onSubmit={handleSubmit} className="modal__form">
+              <h4 className="modal__title">
+                {director ? "Edit Director" : "Add New Director"}
+              </h4>
+              
+              <div className="row">
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="sign__input"
+                      required
+                    />
+                  </div>
+                </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Career *</label>
+                    <input
+                      type="text"
+                      name="career"
+                      value={formData.career}
+                      onChange={handleInputChange}
+                      className="sign__input"
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Career *
-              </label>
-              <input
-                type="text"
-                name="career"
-                value={formData.career}
-                onChange={handleInputChange}
-                required
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Height</label>
+                    <input
+                      type="text"
+                      name="height"
+                      value={formData.height}
+                      onChange={handleInputChange}
+                      placeholder="e.g., 1.75 m"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Height
-              </label>
-              <input
-                type="text"
-                name="height"
-                value={formData.height}
-                onChange={handleInputChange}
-                placeholder="e.g., 1.75 m"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Date of Birth</label>
+                    <input
+                      type="text"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      placeholder="e.g., March 30, 1970"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date of Birth
-              </label>
-              <input
-                type="text"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleInputChange}
-                placeholder="e.g., March 30, 1970"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Place of Birth</label>
+                    <input
+                      type="text"
+                      name="placeOfBirth"
+                      value={formData.placeOfBirth}
+                      onChange={handleInputChange}
+                      placeholder="e.g., London, England, United Kingdom"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Place of Birth
-              </label>
-              <input
-                type="text"
-                name="placeOfBirth"
-                value={formData.placeOfBirth}
-                onChange={handleInputChange}
-                placeholder="e.g., London, England, United Kingdom"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Age</label>
+                    <input
+                      type="number"
+                      name="age"
+                      value={formData.age}
+                      onChange={handleInputChange}
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Age
-              </label>
-              <input
-                type="number"
-                name="age"
-                value={formData.age}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Zodiac</label>
+                    <input
+                      type="text"
+                      name="zodiac"
+                      value={formData.zodiac}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Aries"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Zodiac
-              </label>
-              <input
-                type="text"
-                name="zodiac"
-                value={formData.zodiac}
-                onChange={handleInputChange}
-                placeholder="e.g., Aries"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-6">
+                  <div className="sign__group">
+                    <label className="sign__label">Total Movies</label>
+                    <input
+                      type="number"
+                      name="totalMovies"
+                      value={formData.totalMovies}
+                      onChange={handleInputChange}
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total Movies
-              </label>
-              <input
-                type="number"
-                name="totalMovies"
-                value={formData.totalMovies}
-                onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+                <div className="col-12">
+                  <div className="sign__group">
+                    <label className="sign__label">Genres (comma-separated)</label>
+                    <input
+                      type="text"
+                      name="genres"
+                      value={formData.genres}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Action, Sci-Fi, Thriller"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Genres (comma-separated)
-            </label>
-            <input
-              type="text"
-              name="genres"
-              value={formData.genres}
-              onChange={handleInputChange}
-              placeholder="e.g., Action, Sci-Fi, Thriller"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+                <div className="col-12 col-md-4">
+                  <div className="sign__group">
+                    <label className="sign__label">First Movie</label>
+                    <input
+                      type="text"
+                      name="firstMovie"
+                      value={formData.firstMovie}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Duel (1971)"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                First Movie
-              </label>
-              <input
-                type="text"
-                name="firstMovie"
-                value={formData.firstMovie}
-                onChange={handleInputChange}
-                placeholder="e.g., Duel (1971)"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-4">
+                  <div className="sign__group">
+                    <label className="sign__label">Last Movie</label>
+                    <input
+                      type="text"
+                      name="lastMovie"
+                      value={formData.lastMovie}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Indiana Jones 5 (2023)"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Last Movie
-              </label>
-              <input
-                type="text"
-                name="lastMovie"
-                value={formData.lastMovie}
-                onChange={handleInputChange}
-                placeholder="e.g., Indiana Jones 5 (2023)"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div className="col-12 col-md-4">
+                  <div className="sign__group">
+                    <label className="sign__label">Best Movie</label>
+                    <input
+                      type="text"
+                      name="bestMovie"
+                      value={formData.bestMovie}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Jurassic Park"
+                      className="sign__input"
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Best Movie
-              </label>
-              <input
-                type="text"
-                name="bestMovie"
-                value={formData.bestMovie}
-                onChange={handleInputChange}
-                placeholder="e.g., Jurassic Park"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+                <div className="col-12">
+                  <div className="sign__group">
+                    <label className="sign__label">Profile Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="sign__input"
+                    />
+                    {director?.imageUrl && (
+                      <div className="mt-2">
+                        <img
+                          src={director.imageUrl}
+                          alt="Current"
+                          style={{ height: '80px', width: '80px', objectFit: 'cover', borderRadius: '4px' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Profile Image
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            {director?.imageUrl && (
-              <div className="mt-2">
-                <img
-                  src={director.imageUrl}
-                  alt="Current"
-                  className="h-20 w-20 object-cover rounded-md"
-                />
+                <div className="col-12">
+                  <div className="sign__group">
+                    <label className="sign__label">Biography</label>
+                    <textarea
+                      name="biography"
+                      value={formData.biography}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className="sign__textarea"
+                    />
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Biography
-            </label>
-            <textarea
-              name="biography"
-              value={formData.biography}
-              onChange={handleInputChange}
-              rows={4}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              <div className="modal__btns">
+                <button 
+                  className="modal__btn modal__btn--apply" 
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  <span>{isSubmitting ? "Saving..." : (director ? "Update" : "Create")}</span>
+                </button>
+                <button 
+                  className="modal__btn modal__btn--dismiss" 
+                  type="button" 
+                  onClick={onClose}
+                >
+                  <span>Cancel</span>
+                </button>
+              </div>
+            </form>
           </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {isSubmitting ? "Saving..." : (director ? "Update" : "Create")}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

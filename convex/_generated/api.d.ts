@@ -20,6 +20,7 @@ import type * as http from "../http.js";
 import type * as items from "../items.js";
 import type * as migrations from "../migrations.js";
 import type * as pages from "../pages.js";
+import type * as reviews from "../reviews.js";
 import type * as router from "../router.js";
 import type * as seed from "../seed.js";
 import type * as settings from "../settings.js";
@@ -43,6 +44,7 @@ declare const fullApi: ApiFromModules<{
   items: typeof items;
   migrations: typeof migrations;
   pages: typeof pages;
+  reviews: typeof reviews;
   router: typeof router;
   seed: typeof seed;
   settings: typeof settings;
