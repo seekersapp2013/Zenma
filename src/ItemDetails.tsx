@@ -155,6 +155,196 @@ export function ItemDetails() {
         background: #222028 !important;
         height: 100% !important;
       }
+      
+      /* Professional People List Styling */
+      .item__meta-directors,
+      .item__meta-cast {
+        display: block !important;
+        margin-bottom: 1rem;
+      }
+      
+      .item__people-scroll-container {
+        max-height: 200px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        margin-top: 0.5rem;
+        padding-right: 5px;
+        /* Custom scrollbar styling */
+        scrollbar-width: thin;
+        scrollbar-color: #ff1493 #222028;
+      }
+      
+      .item__people-scroll-container::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .item__people-scroll-container::-webkit-scrollbar-track {
+        background: #222028;
+        border-radius: 3px;
+      }
+      
+      .item__people-scroll-container::-webkit-scrollbar-thumb {
+        background: #ff1493;
+        border-radius: 3px;
+      }
+      
+      .item__people-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #d91a72;
+      }
+      
+      .item__people-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        align-items: start;
+        justify-items: center;
+      }
+      
+      .item__person {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        transition: transform 0.2s ease;
+        width: 100%;
+        max-width: 70px;
+      }
+      
+      .item__person:hover {
+        transform: translateY(-2px);
+      }
+      
+      .item__person-avatar-link {
+        display: block;
+        text-decoration: none;
+        margin-bottom: 0.5rem;
+      }
+      
+      .item__person-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+        background: #222028;
+        border: 2px solid #1a191f;
+        transition: border-color 0.2s ease;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .item__person:hover .item__person-avatar {
+        border-color: #ff1493;
+      }
+      
+      .item__person-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      
+      .item__person-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1a191f 0%, #222028 100%);
+        color: #8b8b8b;
+        font-size: 1.2rem;
+      }
+      
+      .item__person-name {
+        font-size: 0.7rem;
+        color: #fff;
+        text-decoration: none;
+        line-height: 1.2;
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+        transition: color 0.2s ease;
+      }
+      
+      .item__person-name:hover {
+        color: #ff1493;
+        text-decoration: none;
+      }
+      
+      /* Responsive adjustments */
+      @media (max-width: 767px) {
+        .item__people-list {
+          gap: 0.5rem;
+        }
+        
+        .item__person {
+          max-width: 65px;
+        }
+        
+        .item__person-avatar {
+          width: 45px;
+          height: 45px;
+        }
+        
+        .item__person-name {
+          font-size: 0.65rem;
+        }
+        
+        .item__people-scroll-container {
+          max-height: 180px;
+        }
+      }
+      
+      @media (max-width: 575px) {
+        .item__people-list {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0.4rem;
+        }
+        
+        .item__person {
+          max-width: 60px;
+        }
+        
+        .item__person-avatar {
+          width: 40px;
+          height: 40px;
+        }
+        
+        .item__person-placeholder {
+          font-size: 1rem;
+        }
+        
+        .item__person-name {
+          font-size: 0.6rem;
+        }
+        
+        .item__people-scroll-container {
+          max-height: 160px;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .item__people-list {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .item__person {
+          max-width: 80px;
+        }
+        
+        .item__person-avatar {
+          width: 45px;
+          height: 45px;
+        }
+        
+        .item__person-name {
+          font-size: 0.65rem;
+        }
+      }
     `;
     document.head.appendChild(style);
 
@@ -568,17 +758,89 @@ export function ItemDetails() {
                   <div className="col-12 col-md-7 col-lg-8 col-xl-6 col-xxl-7">
                     <div className="item__content">
                       <ul className="item__meta">
-                        {item.director && (
-                          <li><span>Director:</span> <a href="actor.html">{item.director}</a></li>
+                        {item.directorsWithDetails && item.directorsWithDetails.length > 0 && (
+                          <li className="item__meta-directors">
+                            <span>Directors:</span>
+                            <div className="item__people-scroll-container">
+                              <div className="item__people-list">
+                                {item.directorsWithDetails.map((director, index) => (
+                                  <div key={director.name} className="item__person">
+                                    <a 
+                                      href={`/director/${director.slug}`} 
+                                      className="item__person-avatar-link"
+                                      title={director.name}
+                                    >
+                                      <div className="item__person-avatar">
+                                        {director.imageUrl ? (
+                                          <img 
+                                            src={director.imageUrl} 
+                                            alt={director.name}
+                                            className="item__person-image"
+                                          />
+                                        ) : (
+                                          <div className="item__person-placeholder">
+                                            <i className="ti ti-user"></i>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </a>
+                                    <a 
+                                      href={`/director/${director.slug}`} 
+                                      className="item__person-name"
+                                      title={director.name}
+                                    >
+                                      {director.name}
+                                    </a>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </li>
                         )}
-                        {item.cast && item.cast.length > 0 && (
-                          <li><span>Cast:</span> 
-                            {item.cast.map((actor, index) => (
-                              <span key={actor}>
-                                <a href="actor.html">{actor}</a>
-                                {index < item.cast!.length - 1 && ' '}
-                              </span>
-                            ))}
+                        {item.castWithDetails && item.castWithDetails.length > 0 && (
+                          <li className="item__meta-cast">
+                            <span>Cast:</span>
+                            <div className="item__people-scroll-container">
+                              <div className="item__people-list">
+                                {item.castWithDetails.map((actor, index) => (
+                                  <div key={`${actor.name}-${actor.castName || index}`} className="item__person">
+                                    <a 
+                                      href={`/actor/${actor.slug}`} 
+                                      className="item__person-avatar-link"
+                                      title={`${actor.name}${actor.castName ? ` as ${actor.castName}` : ''}`}
+                                    >
+                                      <div className="item__person-avatar">
+                                        {actor.imageUrl ? (
+                                          <img 
+                                            src={actor.imageUrl} 
+                                            alt={actor.name}
+                                            className="item__person-image"
+                                          />
+                                        ) : (
+                                          <div className="item__person-placeholder">
+                                            <i className="ti ti-user"></i>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </a>
+                                    <div className="item__person-info">
+                                      {actor.castName && (
+                                        <div className="item__person-character" title={`Character: ${actor.castName}`}>
+                                          {actor.castName}
+                                        </div>
+                                      )}
+                                      <a 
+                                        href={`/actor/${actor.slug}`} 
+                                        className="item__person-name"
+                                        title={actor.name}
+                                      >
+                                        {actor.name}
+                                      </a>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </li>
                         )}
                         <li><span>Genre:</span> 

@@ -50,8 +50,11 @@ const applicationTables = {
     imageId: v.id("_storage"),
     genres: v.array(v.string()),
     description: v.optional(v.string()),
-    director: v.optional(v.string()),
-    cast: v.optional(v.array(v.string())),
+    director: v.optional(v.array(v.string())),
+    cast: v.optional(v.array(v.object({
+      castName: v.string(), // Character/role name in the movie
+      actorName: v.string(), // Real actor name
+    }))),
     premiereYear: v.optional(v.number()),
     runningTime: v.optional(v.number()), // in minutes
     country: v.optional(v.string()),
@@ -60,7 +63,7 @@ const applicationTables = {
     posterImageId: v.optional(v.id("_storage")), // For uploaded files
     posterImageUrl: v.optional(v.string()), // For direct URLs
     videoSources: v.optional(v.array(v.object({
-      videoId: v.optional(v.id("_storage")), // For uploaded files
+      videoId: v.optional(v.union(v.id("_storage"), v.null())), // Allow null for URL-only videos
       url: v.optional(v.string()), // For direct URLs
       quality: v.string(), // e.g., "576p", "720p", "1080p"
       type: v.string(), // e.g., "video/mp4"
@@ -116,6 +119,52 @@ const applicationTables = {
     createdAt: v.number(),
   })
     .index("by_word", ["word"]),
+
+  // Actors table
+  actors: defineTable({
+    name: v.string(),
+    slug: v.string(), // URL-friendly version of name
+    career: v.string(),
+    height: v.optional(v.string()),
+    dateOfBirth: v.optional(v.string()),
+    placeOfBirth: v.optional(v.string()),
+    age: v.optional(v.number()),
+    zodiac: v.optional(v.string()),
+    genres: v.array(v.string()),
+    totalMovies: v.optional(v.number()),
+    firstMovie: v.optional(v.string()),
+    lastMovie: v.optional(v.string()),
+    bestMovie: v.optional(v.string()),
+    imageId: v.optional(v.id("_storage")), // Profile image
+    biography: v.optional(v.string()),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_name", ["name"]),
+
+  // Directors table
+  directors: defineTable({
+    name: v.string(),
+    slug: v.string(), // URL-friendly version of name
+    career: v.string(),
+    height: v.optional(v.string()),
+    dateOfBirth: v.optional(v.string()),
+    placeOfBirth: v.optional(v.string()),
+    age: v.optional(v.number()),
+    zodiac: v.optional(v.string()),
+    genres: v.array(v.string()),
+    totalMovies: v.optional(v.number()),
+    firstMovie: v.optional(v.string()),
+    lastMovie: v.optional(v.string()),
+    bestMovie: v.optional(v.string()),
+    imageId: v.optional(v.id("_storage")), // Profile image
+    biography: v.optional(v.string()),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_name", ["name"]),
 };
 
 export default defineSchema({

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { FileUpload } from "./components/FileUpload";
@@ -10,8 +10,11 @@ interface ItemFormData {
   imageId: Id<"_storage"> | null;
   genres: string[];
   description: string;
-  director: string;
-  cast: string[];
+  director: string[];
+  cast: Array<{
+    castName: string;
+    actorName: string;
+  }>;
   premiereYear: number | null;
   runningTime: number | null;
   country: string;
@@ -47,7 +50,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
     imageId: null,
     genres: [],
     description: "",
-    director: "",
+    director: [],
     cast: [],
     premiereYear: null,
     runningTime: null,
@@ -62,7 +65,8 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
   // Input states for dynamic arrays
   const [genreInput, setGenreInput] = useState("");
-  const [castInput, setCastInput] = useState("");
+  const [directorInput, setDirectorInput] = useState("");
+  const [castInput, setCastInput] = useState({ castName: "", actorName: "" });
   const [videoSourceInput, setVideoSourceInput] = useState({ 
     videoId: null as Id<"_storage"> | null, 
     url: "",
@@ -73,6 +77,10 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
   const createItem = useMutation(api.items.createItem);
   const updateItem = useMutation(api.items.updateItem);
+  
+  // Fetch actors and directors from database
+  const actors = useQuery(api.actors.getActors);
+  const directors = useQuery(api.directors.getDirectors);
 
   const steps = [
     { id: 1, title: "Basic Info", description: "Title, image, and genres" },
@@ -99,20 +107,47 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
     }));
   };
 
-  const addCast = () => {
-    if (castInput.trim() && !itemForm.cast.includes(castInput.trim())) {
+  const addDirector = () => {
+    if (directorInput.trim() && !itemForm.director.includes(directorInput.trim())) {
       setItemForm(prev => ({
         ...prev,
-        cast: [...prev.cast, castInput.trim()]
+        director: [...prev.director, directorInput.trim()]
       }));
-      setCastInput("");
+      setDirectorInput("");
     }
   };
 
-  const removeCast = (actor: string) => {
+  const removeDirector = (director: string) => {
     setItemForm(prev => ({
       ...prev,
-      cast: prev.cast.filter(c => c !== actor)
+      director: prev.director.filter(d => d !== director)
+    }));
+  };
+
+  const addCast = () => {
+    if (castInput.castName.trim() && castInput.actorName.trim()) {
+      // Check if this combination already exists
+      const exists = itemForm.cast.some(c => 
+        c.castName === castInput.castName.trim() && c.actorName === castInput.actorName.trim()
+      );
+      
+      if (!exists) {
+        setItemForm(prev => ({
+          ...prev,
+          cast: [...prev.cast, { 
+            castName: castInput.castName.trim(), 
+            actorName: castInput.actorName.trim() 
+          }]
+        }));
+        setCastInput({ castName: "", actorName: "" });
+      }
+    }
+  };
+
+  const removeCast = (index: number) => {
+    setItemForm(prev => ({
+      ...prev,
+      cast: prev.cast.filter((_, i) => i !== index)
     }));
   };
 
@@ -120,7 +155,10 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
     if ((videoSourceInput.videoId || videoSourceInput.url.trim()) && videoSourceInput.quality.trim()) {
       setItemForm(prev => ({
         ...prev,
-        videoSources: [...prev.videoSources, { ...videoSourceInput }]
+        videoSources: [...prev.videoSources, { 
+          ...videoSourceInput,
+          videoId: videoSourceInput.videoId || null, // Ensure null instead of undefined
+        }]
       }));
       setVideoSourceInput({ videoId: null, url: "", quality: "", type: "video/mp4" });
     }
@@ -175,6 +213,13 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
     try {
       console.log("Submitting item:", itemForm);
       
+      // Process video sources to ensure proper null handling
+      const processedVideoSources = itemForm.videoSources.map(source => ({
+        ...source,
+        videoId: source.videoId || null, // Ensure null instead of undefined
+        url: source.url || undefined,
+      }));
+      
       if (editingItem) {
         await updateItem({
           itemId: editingItem,
@@ -182,7 +227,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
           imageId: itemForm.imageId,
           genres: itemForm.genres,
           description: itemForm.description || undefined,
-          director: itemForm.director || undefined,
+          director: itemForm.director.length > 0 ? itemForm.director : undefined,
           cast: itemForm.cast.length > 0 ? itemForm.cast : undefined,
           premiereYear: itemForm.premiereYear || undefined,
           runningTime: itemForm.runningTime || undefined,
@@ -190,7 +235,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
           rating: itemForm.rating || undefined,
           posterImageId: itemForm.posterImageId || undefined,
           posterImageUrl: itemForm.posterImageUrl || undefined,
-          videoSources: itemForm.videoSources.length > 0 ? itemForm.videoSources : undefined,
+          videoSources: processedVideoSources.length > 0 ? processedVideoSources : undefined,
           captions: itemForm.captions.length > 0 ? itemForm.captions : undefined,
         });
       } else {
@@ -200,7 +245,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
           imageId: itemForm.imageId,
           genres: itemForm.genres,
           description: itemForm.description || undefined,
-          director: itemForm.director || undefined,
+          director: itemForm.director.length > 0 ? itemForm.director : undefined,
           cast: itemForm.cast.length > 0 ? itemForm.cast : undefined,
           premiereYear: itemForm.premiereYear || undefined,
           runningTime: itemForm.runningTime || undefined,
@@ -208,7 +253,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
           rating: itemForm.rating || undefined,
           posterImageId: itemForm.posterImageId || undefined,
           posterImageUrl: itemForm.posterImageUrl || undefined,
-          videoSources: itemForm.videoSources.length > 0 ? itemForm.videoSources : undefined,
+          videoSources: processedVideoSources.length > 0 ? processedVideoSources : undefined,
           captions: itemForm.captions.length > 0 ? itemForm.captions : undefined,
         });
       }
@@ -323,53 +368,96 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Director
+                Directors
               </label>
-              <input
-                type="text"
-                value={itemForm.director}
-                onChange={(e) => setItemForm(prev => ({ ...prev, director: e.target.value }))}
-                placeholder="Director name"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="flex gap-2 mb-2">
+                <select
+                  value={directorInput}
+                  onChange={(e) => setDirectorInput(e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a director</option>
+                  {directors?.map((director) => (
+                    <option key={director._id} value={director.name}>
+                      {director.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={addDirector}
+                  disabled={!directorInput}
+                  className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {itemForm.director.map((director) => (
+                  <span
+                    key={director}
+                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm flex items-center gap-1"
+                  >
+                    {director}
+                    <button
+                      type="button"
+                      onClick={() => removeDirector(director)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Cast
               </label>
-              <div className="flex gap-2 mb-2">
+              <div className="grid grid-cols-12 gap-2 mb-2">
                 <input
                   type="text"
-                  value={castInput}
-                  onChange={(e) => setCastInput(e.target.value)}
-                  placeholder="Add cast member"
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCast())}
+                  value={castInput.castName}
+                  onChange={(e) => setCastInput(prev => ({ ...prev, castName: e.target.value }))}
+                  placeholder="Cast Name (Character/Role)"
+                  className="col-span-5 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <select
+                  value={castInput.actorName}
+                  onChange={(e) => setCastInput(prev => ({ ...prev, actorName: e.target.value }))}
+                  className="col-span-6 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select an actor</option>
+                  {actors?.map((actor) => (
+                    <option key={actor._id} value={actor.name}>
+                      {actor.name}
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   onClick={addCast}
-                  className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
+                  disabled={!castInput.castName.trim() || !castInput.actorName.trim()}
+                  className="col-span-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add
+                  +
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {itemForm.cast.map((actor) => (
-                  <span
-                    key={actor}
-                    className="bg-purple-100 text-purple-800 px-2 py-1 rounded-md text-sm flex items-center gap-1"
-                  >
-                    {actor}
+              <div className="space-y-2">
+                {itemForm.cast.map((castMember, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-purple-50 rounded-md">
+                    <span className="flex-1 text-sm">
+                      <strong>{castMember.castName}</strong> - {castMember.actorName}
+                    </span>
                     <button
                       type="button"
-                      onClick={() => removeCast(actor)}
+                      onClick={() => removeCast(index)}
                       className="text-purple-600 hover:text-purple-800"
                     >
                       ×
                     </button>
-                  </span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -455,7 +543,6 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                 onUrlComplete={(url) => setItemForm(prev => ({ ...prev, posterImageUrl: url, posterImageId: null }))}
                 accept="image/*"
                 fileType="image"
-                maxSize={20}
               />
             </div>
 
@@ -471,7 +558,6 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                     onUrlComplete={(url) => setVideoSourceInput(prev => ({ ...prev, url: url, videoId: null }))}
                     accept="video/*"
                     fileType="video"
-                    maxSize={200}
                   />
                 </div>
                 <input
@@ -597,14 +683,14 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                   <strong>Description:</strong> {itemForm.description.substring(0, 100)}...
                 </div>
               )}
-              {itemForm.director && (
+              {itemForm.director.length > 0 && (
                 <div>
-                  <strong>Director:</strong> {itemForm.director}
+                  <strong>Directors:</strong> {itemForm.director.join(", ")}
                 </div>
               )}
               {itemForm.cast.length > 0 && (
                 <div>
-                  <strong>Cast:</strong> {itemForm.cast.join(", ")}
+                  <strong>Cast:</strong> {itemForm.cast.map(c => `${c.castName} (${c.actorName})`).join(", ")}
                 </div>
               )}
               {itemForm.premiereYear && (

@@ -5,6 +5,8 @@ import { SignOutButton } from "./SignOutButton";
 import { useNavigate } from "react-router-dom";
 import { CategoryManagement } from "./CategoryManagement";
 import { CommentsManagement } from "./components/CommentsManagement";
+import { ActorsManagement } from "./components/ActorsManagement";
+import { DirectorsManagement } from "./components/DirectorsManagement";
 import { GeneralSettings } from "./components/GeneralSettings";
 
 export function AdminDashboard() {
@@ -43,6 +45,10 @@ export function AdminDashboard() {
         return <CategoryManagement />;
       case "comments":
         return <CommentsManagement />;
+      case "actors":
+        return <ActorsManagement />;
+      case "directors":
+        return <DirectorsManagement />;
       case "dashboard":
       default:
         return <DashboardContent navigate={navigate} />;
@@ -94,6 +100,30 @@ export function AdminDashboard() {
                 }`}
               >
                 Categories
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setActiveTab("actors")}
+                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+                  activeTab === "actors" 
+                    ? "bg-blue-100 text-blue-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Actors
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setActiveTab("directors")}
+                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${
+                  activeTab === "directors" 
+                    ? "bg-blue-100 text-blue-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                Directors
               </button>
             </li>
             <li>

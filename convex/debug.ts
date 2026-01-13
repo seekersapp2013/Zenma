@@ -18,3 +18,9 @@ export const getAllUserProfiles = query({
     return profiles;
   },
 });
+// Import the migration function
+import { migrateExistingData } from "./items";
+import { seedActorsAndDirectors, updateItemsWithNewFields } from "./seed";
+
+// Re-export for easy access
+export { migrateExistingData, seedActorsAndDirectors, updateItemsWithNewFields };

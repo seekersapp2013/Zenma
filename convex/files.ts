@@ -9,13 +9,18 @@ export const generateUploadUrl = mutation({
       throw new Error("Not authenticated");
     }
     
-    return await ctx.storage.generateUploadUrl();
+    console.log("Generating upload URL for user:", userId);
+    const uploadUrl = await ctx.storage.generateUploadUrl();
+    console.log("Upload URL generated successfully");
+    return uploadUrl;
   },
 });
 
 export const getImageUrl = mutation({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, args) => {
-    return await ctx.storage.getUrl(args.storageId);
+    const url = await ctx.storage.getUrl(args.storageId);
+    console.log("Retrieved URL for storage ID:", args.storageId);
+    return url;
   },
 });

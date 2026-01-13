@@ -20,7 +20,7 @@ export function HybridUpload({
   className = "",
   accept = "image/*",
   fileType = 'image',
-  maxSize = 200, // Increased default size limit
+  maxSize = Infinity, // No size limit
   label = "Media"
 }: HybridUploadProps) {
   const [uploadMethod, setUploadMethod] = useState<'upload' | 'url'>('upload');

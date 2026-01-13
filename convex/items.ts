@@ -46,15 +46,99 @@ export const getItemBySlug = query({
     // Resolve video source URLs - use storage ID if available, else use direct URL
     const videoSources = item.videoSources 
       ? await Promise.all(
-          item.videoSources.map(async (source) => ({
-            url: source.videoId 
-              ? await ctx.storage.getUrl(source.videoId)
-              : source.url || "",
-            quality: source.quality,
-            type: source.type,
-          }))
+          item.videoSources.map(async (source) => {
+            let resolvedUrl = "";
+            
+            // Try to get URL from storage ID first
+            if (source.videoId) {
+              try {
+                const storageUrl = await ctx.storage.getUrl(source.videoId);
+                if (storageUrl) {
+                  resolvedUrl = storageUrl;
+                }
+              } catch (error) {
+                console.error("Failed to resolve storage URL for videoId:", source.videoId, error);
+              }
+            }
+            
+            // Fallback to direct URL if storage URL failed or doesn't exist
+            if (!resolvedUrl && source.url) {
+              resolvedUrl = source.url;
+            }
+            
+            // Log for debugging
+            console.log("Video source resolution:", {
+              videoId: source.videoId,
+              directUrl: source.url,
+              resolvedUrl,
+              quality: source.quality,
+              type: source.type
+            });
+            
+            return {
+              url: resolvedUrl,
+              quality: source.quality,
+              type: source.type,
+            };
+          })
         )
       : null;
+
+    // Get detailed director information with images
+    const directorsWithDetails = item.director 
+      ? await Promise.all(
+          item.director.map(async (directorName) => {
+            const director = await ctx.db
+              .query("directors")
+              .withIndex("by_name", (q) => q.eq("name", directorName))
+              .first();
+            
+            if (director && director.imageId) {
+              const imageUrl = await ctx.storage.getUrl(director.imageId);
+              return {
+                ...director,
+                imageUrl,
+              };
+            }
+            
+            // Return basic info if no detailed record found
+            return {
+              name: directorName,
+              slug: directorName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+              imageUrl: null,
+            };
+          })
+        )
+      : [];
+
+    // Get detailed cast information with images
+    const castWithDetails = item.cast 
+      ? await Promise.all(
+          item.cast.map(async (castMember) => {
+            const actor = await ctx.db
+              .query("actors")
+              .withIndex("by_name", (q) => q.eq("name", castMember.actorName))
+              .first();
+            
+            if (actor && actor.imageId) {
+              const imageUrl = await ctx.storage.getUrl(actor.imageId);
+              return {
+                ...actor,
+                castName: castMember.castName, // Include the character name
+                imageUrl,
+              };
+            }
+            
+            // Return basic info if no detailed record found
+            return {
+              name: castMember.actorName,
+              castName: castMember.castName,
+              slug: castMember.actorName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+              imageUrl: null,
+            };
+          })
+        )
+      : [];
     
     return {
       ...item,
@@ -62,6 +146,8 @@ export const getItemBySlug = query({
       posterImageUrl,
       videoSources,
       category,
+      directorsWithDetails,
+      castWithDetails,
     };
   },
 });
@@ -74,8 +160,11 @@ export const createItem = mutation({
     imageId: v.id("_storage"),
     genres: v.array(v.string()),
     description: v.optional(v.string()),
-    director: v.optional(v.string()),
-    cast: v.optional(v.array(v.string())),
+    director: v.optional(v.array(v.string())),
+    cast: v.optional(v.array(v.object({
+      castName: v.string(),
+      actorName: v.string(),
+    }))),
     premiereYear: v.optional(v.number()),
     runningTime: v.optional(v.number()),
     country: v.optional(v.string()),
@@ -83,7 +172,7 @@ export const createItem = mutation({
     posterImageId: v.optional(v.id("_storage")),
     posterImageUrl: v.optional(v.string()),
     videoSources: v.optional(v.array(v.object({
-      videoId: v.optional(v.id("_storage")),
+      videoId: v.optional(v.union(v.id("_storage"), v.null())),
       url: v.optional(v.string()),
       quality: v.string(),
       type: v.string(),
@@ -152,8 +241,11 @@ export const updateItem = mutation({
     imageId: v.id("_storage"),
     genres: v.array(v.string()),
     description: v.optional(v.string()),
-    director: v.optional(v.string()),
-    cast: v.optional(v.array(v.string())),
+    director: v.optional(v.array(v.string())),
+    cast: v.optional(v.array(v.object({
+      castName: v.string(),
+      actorName: v.string(),
+    }))),
     premiereYear: v.optional(v.number()),
     runningTime: v.optional(v.number()),
     country: v.optional(v.string()),
@@ -161,7 +253,7 @@ export const updateItem = mutation({
     posterImageId: v.optional(v.id("_storage")),
     posterImageUrl: v.optional(v.string()),
     videoSources: v.optional(v.array(v.object({
-      videoId: v.optional(v.id("_storage")),
+      videoId: v.optional(v.union(v.id("_storage"), v.null())),
       url: v.optional(v.string()),
       quality: v.string(),
       type: v.string(),
@@ -253,13 +345,32 @@ export const getRelatedItemsByGenre = query({
           : item.posterImageUrl || null,
         videoSources: item.videoSources 
           ? await Promise.all(
-              item.videoSources.map(async (source) => ({
-                url: source.videoId 
-                  ? await ctx.storage.getUrl(source.videoId)
-                  : source.url || "",
-                quality: source.quality,
-                type: source.type,
-              }))
+              item.videoSources.map(async (source) => {
+                let resolvedUrl = "";
+                
+                // Try to get URL from storage ID first
+                if (source.videoId) {
+                  try {
+                    const storageUrl = await ctx.storage.getUrl(source.videoId);
+                    if (storageUrl) {
+                      resolvedUrl = storageUrl;
+                    }
+                  } catch (error) {
+                    console.error("Failed to resolve storage URL for videoId:", source.videoId, error);
+                  }
+                }
+                
+                // Fallback to direct URL if storage URL failed or doesn't exist
+                if (!resolvedUrl && source.url) {
+                  resolvedUrl = source.url;
+                }
+                
+                return {
+                  url: resolvedUrl,
+                  quality: source.quality,
+                  type: source.type,
+                };
+              })
             )
           : null,
       }))
@@ -269,15 +380,56 @@ export const getRelatedItemsByGenre = query({
   },
 });
 
-export const deleteItem = mutation({
-  args: { itemId: v.id("items") },
-  handler: async (ctx, args) => {
+// Migration function to fix existing data
+export const migrateExistingData = mutation({
+  handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Not authenticated");
     }
 
-    return await ctx.db.delete(args.itemId);
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!userProfile || userProfile.role !== "admin") {
+      throw new Error("Not authorized - admin access required");
+    }
+
+    const items = await ctx.db.query("items").collect();
+    let migratedCount = 0;
+
+    for (const item of items) {
+      let needsUpdate = false;
+      const updates: any = {};
+
+      // Fix director field - convert string to array
+      if (item.director) {
+        if (typeof item.director === 'string') {
+          updates.director = [item.director];
+          needsUpdate = true;
+        }
+      }
+
+      // Fix videoSources - ensure videoId can be null
+      if (item.videoSources) {
+        const fixedVideoSources = item.videoSources.map(source => ({
+          ...source,
+          videoId: source.videoId || null, // Ensure null instead of undefined
+        }));
+        updates.videoSources = fixedVideoSources;
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        await ctx.db.patch(item._id, updates);
+        migratedCount++;
+      }
+    }
+
+    return `Migrated ${migratedCount} items to new schema format`;
   },
 });
 
@@ -312,5 +464,23 @@ export const getAllItemsWithCategories = query({
     }
 
     return result;
+  },
+});
+
+export const deleteItem = mutation({
+  args: { itemId: v.id("items") },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if item exists before trying to delete
+    const item = await ctx.db.get(args.itemId);
+    if (!item) {
+      throw new Error("Item not found");
+    }
+
+    return await ctx.db.delete(args.itemId);
   },
 });

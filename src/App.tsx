@@ -6,6 +6,8 @@ import { AdminDashboard } from "./AdminDashboard";
 import { UserOnboarding } from "./UserOnboarding";
 import { PageView } from "./PageView";
 import { ItemDetails } from "./ItemDetails";
+import { Actor } from "./Actor";
+import { Director } from "./Director";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -23,6 +25,10 @@ export default function App() {
         <Route path="/login" element={<SignInForm />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
+        <Route path="/actor/:slug" element={<Actor />} />
+        <Route path="/actor" element={<Actor />} />
+        <Route path="/director/:slug" element={<Director />} />
+        <Route path="/director" element={<Director />} />
         <Route path="/details/:slug" element={<ItemDetails />} />
         <Route path="/:slug" element={<DynamicPageRoute />} />
       </Routes>

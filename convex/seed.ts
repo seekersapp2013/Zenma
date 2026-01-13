@@ -67,11 +67,29 @@ export const updateItemsWithNewFields = mutation({
     const items = await ctx.db.query("items").collect();
     
     for (const item of items) {
+      // Convert old director string to array if needed
+      let directorArray = [];
+      if (item.director) {
+        if (Array.isArray(item.director)) {
+          directorArray = item.director;
+        } else {
+          directorArray = [item.director];
+        }
+      } else {
+        directorArray = ["Christopher Nolan"];
+      }
+
       // Add sample data for the new fields if they don't exist
       await ctx.db.patch(item._id, {
         description: item.description || "An exciting story that will keep you on the edge of your seat. Follow the journey of our protagonists as they navigate through challenges and discover the true meaning of courage and friendship.",
-        director: item.director || "Christopher Nolan",
-        cast: item.cast || ["Leonardo DiCaprio", "Marion Cotillard", "Tom Hardy", "Ellen Page", "Michael Caine"],
+        director: directorArray,
+        cast: item.cast || [
+          { castName: "Dom Cobb", actorName: "Leonardo DiCaprio" },
+          { castName: "Mal", actorName: "Marion Cotillard" },
+          { castName: "Eames", actorName: "Tom Hardy" },
+          { castName: "Ariadne", actorName: "Ellen Page" },
+          { castName: "Professor Miles", actorName: "Michael Caine" }
+        ],
         premiereYear: item.premiereYear || 2023,
         runningTime: item.runningTime || 148,
         country: item.country || "USA",
@@ -80,5 +98,151 @@ export const updateItemsWithNewFields = mutation({
     }
 
     return `Updated ${items.length} items with new fields`;
+  },
+});
+
+// Seed sample actors and directors
+export const seedActorsAndDirectors = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if actors already exist
+    const existingActors = await ctx.db.query("actors").collect();
+    if (existingActors.length === 0) {
+      // Create sample actors
+      const sampleActors = [
+        {
+          name: "Leonardo DiCaprio",
+          career: "Actor",
+          height: "6'0\"",
+          dateOfBirth: "November 11, 1974",
+          placeOfBirth: "Los Angeles, California, USA",
+          age: 49,
+          zodiac: "Scorpio",
+          genres: ["Drama", "Thriller", "Action"],
+          totalMovies: 35,
+          firstMovie: "Critters 3",
+          lastMovie: "Killers of the Flower Moon",
+          bestMovie: "The Revenant",
+          biography: "Leonardo Wilhelm DiCaprio is an American actor and film producer. Known for his work in biographical and period films, he has received numerous accolades, including an Academy Award, a British Academy Film Award, and three Golden Globe Awards."
+        },
+        {
+          name: "Marion Cotillard",
+          career: "Actress",
+          height: "5'6\"",
+          dateOfBirth: "September 30, 1975",
+          placeOfBirth: "Paris, France",
+          age: 48,
+          zodiac: "Libra",
+          genres: ["Drama", "Romance", "Thriller"],
+          totalMovies: 40,
+          firstMovie: "The Story of a Boy Who Wanted to Be Kissed",
+          lastMovie: "Annette",
+          bestMovie: "La Vie en Rose",
+          biography: "Marion Cotillard is a French actress, singer, and environmentalist. She is known for her wide range of roles across blockbusters and independent films."
+        },
+        {
+          name: "Tom Hardy",
+          career: "Actor",
+          height: "5'9\"",
+          dateOfBirth: "September 15, 1977",
+          placeOfBirth: "London, England",
+          age: 46,
+          zodiac: "Virgo",
+          genres: ["Action", "Drama", "Thriller"],
+          totalMovies: 30,
+          firstMovie: "Black Hawk Down",
+          lastMovie: "Venom: Let There Be Carnage",
+          bestMovie: "Mad Max: Fury Road",
+          biography: "Edward Thomas Hardy is an English actor and producer. After studying acting at the Drama Centre London, he made his film debut in Ridley Scott's Black Hawk Down."
+        }
+      ];
+
+      for (const actor of sampleActors) {
+        const slug = actor.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+
+        await ctx.db.insert("actors", {
+          ...actor,
+          slug,
+          createdBy: userId,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    // Check if directors already exist
+    const existingDirectors = await ctx.db.query("directors").collect();
+    if (existingDirectors.length === 0) {
+      // Create sample directors
+      const sampleDirectors = [
+        {
+          name: "Christopher Nolan",
+          career: "Director, Producer, Screenwriter",
+          height: "6'0\"",
+          dateOfBirth: "July 30, 1970",
+          placeOfBirth: "London, England",
+          age: 53,
+          zodiac: "Leo",
+          genres: ["Sci-Fi", "Thriller", "Drama"],
+          totalMovies: 12,
+          firstMovie: "Following",
+          lastMovie: "Oppenheimer",
+          bestMovie: "Inception",
+          biography: "Christopher Edward Nolan is a British-American filmmaker known for his Hollywood blockbusters with complex storytelling. His films have grossed more than US$5 billion worldwide."
+        },
+        {
+          name: "Denis Villeneuve",
+          career: "Director, Producer, Screenwriter",
+          height: "6'2\"",
+          dateOfBirth: "October 3, 1967",
+          placeOfBirth: "Trois-Rivières, Quebec, Canada",
+          age: 56,
+          zodiac: "Libra",
+          genres: ["Sci-Fi", "Drama", "Thriller"],
+          totalMovies: 15,
+          firstMovie: "Un 32 août sur terre",
+          lastMovie: "Dune: Part Two",
+          bestMovie: "Blade Runner 2049",
+          biography: "Denis Villeneuve is a Canadian filmmaker. He is a four-time recipient of the Canadian Screen Award for Best Direction."
+        },
+        {
+          name: "Greta Gerwig",
+          career: "Director, Screenwriter, Actress",
+          height: "5'9\"",
+          dateOfBirth: "August 4, 1983",
+          placeOfBirth: "Sacramento, California, USA",
+          age: 40,
+          zodiac: "Leo",
+          genres: ["Comedy", "Drama", "Romance"],
+          totalMovies: 8,
+          firstMovie: "Nights and Weekends",
+          lastMovie: "Barbie",
+          bestMovie: "Lady Bird",
+          biography: "Greta Celeste Gerwig is an American actress, screenwriter, and director. She has received various accolades, including a Golden Globe Award."
+        }
+      ];
+
+      for (const director of sampleDirectors) {
+        const slug = director.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+
+        await ctx.db.insert("directors", {
+          ...director,
+          slug,
+          createdBy: userId,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    return `Seeded ${existingActors.length === 0 ? 3 : 0} actors and ${existingDirectors.length === 0 ? 3 : 0} directors`;
   },
 });
