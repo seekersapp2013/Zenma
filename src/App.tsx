@@ -16,6 +16,13 @@ import { PageView } from "./PageView";
 import { ItemDetails } from "./ItemDetails";
 import { Actor } from "./Actor";
 import { Director } from "./Director";
+import { ActorFormPage } from "./components/ActorFormPage";
+import { DirectorFormPage } from "./components/DirectorFormPage";
+import { ItemWizardPage } from "./ItemWizardPage";
+import { AboutUs } from "./AboutUs";
+import { AboutUsEditor } from "./AboutUsEditor";
+import { ContactUs } from "./ContactUs";
+import { ContactUsEditor } from "./ContactUsEditor";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -35,12 +42,22 @@ export default function App() {
         <Route path="/dashboard" element={<AdminDashboardRoute />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
         <Route path="/categories" element={<AdminRoute><CategoryManagement /></AdminRoute>} />
+        <Route path="/categories/:categoryId/items/new" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
+        <Route path="/categories/:categoryId/items/edit" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
         <Route path="/catalog" element={<AdminRoute><Catalog /></AdminRoute>} />
         <Route path="/actors" element={<AdminRoute><Actors /></AdminRoute>} />
+        <Route path="/actors/new" element={<AdminRoute><ActorFormPage /></AdminRoute>} />
+        <Route path="/actors/edit/:id" element={<AdminRoute><ActorFormPage /></AdminRoute>} />
         <Route path="/directors" element={<AdminRoute><Directors /></AdminRoute>} />
+        <Route path="/directors/new" element={<AdminRoute><DirectorFormPage /></AdminRoute>} />
+        <Route path="/directors/edit/:id" element={<AdminRoute><DirectorFormPage /></AdminRoute>} />
         <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
         <Route path="/comments" element={<AdminRoute><Comments /></AdminRoute>} />
         <Route path="/reviews" element={<AdminRoute><Reviews /></AdminRoute>} />
+        <Route path="/aboutus-editor" element={<AdminRoute><AboutUsEditor /></AdminRoute>} />
+        <Route path="/aboutus" element={<AboutUs />} />
+        <Route path="/contactus-editor" element={<AdminRoute><ContactUsEditor /></AdminRoute>} />
+        <Route path="/contactus" element={<ContactUs />} />
         <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
         <Route path="/actor/:slug" element={<Actor />} />
         <Route path="/actor" element={<Actor />} />

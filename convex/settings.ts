@@ -203,3 +203,84 @@ export const getBannedWordsWithDetails = query({
     return wordsWithDetails;
   },
 });
+
+// Get About Us content
+export const getAboutUsContent = query({
+  args: {},
+  handler: async (ctx) => {
+    const settings = await ctx.db.query("appSettings").collect();
+    
+    // Convert to key-value object
+    const settingsObj: Record<string, string> = {};
+    settings.forEach(setting => {
+      settingsObj[setting.key] = setting.value;
+    });
+
+    return {
+      mainDescription: settingsObj.aboutMainDescription || "Welcome to Zenma movie site, the ultimate destination for all film enthusiasts. Immerse yourself in a world of captivating stories, stunning visuals, and unforgettable performances. Explore our extensive library of movies, spanning across genres, eras, and cultures.",
+      secondaryDescription: settingsObj.aboutSecondaryDescription || "Indulge in the joy of cinema with our curated collections, featuring handpicked movies grouped by themes, directors, or actors. Dive into the world of cinematic magic and let yourself be transported to new realms of imagination and emotion.",
+      missionStatement: settingsObj.aboutMissionStatement || "",
+    };
+  },
+});
+
+// Update About Us content (admin only)
+export const updateAboutUsContent = mutation({
+  args: {
+    mainDescription: v.string(),
+    secondaryDescription: v.string(),
+    missionStatement: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be logged in");
+    }
+
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (userProfile?.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+
+    // Update main description
+    await updateOrCreateSetting(ctx, "aboutMainDescription", args.mainDescription, userId);
+    
+    // Update secondary description
+    await updateOrCreateSetting(ctx, "aboutSecondaryDescription", args.secondaryDescription, userId);
+    
+    // Update mission statement if provided
+    if (args.missionStatement !== undefined) {
+      await updateOrCreateSetting(ctx, "aboutMissionStatement", args.missionStatement, userId);
+    }
+
+    return { success: true };
+  },
+});
+
+// Helper function to update or create setting
+async function updateOrCreateSetting(ctx: any, key: string, value: string, userId: any) {
+  const existingSetting = await ctx.db
+    .query("appSettings")
+    .withIndex("by_key", (q: any) => q.eq("key", key))
+    .first();
+
+  if (existingSetting) {
+    await ctx.db.patch(existingSetting._id, {
+      value,
+      updatedBy: userId,
+      updatedAt: Date.now(),
+    });
+  } else {
+    await ctx.db.insert("appSettings", {
+      key,
+      value,
+      updatedBy: userId,
+      updatedAt: Date.now(),
+    });
+  }
+}

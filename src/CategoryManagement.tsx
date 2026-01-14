@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
-import { ItemWizard } from "./ItemWizard";
+import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "./AdminLayout";
 import {
   DndContext,
@@ -30,13 +30,8 @@ interface CategoryFormData {
 }
 
 export function CategoryManagement() {
+  const navigate = useNavigate();
   const [showCategoryForm, setShowCategoryForm] = useState(false);
-  const [showItemWizard, setShowItemWizard] = useState<Id<"categories"> | null>(null);
-  const [editingItem, setEditingItem] = useState<{
-    itemId: Id<"items">;
-    categoryId: Id<"categories">;
-    data: any;
-  } | null>(null);
   const [categoryForm, setCategoryForm] = useState<CategoryFormData>({
     type: "featured",
     title: "",
@@ -139,16 +134,6 @@ export function CategoryManagement() {
     }
   };
 
-  const handleWizardSuccess = () => {
-    setShowItemWizard(null);
-    setEditingItem(null);
-  };
-
-  const handleWizardClose = () => {
-    setShowItemWizard(null);
-    setEditingItem(null);
-  };
-
   const formatTitle = (title: string) => {
     return title.split(' ').map(word => {
       if (word.startsWith('<b>') && word.endsWith('</b>')) {
@@ -225,29 +210,25 @@ export function CategoryManagement() {
                     category={category}
                     index={index}
                     onDelete={() => deleteCategory({ categoryId: category._id })}
-                    onAddItem={() => setShowItemWizard(category._id)}
+                    onAddItem={() => navigate(`/categories/${category._id}/items/new`)}
                     onEditItem={(item) => {
-                      setEditingItem({
-                        itemId: item._id,
-                        categoryId: category._id,
-                        data: {
-                          title: item.title,
-                          imageId: item.imageId,
-                          genres: item.genres,
-                          description: item.description || "",
-                          director: item.director || "",
-                          cast: item.cast || [],
-                          premiereYear: item.premiereYear || undefined,
-                          runningTime: item.runningTime || undefined,
-                          country: item.country || "",
-                          rating: item.rating || undefined,
-                          posterImageId: item.posterImageId || undefined,
-                          posterImageUrl: item.posterImageUrl || undefined,
-                          videoSources: item.videoSources || [],
-                          captions: item.captions || [],
-                        }
-                      });
-                      setShowItemWizard(category._id);
+                      const initialData = {
+                        title: item.title,
+                        imageId: item.imageId,
+                        genres: item.genres,
+                        description: item.description || "",
+                        director: item.director || "",
+                        cast: item.cast || [],
+                        premiereYear: item.premiereYear || undefined,
+                        runningTime: item.runningTime || undefined,
+                        country: item.country || "",
+                        rating: item.rating || undefined,
+                        posterImageId: item.posterImageId || undefined,
+                        posterImageUrl: item.posterImageUrl || undefined,
+                        videoSources: item.videoSources || [],
+                        captions: item.captions || [],
+                      };
+                      navigate(`/categories/${category._id}/items/edit?editingItem=${item._id}&initialData=${encodeURIComponent(JSON.stringify(initialData))}`);
                     }}
                     onDeleteItem={(itemId) => deleteItem({ itemId })}
                     formatTitle={formatTitle}
@@ -331,16 +312,6 @@ export function CategoryManagement() {
         </div>
       )}
 
-      {/* Item Wizard */}
-      {showItemWizard && (
-        <ItemWizard
-          categoryId={showItemWizard}
-          editingItem={editingItem?.itemId || undefined}
-          initialData={editingItem?.data}
-          onClose={handleWizardClose}
-          onSuccess={handleWizardSuccess}
-        />
-      )}
     </AdminLayout>
   );
 }

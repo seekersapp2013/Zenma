@@ -1,0 +1,137 @@
+/* Wizard Steps Styling */
+.wizard-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+  background: rgba(15, 14, 19, 0.5);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.wizard-step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.wizard-step.active .wizard-step-number {
+  background: linear-gradient(135deg, #ff1493, #d91a72);
+  border-color: #ff1493;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255, 20, 147, 0.4);
+}
+
+.wizard-step-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.wizard-step.active .wizard-step-label {
+  color: #fff;
+}
+
+.wizard-step-line {
+  width: 60px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 8px;
+  align-self: flex-start;
+  margin-top: 20px;
+}
+
+/* Compact form spacing for wizard */
+.sign__form--profile .sign__group {
+  margin-bottom: 16px;
+}
+
+.sign__form--profile .sign__title {
+  margin-bottom: 20px;
+  font-size: 20px;
+  color: #fff;
+}
+
+.sign__form--profile {
+  max-width: 100%;
+  padding: 30px;
+}
+
+.sign__label {
+  display: block;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.sign__textarea {
+  width: 100%;
+  background-color: rgba(22, 21, 27, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  padding: 12px 20px;
+  transition: all 0.4s ease;
+  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+  resize: vertical;
+  font-family: inherit;
+}
+
+.sign__textarea:focus {
+  outline: none;
+  border-color: #ff1493;
+  background-color: rgba(22, 21, 27, 0.95);
+  box-shadow: 
+    0 0 0 3px rgba(191, 26, 101, 0.2),
+    0 0 20px rgba(191, 26, 101, 0.3);
+}
+
+.sign__group--btns {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  margin-bottom: 0;
+}
+
+/* Responsive wizard */
+@media (max-width: 768px) {
+  .wizard-steps {
+    padding: 12px 8px;
+  }
+  
+  .wizard-step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .wizard-step-label {
+    font-size: 10px;
+  }
+  
+  .wizard-step-line {
+    width: 30px;
+    margin-top: 16px;
+  }
+}

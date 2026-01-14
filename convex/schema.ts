@@ -193,6 +193,20 @@ const applicationTables = {
   })
     .index("by_slug", ["slug"])
     .index("by_name", ["name"]),
+
+  // Contact form submissions
+  contactSubmissions: defineTable({
+    name: v.string(),
+    email: v.string(),
+    subject: v.string(),
+    message: v.string(),
+    status: v.union(v.literal("new"), v.literal("read"), v.literal("archived")),
+    createdAt: v.number(),
+    readAt: v.optional(v.number()),
+    readBy: v.optional(v.id("users")),
+  })
+    .index("by_status", ["status"])
+    .index("by_created", ["createdAt"]),
 };
 
 export default defineSchema({

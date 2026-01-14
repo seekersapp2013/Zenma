@@ -12,6 +12,7 @@ import type * as actors from "../actors.js";
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as comments from "../comments.js";
+import type * as contacts from "../contacts.js";
 import type * as content from "../content.js";
 import type * as debug from "../debug.js";
 import type * as directors from "../directors.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   categories: typeof categories;
   comments: typeof comments;
+  contacts: typeof contacts;
   content: typeof content;
   debug: typeof debug;
   directors: typeof directors;

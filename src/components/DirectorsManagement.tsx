@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
 import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "../AdminLayout";
 
@@ -47,18 +46,11 @@ export function DirectorsManagement() {
   }
 
   const handleAddDirector = () => {
-    setEditingDirector(null);
-    setShowForm(true);
+    navigate("/directors/new");
   };
 
-  const handleEditDirector = (director: any) => {
-    setEditingDirector(director);
-    setShowForm(true);
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingDirector(null);
+  const handleEditDirector = (directorId: string) => {
+    navigate(`/directors/edit/${directorId}`);
   };
 
   if (directors === undefined) {
@@ -87,13 +79,6 @@ export function DirectorsManagement() {
         </button>
       }
     >
-      {showForm && (
-        <DirectorForm
-          director={editingDirector}
-          onClose={handleCloseForm}
-        />
-      )}
-
       {/* Directors Table */}
       <div className="catalog catalog--1">
         <table className="catalog__table">
@@ -111,7 +96,7 @@ export function DirectorsManagement() {
               <DirectorRow
                 key={director._id}
                 director={director}
-                onEdit={() => handleEditDirector(director)}
+                onEdit={handleEditDirector}
               />
             ))}
           </tbody>
@@ -127,11 +112,12 @@ export function DirectorsManagement() {
   );
 }
 
-function DirectorRow({ director, onEdit }: { director: any; onEdit: () => void }) {
+function DirectorRow({ director, onEdit }: { director: any; onEdit: (directorId: string) => void }) {
   const deleteDirector = useMutation(api.directors.deleteDirector);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!confirm("Are you sure you want to delete this director?")) return;
     
     setIsDeleting(true);
@@ -146,7 +132,11 @@ function DirectorRow({ director, onEdit }: { director: any; onEdit: () => void }
   };
 
   return (
-    <tr>
+    <tr 
+      onClick={() => onEdit(director._id)}
+      style={{ cursor: 'pointer' }}
+      className="catalog__row--clickable"
+    >
       <td>
         <div className="catalog__user">
           <div className="catalog__avatar">
@@ -175,14 +165,6 @@ function DirectorRow({ director, onEdit }: { director: any; onEdit: () => void }
       </td>
       <td>
         <div className="catalog__btns">
-          <button 
-            type="button" 
-            className="catalog__btn catalog__btn--edit"
-            onClick={onEdit}
-            title="Edit Director"
-          >
-            <i className="ti ti-edit"></i>
-          </button>
           <button 
             type="button" 
             className="catalog__btn catalog__btn--delete" 

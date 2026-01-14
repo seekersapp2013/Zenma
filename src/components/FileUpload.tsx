@@ -24,6 +24,7 @@ export function FileUpload({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
@@ -58,6 +59,8 @@ export function FileUpload({
       if (fileType === 'image' && file.size < 10 * 1024 * 1024) {
         const objectUrl = URL.createObjectURL(file);
         setPreviewUrl(objectUrl);
+      } else if (fileType === 'video') {
+        setUploadedFileName(file.name);
       }
 
       console.log('Getting upload URL...');
@@ -183,71 +186,133 @@ export function FileUpload({
   };
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={className} style={{ marginBottom: '8px' }}>
       <input
         ref={fileInputRef}
         type="file"
         accept={accept}
         onChange={handleFileSelect}
-        className="hidden"
+        style={{ display: 'none' }}
       />
       
-      <div className="flex flex-col items-center space-y-4">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {fileType === 'image' ? (
           // Image preview
           previewUrl ? (
-            <div className="relative">
+            <div style={{ position: 'relative', width: '100%', maxWidth: '200px' }}>
               <img
                 src={previewUrl}
                 alt="Preview"
-                className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                style={{ 
+                  width: '100%', 
+                  height: '120px', 
+                  objectFit: 'cover', 
+                  borderRadius: '8px', 
+                  border: '2px solid rgba(255, 255, 255, 0.1)' 
+                }}
               />
               {isUploading && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
-                    <div className="text-white text-xs">{uploadProgress}%</div>
+                <div style={{ 
+                  position: 'absolute', 
+                  inset: 0, 
+                  background: 'rgba(0, 0, 0, 0.7)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  borderRadius: '8px' 
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      width: '32px', 
+                      height: '32px', 
+                      border: '3px solid rgba(255, 255, 255, 0.3)', 
+                      borderTop: '3px solid #fff', 
+                      borderRadius: '50%', 
+                      animation: 'spin 1s linear infinite',
+                      margin: '0 auto 8px'
+                    }}></div>
+                    <div style={{ color: '#fff', fontSize: '12px' }}>{uploadProgress}%</div>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={{ 
+              width: '100%', 
+              maxWidth: '200px',
+              height: '120px', 
+              border: '2px dashed rgba(255, 255, 255, 0.2)', 
+              borderRadius: '8px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              background: 'rgba(22, 21, 27, 0.5)'
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <svg style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.4)', margin: '0 auto 8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z" />
                 </svg>
-                <p className="text-xs text-gray-500">No image</p>
+                <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', margin: 0 }}>No image</p>
               </div>
             </div>
           )
         ) : (
           // Video upload indicator
-          <div className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-            <div className="text-center">
+          <div style={{ 
+            width: '100%', 
+            border: '2px dashed rgba(255, 255, 255, 0.2)', 
+            borderRadius: '8px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '16px',
+            background: 'rgba(22, 21, 27, 0.5)'
+          }}>
+            <div style={{ textAlign: 'center', width: '100%' }}>
               {isUploading ? (
-                <div className="space-y-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-xs text-gray-500">{uploadProgress}%</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                  <div style={{ 
+                    width: '32px', 
+                    height: '32px', 
+                    border: '3px solid rgba(255, 20, 147, 0.3)', 
+                    borderTop: '3px solid #ff1493', 
+                    borderRadius: '50%', 
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', margin: 0 }}>{uploadProgress}%</p>
+                </div>
+              ) : uploadedFileName ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <svg style={{ width: '24px', height: '24px', color: '#4ade80' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <p style={{ fontSize: '12px', color: '#fff', margin: 0, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{uploadedFileName}</p>
                 </div>
               ) : (
                 <>
-                  <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style={{ width: '32px', height: '32px', color: 'rgba(255, 255, 255, 0.4)', margin: '0 auto 8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 002 2v8a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-xs text-gray-500">No video</p>
+                  <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', margin: 0 }}>No video</p>
                 </>
               )}
             </div>
           </div>
         )}
         
-        <div className="flex gap-2">
+        <div style={{ display: 'flex', gap: '8px' }}>
           <button
             type="button"
             onClick={handleClick}
             disabled={isUploading}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="sign__btn"
+            style={{ 
+              width: 'auto', 
+              padding: '0 16px', 
+              height: '40px',
+              marginTop: 0,
+              fontSize: '12px'
+            }}
           >
             {isUploading ? `Uploading... ${uploadProgress}%` : `Upload ${fileType === 'image' ? 'Image' : 'Video'}`}
           </button>
@@ -256,7 +321,15 @@ export function FileUpload({
             <button
               type="button"
               onClick={handleCancel}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+              className="sign__btn"
+              style={{ 
+                width: 'auto', 
+                padding: '0 16px', 
+                height: '40px',
+                marginTop: 0,
+                fontSize: '12px',
+                background: 'linear-gradient(135deg, #dc2626, #991b1b)'
+              }}
             >
               Cancel
             </button>
@@ -265,17 +338,31 @@ export function FileUpload({
       </div>
       
       {error && (
-        <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded-md">
+        <div style={{ 
+          color: '#ef4444', 
+          fontSize: '12px', 
+          textAlign: 'center', 
+          background: 'rgba(239, 68, 68, 0.1)', 
+          padding: '8px', 
+          borderRadius: '6px',
+          marginTop: '8px'
+        }}>
           {error}
         </div>
       )}
       
-      <p className="text-xs text-gray-500 text-center">
+      <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', textAlign: 'center', margin: '4px 0 0 0' }}>
         {fileType === 'image' 
-          ? `Supported formats: JPG, PNG, GIF (no size limit)`
-          : `Supported formats: MP4, WebM, MOV (no size limit)`
+          ? `Supported: JPG, PNG, GIF (no size limit)`
+          : `Supported: MP4, WebM, MOV (no size limit)`
         }
       </p>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

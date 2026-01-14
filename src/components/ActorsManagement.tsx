@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
 import { useNavigate } from "react-router-dom";
 import { AdminLayout } from "../AdminLayout";
 
@@ -9,8 +8,6 @@ export function ActorsManagement() {
   const navigate = useNavigate();
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const actors = useQuery(api.actors.getActors);
-  const [showForm, setShowForm] = useState(false);
-  const [editingActor, setEditingActor] = useState<any>(null);
 
   if (loggedInUser === undefined) {
     return (
@@ -47,18 +44,11 @@ export function ActorsManagement() {
   }
 
   const handleAddActor = () => {
-    setEditingActor(null);
-    setShowForm(true);
+    navigate("/actors/new");
   };
 
-  const handleEditActor = (actor: any) => {
-    setEditingActor(actor);
-    setShowForm(true);
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingActor(null);
+  const handleEditActor = (actorId: string) => {
+    navigate(`/actors/edit/${actorId}`);
   };
 
   if (actors === undefined) {
@@ -87,13 +77,6 @@ export function ActorsManagement() {
         </button>
       }
     >
-      {showForm && (
-        <ActorForm
-          actor={editingActor}
-          onClose={handleCloseForm}
-        />
-      )}
-
       {/* Actors Table */}
       <div className="catalog catalog--1">
         <table className="catalog__table">
@@ -111,7 +94,7 @@ export function ActorsManagement() {
               <ActorRow
                 key={actor._id}
                 actor={actor}
-                onEdit={() => handleEditActor(actor)}
+                onEdit={handleEditActor}
               />
             ))}
           </tbody>
@@ -127,11 +110,12 @@ export function ActorsManagement() {
   );
 }
 
-function ActorRow({ actor, onEdit }: { actor: any; onEdit: () => void }) {
+function ActorRow({ actor, onEdit }: { actor: any; onEdit: (actorId: string) => void }) {
   const deleteActor = useMutation(api.actors.deleteActor);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async () => {
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!confirm("Are you sure you want to delete this actor?")) return;
     
     setIsDeleting(true);
@@ -146,7 +130,11 @@ function ActorRow({ actor, onEdit }: { actor: any; onEdit: () => void }) {
   };
 
   return (
-    <tr>
+    <tr 
+      onClick={() => onEdit(actor._id)}
+      style={{ cursor: 'pointer' }}
+      className="catalog__row--clickable"
+    >
       <td>
         <div className="catalog__user">
           <div className="catalog__avatar">
@@ -177,14 +165,6 @@ function ActorRow({ actor, onEdit }: { actor: any; onEdit: () => void }) {
         <div className="catalog__btns">
           <button 
             type="button" 
-            className="catalog__btn catalog__btn--edit"
-            onClick={onEdit}
-            title="Edit Actor"
-          >
-            <i className="ti ti-edit"></i>
-          </button>
-          <button 
-            type="button" 
             className="catalog__btn catalog__btn--delete" 
             onClick={handleDelete}
             disabled={isDeleting}
@@ -195,330 +175,5 @@ function ActorRow({ actor, onEdit }: { actor: any; onEdit: () => void }) {
         </div>
       </td>
     </tr>
-  );
-}
-
-function ActorForm({ actor, onClose }: { actor?: any; onClose: () => void }) {
-  const createActor = useMutation(api.actors.createActor);
-  const updateActor = useMutation(api.actors.updateActor);
-  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [formData, setFormData] = useState({
-    name: actor?.name || "",
-    career: actor?.career || "",
-    height: actor?.height || "",
-    dateOfBirth: actor?.dateOfBirth || "",
-    placeOfBirth: actor?.placeOfBirth || "",
-    age: actor?.age || "",
-    zodiac: actor?.zodiac || "",
-    genres: actor?.genres?.join(", ") || "",
-    totalMovies: actor?.totalMovies || "",
-    firstMovie: actor?.firstMovie || "",
-    lastMovie: actor?.lastMovie || "",
-    bestMovie: actor?.bestMovie || "",
-    biography: actor?.biography || "",
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      let imageId = actor?.imageId;
-
-      // Upload new image if selected
-      if (imageFile) {
-        const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": imageFile.type },
-          body: imageFile,
-        });
-        const { storageId } = await result.json();
-        imageId = storageId;
-      }
-
-      const actorData = {
-        name: formData.name,
-        career: formData.career,
-        height: formData.height || undefined,
-        dateOfBirth: formData.dateOfBirth || undefined,
-        placeOfBirth: formData.placeOfBirth || undefined,
-        age: formData.age ? parseInt(formData.age) : undefined,
-        zodiac: formData.zodiac || undefined,
-        genres: formData.genres.split(",").map(g => g.trim()).filter(g => g),
-        totalMovies: formData.totalMovies ? parseInt(formData.totalMovies) : undefined,
-        firstMovie: formData.firstMovie || undefined,
-        lastMovie: formData.lastMovie || undefined,
-        bestMovie: formData.bestMovie || undefined,
-        imageId: imageId || undefined,
-        biography: formData.biography || undefined,
-      };
-
-      if (actor) {
-        await updateActor({ id: actor._id, ...actorData });
-      } else {
-        await createActor(actorData);
-      }
-
-      onClose();
-    } catch (error) {
-      console.error("Failed to save actor:", error);
-      alert("Failed to save actor");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1}>
-      <div className="modal-dialog modal-dialog-centered modal-lg">
-        <div className="modal-content">
-          <div className="modal__content">
-            <form onSubmit={handleSubmit} className="modal__form">
-              <h4 className="modal__title">
-                {actor ? "Edit Actor" : "Add New Actor"}
-              </h4>
-              
-              <div className="row">
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Name *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="sign__input"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Career *</label>
-                    <input
-                      type="text"
-                      name="career"
-                      value={formData.career}
-                      onChange={handleInputChange}
-                      className="sign__input"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Height</label>
-                    <input
-                      type="text"
-                      name="height"
-                      value={formData.height}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 1.65 m"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Date of Birth</label>
-                    <input
-                      type="text"
-                      name="dateOfBirth"
-                      value={formData.dateOfBirth}
-                      onChange={handleInputChange}
-                      placeholder="e.g., July 12, 1978"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Place of Birth</label>
-                    <input
-                      type="text"
-                      name="placeOfBirth"
-                      value={formData.placeOfBirth}
-                      onChange={handleInputChange}
-                      placeholder="e.g., San Antonio, Texas, United States"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Age</label>
-                    <input
-                      type="number"
-                      name="age"
-                      value={formData.age}
-                      onChange={handleInputChange}
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Zodiac</label>
-                    <input
-                      type="text"
-                      name="zodiac"
-                      value={formData.zodiac}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Cancer"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-6">
-                  <div className="sign__group">
-                    <label className="sign__label">Total Movies</label>
-                    <input
-                      type="number"
-                      name="totalMovies"
-                      value={formData.totalMovies}
-                      onChange={handleInputChange}
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12">
-                  <div className="sign__group">
-                    <label className="sign__label">Genres (comma-separated)</label>
-                    <input
-                      type="text"
-                      name="genres"
-                      value={formData.genres}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Action, Thriller, Drama"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-4">
-                  <div className="sign__group">
-                    <label className="sign__label">First Movie</label>
-                    <input
-                      type="text"
-                      name="firstMovie"
-                      value={formData.firstMovie}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Girl Fight (2000)"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-4">
-                  <div className="sign__group">
-                    <label className="sign__label">Last Movie</label>
-                    <input
-                      type="text"
-                      name="lastMovie"
-                      value={formData.lastMovie}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Fast and the Furious 10 (2023)"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12 col-md-4">
-                  <div className="sign__group">
-                    <label className="sign__label">Best Movie</label>
-                    <input
-                      type="text"
-                      name="bestMovie"
-                      value={formData.bestMovie}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Avatar"
-                      className="sign__input"
-                    />
-                  </div>
-                </div>
-
-                <div className="col-12">
-                  <div className="sign__group">
-                    <label className="sign__label">Profile Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="sign__input"
-                    />
-                    {actor?.imageUrl && (
-                      <div className="mt-2">
-                        <img
-                          src={actor.imageUrl}
-                          alt="Current"
-                          style={{ height: '80px', width: '80px', objectFit: 'cover', borderRadius: '4px' }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="col-12">
-                  <div className="sign__group">
-                    <label className="sign__label">Biography</label>
-                    <textarea
-                      name="biography"
-                      value={formData.biography}
-                      onChange={handleInputChange}
-                      rows={4}
-                      className="sign__textarea"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="modal__btns">
-                <button 
-                  className="modal__btn modal__btn--apply" 
-                  type="submit"
-                  disabled={isSubmitting}
-                >
-                  <span>{isSubmitting ? "Saving..." : (actor ? "Update" : "Create")}</span>
-                </button>
-                <button 
-                  className="modal__btn modal__btn--dismiss" 
-                  type="button" 
-                  onClick={onClose}
-                >
-                  <span>Cancel</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

@@ -4,6 +4,7 @@ import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { FileUpload } from "./components/FileUpload";
 import { HybridUpload } from "./components/HybridUpload";
+import "./wizard.css";
 
 interface ItemFormData {
   title: string;
@@ -284,67 +285,74 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title *
-              </label>
-              <input
-                type="text"
-                value={itemForm.title}
-                onChange={(e) => setItemForm(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Movie/Show title"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+          <div className="row">
+            <div className="col-12">
+              <h4 className="sign__title mb-4">Basic Information</h4>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cover Image *
-              </label>
-              <FileUpload
-                onUploadComplete={(storageId) => setItemForm(prev => ({ ...prev, imageId: storageId }))}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Genres *
-              </label>
-              <div className="flex gap-2 mb-2">
+
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Title *</label>
                 <input
                   type="text"
-                  value={genreInput}
-                  onChange={(e) => setGenreInput(e.target.value)}
-                  placeholder="Add genre"
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGenre())}
+                  value={itemForm.title}
+                  onChange={(e) => setItemForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Movie/Show title"
+                  className="sign__input"
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={addGenre}
-                  className="bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
-                >
-                  Add
-                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {itemForm.genres.map((genre) => (
-                  <span
-                    key={genre}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm flex items-center gap-1"
+            </div>
+            
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Cover Image *</label>
+                <FileUpload
+                  onUploadComplete={(storageId) => setItemForm(prev => ({ ...prev, imageId: storageId }))}
+                />
+              </div>
+            </div>
+            
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Genres *</label>
+                <div className="d-flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={genreInput}
+                    onChange={(e) => setGenreInput(e.target.value)}
+                    placeholder="Add genre"
+                    className="sign__input flex-grow-1"
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGenre())}
+                  />
+                  <button
+                    type="button"
+                    onClick={addGenre}
+                    className="sign__btn"
+                    style={{ width: 'auto', padding: '0 20px', marginTop: 0 }}
                   >
-                    {genre}
-                    <button
-                      type="button"
-                      onClick={() => removeGenre(genre)}
-                      className="text-blue-600 hover:text-blue-800"
+                    Add
+                  </button>
+                </div>
+                <div className="d-flex flex-wrap gap-2">
+                  {itemForm.genres.map((genre) => (
+                    <span
+                      key={genre}
+                      className="badge bg-primary d-flex align-items-center gap-1"
+                      style={{ fontSize: '14px', padding: '8px 12px' }}
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                      {genre}
+                      <button
+                        type="button"
+                        onClick={() => removeGenre(genre)}
+                        className="btn-close btn-close-white"
+                        style={{ fontSize: '10px', padding: '0', marginLeft: '5px' }}
+                        aria-label="Remove"
+                      >
+                      </button>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -352,121 +360,133 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
       case 2:
         return (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={itemForm.description}
-                onChange={(e) => setItemForm(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Movie/show description"
-                rows={4}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          <div className="row">
+            <div className="col-12">
+              <h4 className="sign__title mb-4">Details</h4>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Directors
-              </label>
-              <div className="flex gap-2 mb-2">
-                <select
-                  value={directorInput}
-                  onChange={(e) => setDirectorInput(e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select a director</option>
-                  {directors?.map((director) => (
-                    <option key={director._id} value={director.name}>
-                      {director.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={addDirector}
-                  disabled={!directorInput}
-                  className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Add
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {itemForm.director.map((director) => (
-                  <span
-                    key={director}
-                    className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm flex items-center gap-1"
-                  >
-                    {director}
-                    <button
-                      type="button"
-                      onClick={() => removeDirector(director)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cast
-              </label>
-              <div className="grid grid-cols-12 gap-2 mb-2">
-                <input
-                  type="text"
-                  value={castInput.castName}
-                  onChange={(e) => setCastInput(prev => ({ ...prev, castName: e.target.value }))}
-                  placeholder="Cast Name (Character/Role)"
-                  className="col-span-5 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Description</label>
+                <textarea
+                  value={itemForm.description}
+                  onChange={(e) => setItemForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Movie/show description"
+                  rows={4}
+                  className="sign__textarea"
                 />
-                <select
-                  value={castInput.actorName}
-                  onChange={(e) => setCastInput(prev => ({ ...prev, actorName: e.target.value }))}
-                  className="col-span-6 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select an actor</option>
-                  {actors?.map((actor) => (
-                    <option key={actor._id} value={actor.name}>
-                      {actor.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={addCast}
-                  disabled={!castInput.castName.trim() || !castInput.actorName.trim()}
-                  className="col-span-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  +
-                </button>
               </div>
-              <div className="space-y-2">
-                {itemForm.cast.map((castMember, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-purple-50 rounded-md">
-                    <span className="flex-1 text-sm">
-                      <strong>{castMember.castName}</strong> - {castMember.actorName}
+            </div>
+
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Directors</label>
+                <div className="d-flex gap-2 mb-2">
+                  <select
+                    value={directorInput}
+                    onChange={(e) => setDirectorInput(e.target.value)}
+                    className="sign__input flex-grow-1"
+                  >
+                    <option value="">Select a director</option>
+                    {directors?.map((director) => (
+                      <option key={director._id} value={director.name}>
+                        {director.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={addDirector}
+                    disabled={!directorInput}
+                    className="sign__btn"
+                    style={{ width: 'auto', padding: '0 20px', marginTop: 0 }}
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="d-flex flex-wrap gap-2">
+                  {itemForm.director.map((director) => (
+                    <span
+                      key={director}
+                      className="badge bg-primary d-flex align-items-center gap-1"
+                      style={{ fontSize: '14px', padding: '8px 12px' }}
+                    >
+                      {director}
+                      <button
+                        type="button"
+                        onClick={() => removeDirector(director)}
+                        className="btn-close btn-close-white"
+                        style={{ fontSize: '10px', padding: '0', marginLeft: '5px' }}
+                        aria-label="Remove"
+                      >
+                      </button>
                     </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Cast</label>
+                <div className="row g-2 mb-2">
+                  <div className="col-5">
+                    <input
+                      type="text"
+                      value={castInput.castName}
+                      onChange={(e) => setCastInput(prev => ({ ...prev, castName: e.target.value }))}
+                      placeholder="Cast Name (Character/Role)"
+                      className="sign__input"
+                    />
+                  </div>
+                  <div className="col-6">
+                    <select
+                      value={castInput.actorName}
+                      onChange={(e) => setCastInput(prev => ({ ...prev, actorName: e.target.value }))}
+                      className="sign__input"
+                    >
+                      <option value="">Select an actor</option>
+                      {actors?.map((actor) => (
+                        <option key={actor._id} value={actor.name}>
+                          {actor.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-1">
                     <button
                       type="button"
-                      onClick={() => removeCast(index)}
-                      className="text-purple-600 hover:text-purple-800"
+                      onClick={addCast}
+                      disabled={!castInput.castName.trim() || !castInput.actorName.trim()}
+                      className="sign__btn"
+                      style={{ width: '100%', padding: '0' }}
                     >
-                      ×
+                      +
                     </button>
                   </div>
-                ))}
+                </div>
+                <div className="d-flex flex-column gap-2">
+                  {itemForm.cast.map((castMember, index) => (
+                    <div key={index} className="d-flex align-items-center gap-2 p-2" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
+                      <span className="flex-grow-1" style={{ fontSize: '14px' }}>
+                        <strong>{castMember.castName}</strong> - {castMember.actorName}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeCast(index)}
+                        className="btn-close btn-close-white"
+                        aria-label="Remove"
+                      >
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Premiere Year
-                </label>
+            <div className="col-12 col-md-6">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Premiere Year</label>
                 <input
                   type="number"
                   value={itemForm.premiereYear || ""}
@@ -477,13 +497,14 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                   placeholder="2024"
                   min="1900"
                   max="2030"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="sign__input"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Running Time (minutes)
-                </label>
+            </div>
+
+            <div className="col-12 col-md-6">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Running Time (minutes)</label>
                 <input
                   type="number"
                   value={itemForm.runningTime || ""}
@@ -493,28 +514,27 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                   }))}
                   placeholder="120"
                   min="1"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="sign__input"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Country
-                </label>
+            <div className="col-12 col-md-6">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Country</label>
                 <input
                   type="text"
                   value={itemForm.country}
                   onChange={(e) => setItemForm(prev => ({ ...prev, country: e.target.value }))}
                   placeholder="USA"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="sign__input"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rating (1-10)
-                </label>
+            </div>
+
+            <div className="col-12 col-md-6">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Rating (1-10)</label>
                 <input
                   type="number"
                   value={itemForm.rating || ""}
@@ -526,7 +546,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                   min="1"
                   max="10"
                   step="0.1"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="sign__input"
                 />
               </div>
             </div>
@@ -535,132 +555,156 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
       case 3:
         return (
-          <div className="space-y-4">
-            <div>
-              <HybridUpload
-                label="Poster Image"
-                onUploadComplete={(storageId) => setItemForm(prev => ({ ...prev, posterImageId: storageId, posterImageUrl: "" }))}
-                onUrlComplete={(url) => setItemForm(prev => ({ ...prev, posterImageUrl: url, posterImageId: null }))}
-                accept="image/*"
-                fileType="image"
-              />
+          <div className="row">
+            <div className="col-12">
+              <h4 className="sign__title mb-4">Video Player</h4>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Video Sources
-              </label>
-              <div className="grid grid-cols-12 gap-2 mb-2">
-                <div className="col-span-6">
-                  <HybridUpload
-                    label=""
-                    onUploadComplete={(storageId) => setVideoSourceInput(prev => ({ ...prev, videoId: storageId, url: "" }))}
-                    onUrlComplete={(url) => setVideoSourceInput(prev => ({ ...prev, url: url, videoId: null }))}
-                    accept="video/*"
-                    fileType="video"
-                  />
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <HybridUpload
+                  label="Poster Image"
+                  onUploadComplete={(storageId) => setItemForm(prev => ({ ...prev, posterImageId: storageId, posterImageUrl: "" }))}
+                  onUrlComplete={(url) => setItemForm(prev => ({ ...prev, posterImageUrl: url, posterImageId: null }))}
+                  accept="image/*"
+                  fileType="image"
+                />
+              </div>
+            </div>
+
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Video Sources</label>
+                <div className="row g-2 mb-2">
+                  <div className="col-6">
+                    <HybridUpload
+                      label=""
+                      onUploadComplete={(storageId) => setVideoSourceInput(prev => ({ ...prev, videoId: storageId, url: "" }))}
+                      onUrlComplete={(url) => setVideoSourceInput(prev => ({ ...prev, url: url, videoId: null }))}
+                      accept="video/*"
+                      fileType="video"
+                    />
+                  </div>
+                  <div className="col-3">
+                    <input
+                      type="text"
+                      value={videoSourceInput.quality}
+                      onChange={(e) => setVideoSourceInput(prev => ({ ...prev, quality: e.target.value }))}
+                      placeholder="Quality (e.g., 720p)"
+                      className="sign__input"
+                    />
+                  </div>
+                  <div className="col-2">
+                    <select
+                      value={videoSourceInput.type}
+                      onChange={(e) => setVideoSourceInput(prev => ({ ...prev, type: e.target.value }))}
+                      className="sign__input"
+                    >
+                      <option value="video/mp4">MP4</option>
+                      <option value="video/webm">WebM</option>
+                      <option value="video/ogg">OGG</option>
+                    </select>
+                  </div>
+                  <div className="col-1">
+                    <button
+                      type="button"
+                      onClick={addVideoSource}
+                      className="sign__btn"
+                      style={{ width: '100%', padding: '0' }}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  value={videoSourceInput.quality}
-                  onChange={(e) => setVideoSourceInput(prev => ({ ...prev, quality: e.target.value }))}
-                  placeholder="Quality (e.g., 720p)"
-                  className="col-span-3 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <select
-                  value={videoSourceInput.type}
-                  onChange={(e) => setVideoSourceInput(prev => ({ ...prev, type: e.target.value }))}
-                  className="col-span-2 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="video/mp4">MP4</option>
-                  <option value="video/webm">WebM</option>
-                  <option value="video/ogg">OGG</option>
-                </select>
-                <button
-                  type="button"
-                  onClick={addVideoSource}
-                  className="col-span-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
-                >
-                  +
-                </button>
-              </div>
-              <div className="space-y-2">
-                {itemForm.videoSources.map((source, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                    <span className="flex-1 text-sm">
-                      <strong>{source.quality}</strong> - {source.videoId ? 'Uploaded Video' : 'URL Video'} ({source.type})
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeVideoSource(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                <div className="d-flex flex-column gap-2">
+                  {itemForm.videoSources.map((source, index) => (
+                    <div key={index} className="d-flex align-items-center gap-2 p-2" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
+                      <span className="flex-grow-1" style={{ fontSize: '14px' }}>
+                        <strong>{source.quality}</strong> - {source.videoId ? 'Uploaded Video' : 'URL Video'} ({source.type})
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeVideoSource(index)}
+                        className="btn-close btn-close-white"
+                        aria-label="Remove"
+                      >
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Captions/Subtitles
-              </label>
-              <div className="grid grid-cols-12 gap-2 mb-2">
-                <input
-                  type="text"
-                  value={captionInput.label}
-                  onChange={(e) => setCaptionInput(prev => ({ ...prev, label: e.target.value }))}
-                  placeholder="Label (e.g., English)"
-                  className="col-span-3 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={captionInput.srcLang}
-                  onChange={(e) => setCaptionInput(prev => ({ ...prev, srcLang: e.target.value }))}
-                  placeholder="Lang (e.g., en)"
-                  className="col-span-2 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="url"
-                  value={captionInput.src}
-                  onChange={(e) => setCaptionInput(prev => ({ ...prev, src: e.target.value }))}
-                  placeholder="VTT file URL"
-                  className="col-span-5 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <label className="col-span-1 flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={captionInput.default}
-                    onChange={(e) => setCaptionInput(prev => ({ ...prev, default: e.target.checked }))}
-                    className="mr-1"
-                  />
-                  <span className="text-xs">Default</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={addCaption}
-                  className="col-span-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors"
-                >
-                  +
-                </button>
-              </div>
-              <div className="space-y-2">
-                {itemForm.captions.map((caption, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
-                    <span className="flex-1 text-sm">
-                      <strong>{caption.label}</strong> ({caption.srcLang}) - {caption.src}
-                      {caption.default && <span className="text-blue-600 ml-2">[Default]</span>}
-                    </span>
+            <div className="col-12">
+              <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Captions/Subtitles</label>
+                <div className="row g-2 mb-2">
+                  <div className="col-3">
+                    <input
+                      type="text"
+                      value={captionInput.label}
+                      onChange={(e) => setCaptionInput(prev => ({ ...prev, label: e.target.value }))}
+                      placeholder="Label (e.g., English)"
+                      className="sign__input"
+                    />
+                  </div>
+                  <div className="col-2">
+                    <input
+                      type="text"
+                      value={captionInput.srcLang}
+                      onChange={(e) => setCaptionInput(prev => ({ ...prev, srcLang: e.target.value }))}
+                      placeholder="Lang (e.g., en)"
+                      className="sign__input"
+                    />
+                  </div>
+                  <div className="col-5">
+                    <input
+                      type="url"
+                      value={captionInput.src}
+                      onChange={(e) => setCaptionInput(prev => ({ ...prev, src: e.target.value }))}
+                      placeholder="VTT file URL"
+                      className="sign__input"
+                    />
+                  </div>
+                  <div className="col-1 d-flex align-items-center">
+                    <label className="d-flex align-items-center" style={{ fontSize: '12px', color: '#fff' }}>
+                      <input
+                        type="checkbox"
+                        checked={captionInput.default}
+                        onChange={(e) => setCaptionInput(prev => ({ ...prev, default: e.target.checked }))}
+                        className="me-1"
+                      />
+                      Default
+                    </label>
+                  </div>
+                  <div className="col-1">
                     <button
                       type="button"
-                      onClick={() => removeCaption(index)}
-                      className="text-red-600 hover:text-red-800"
+                      onClick={addCaption}
+                      className="sign__btn"
+                      style={{ width: '100%', padding: '0' }}
                     >
-                      ×
+                      +
                     </button>
                   </div>
-                ))}
+                </div>
+                <div className="d-flex flex-column gap-2">
+                  {itemForm.captions.map((caption, index) => (
+                    <div key={index} className="d-flex align-items-center gap-2 p-2" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
+                      <span className="flex-grow-1" style={{ fontSize: '14px' }}>
+                        <strong>{caption.label}</strong> ({caption.srcLang}) - {caption.src}
+                        {caption.default && <span style={{ color: '#ff1493', marginLeft: '8px' }}>[Default]</span>}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeCaption(index)}
+                        className="btn-close btn-close-white"
+                        aria-label="Remove"
+                      >
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -668,61 +712,65 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
       case 4:
         return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Review Your Item</h3>
+          <div className="row">
+            <div className="col-12">
+              <h4 className="sign__title mb-4">Review Your Item</h4>
+            </div>
             
-            <div className="bg-gray-50 p-4 rounded-md space-y-3">
-              <div>
-                <strong>Title:</strong> {itemForm.title}
+            <div className="col-12">
+              <div className="p-4" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
+                <div className="mb-3">
+                  <strong style={{ color: '#ff1493' }}>Title:</strong> <span style={{ color: '#fff' }}>{itemForm.title}</span>
+                </div>
+                <div className="mb-3">
+                  <strong style={{ color: '#ff1493' }}>Genres:</strong> <span style={{ color: '#fff' }}>{itemForm.genres.join(", ") || "None"}</span>
+                </div>
+                {itemForm.description && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Description:</strong> <span style={{ color: '#fff' }}>{itemForm.description.substring(0, 100)}...</span>
+                  </div>
+                )}
+                {itemForm.director.length > 0 && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Directors:</strong> <span style={{ color: '#fff' }}>{itemForm.director.join(", ")}</span>
+                  </div>
+                )}
+                {itemForm.cast.length > 0 && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Cast:</strong> <span style={{ color: '#fff' }}>{itemForm.cast.map(c => `${c.castName} (${c.actorName})`).join(", ")}</span>
+                  </div>
+                )}
+                {itemForm.premiereYear && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Premiere Year:</strong> <span style={{ color: '#fff' }}>{itemForm.premiereYear}</span>
+                  </div>
+                )}
+                {itemForm.runningTime && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Running Time:</strong> <span style={{ color: '#fff' }}>{itemForm.runningTime} minutes</span>
+                  </div>
+                )}
+                {itemForm.country && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Country:</strong> <span style={{ color: '#fff' }}>{itemForm.country}</span>
+                  </div>
+                )}
+                {itemForm.rating && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Rating:</strong> <span style={{ color: '#fff' }}>{itemForm.rating}/10</span>
+                  </div>
+                )}
+                {itemForm.videoSources.length > 0 && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Video Sources:</strong> <span style={{ color: '#fff' }}>{itemForm.videoSources.length} source(s)</span>
+                  </div>
+                )}
+                {itemForm.captions.length > 0 && (
+                  <div className="mb-3">
+                    <strong style={{ color: '#ff1493' }}>Captions:</strong> <span style={{ color: '#fff' }}>{itemForm.captions.length} language(s)</span>
+                  </div>
+                )}
               </div>
-              <div>
-                <strong>Genres:</strong> {itemForm.genres.join(", ") || "None"}
-              </div>
-              {itemForm.description && (
-                <div>
-                  <strong>Description:</strong> {itemForm.description.substring(0, 100)}...
-                </div>
-              )}
-              {itemForm.director.length > 0 && (
-                <div>
-                  <strong>Directors:</strong> {itemForm.director.join(", ")}
-                </div>
-              )}
-              {itemForm.cast.length > 0 && (
-                <div>
-                  <strong>Cast:</strong> {itemForm.cast.map(c => `${c.castName} (${c.actorName})`).join(", ")}
-                </div>
-              )}
-              {itemForm.premiereYear && (
-                <div>
-                  <strong>Premiere Year:</strong> {itemForm.premiereYear}
-                </div>
-              )}
-              {itemForm.runningTime && (
-                <div>
-                  <strong>Running Time:</strong> {itemForm.runningTime} minutes
-                </div>
-              )}
-              {itemForm.country && (
-                <div>
-                  <strong>Country:</strong> {itemForm.country}
-                </div>
-              )}
-              {itemForm.rating && (
-                <div>
-                  <strong>Rating:</strong> {itemForm.rating}/10
-                </div>
-              )}
-              {itemForm.videoSources.length > 0 && (
-                <div>
-                  <strong>Video Sources:</strong> {itemForm.videoSources.length} source(s)
-                </div>
-              )}
-              {itemForm.captions.length > 0 && (
-                <div>
-                  <strong>Captions:</strong> {itemForm.captions.length} language(s)
-                </div>
-              )}
             </div>
           </div>
         );
@@ -733,91 +781,89 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">
-              {editingItem ? "Edit Item" : "Add New Item"}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              ×
-            </button>
-          </div>
-          
-          {/* Progress Steps */}
-          <div className="mt-4">
-            <div className="flex items-center">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                    currentStep >= step.id 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    {step.id}
-                  </div>
-                  <div className="ml-2 text-sm">
-                    <div className={`font-medium ${currentStep >= step.id ? 'text-blue-600' : 'text-gray-500'}`}>
-                      {step.title}
-                    </div>
-                    <div className="text-gray-400 text-xs">{step.description}</div>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`mx-4 h-0.5 w-12 ${
-                      currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200'
-                    }`} />
-                  )}
-                </div>
-              ))}
+    <div className="main__content">
+      <div className="container-fluid">
+        <div className="row">
+          <div className="col-12">
+            <div className="main__title">
+              <h2>{editingItem ? "Edit Item" : "Add New Item"}</h2>
+              <button 
+                onClick={onClose}
+                className="main__title-link"
+              >
+                <i className="ti ti-arrow-left"></i> Back
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="px-6 py-4 overflow-y-auto max-h-[60vh]">
-          {renderStep()}
+        {/* Step Indicator */}
+        <div className="row">
+          <div className="col-12">
+            <div className="wizard-steps mb-4">
+              <div className={`wizard-step ${currentStep >= 1 ? 'active' : ''}`}>
+                <div className="wizard-step-number">1</div>
+                <div className="wizard-step-label">Basic Info</div>
+              </div>
+              <div className="wizard-step-line"></div>
+              <div className={`wizard-step ${currentStep >= 2 ? 'active' : ''}`}>
+                <div className="wizard-step-number">2</div>
+                <div className="wizard-step-label">Details</div>
+              </div>
+              <div className="wizard-step-line"></div>
+              <div className={`wizard-step ${currentStep >= 3 ? 'active' : ''}`}>
+                <div className="wizard-step-number">3</div>
+                <div className="wizard-step-label">Video Player</div>
+              </div>
+              <div className="wizard-step-line"></div>
+              <div className={`wizard-step ${currentStep >= 4 ? 'active' : ''}`}>
+                <div className="wizard-step-number">4</div>
+                <div className="wizard-step-label">Review</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
-          <button
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          
-          <div className="flex gap-2">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            
-            {currentStep < steps.length ? (
-              <button
-                onClick={handleNext}
-                disabled={!canProceed()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={!canProceed()}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {editingItem ? "Update Item" : "Create Item"}
-              </button>
-            )}
+        <div className="row">
+          <div className="col-12">
+            <form onSubmit={(e) => { e.preventDefault(); if (currentStep === 4) handleSubmit(); }} className="sign__form sign__form--profile">
+              {renderStep()}
+
+              {/* Navigation Buttons */}
+              <div className="col-12">
+                <div className="sign__group sign__group--btns">
+                  {currentStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={handlePrevious}
+                      className="sign__btn"
+                      style={{ marginRight: '10px' }}
+                    >
+                      <i className="ti ti-arrow-left"></i> Previous
+                    </button>
+                  )}
+                  
+                  {currentStep < 4 ? (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="sign__btn"
+                      disabled={!canProceed()}
+                    >
+                      Next <i className="ti ti-arrow-right"></i>
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="sign__btn"
+                      disabled={!canProceed()}
+                    >
+                      {editingItem ? "Update Item" : "Create Item"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>

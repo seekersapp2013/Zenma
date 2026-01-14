@@ -18,7 +18,6 @@ export function AdminLayout({ children, currentPage, pageTitle, totalCount, titl
     document.body.style.padding = '0';
     document.body.style.backgroundColor = '#1a1a1a';
     document.body.style.fontFamily = 'Inter, sans-serif';
-    document.body.style.overflow = 'hidden';
     
     // Add custom CSS for sidebar counts
     const customCSS = `
@@ -101,7 +100,6 @@ export function AdminLayout({ children, currentPage, pageTitle, totalCount, titl
       document.body.style.padding = '';
       document.body.style.backgroundColor = '';
       document.body.style.fontFamily = '';
-      document.body.style.overflow = '';
       
       // Remove custom styles
       const customStyle = document.querySelector('style');
@@ -118,13 +116,7 @@ export function AdminLayout({ children, currentPage, pageTitle, totalCount, titl
       margin: 0, 
       padding: 0, 
       minHeight: '100vh', 
-      backgroundColor: '#1a1a1a',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      overflow: 'hidden'
+      backgroundColor: '#1a1a1a'
     }}>
       {/* Header */}
       <header className="header">

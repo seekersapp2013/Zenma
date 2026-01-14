@@ -85,6 +85,18 @@ export function Sidebar({ currentPage }: SidebarProps) {
       count: allReviews?.length || 0
     },
     { 
+      href: "/aboutus-editor", 
+      icon: "ti-info-circle", 
+      label: "About Us", 
+      key: "aboutus" 
+    },
+    { 
+      href: "/contactus-editor", 
+      icon: "ti-mail", 
+      label: "Contact Us", 
+      key: "contactus" 
+    },
+    { 
       href: "/settings", 
       icon: "ti-settings", 
       label: "Settings", 
@@ -94,9 +106,14 @@ export function Sidebar({ currentPage }: SidebarProps) {
 
   return (
     <div className="sidebar">
-      <a href="/dashboard" className="sidebar__logo">
-        <img src="/admin/img/logo.svg" alt="Logo" />
-      </a>
+        {/* header logo */}
+          <a href="/" className="header__logo">
+            <h1>
+              <span style={{ color: '#ff1493', fontWeight: 900 }}>ZEN</span>
+              <span style={{ color: '#ffffff', fontWeight: 900 }}>MA</span>
+            </h1>
+          </a>
+        {/* end header logo */}
       
       <div className="sidebar__user">
         <div className="sidebar__user-img">
