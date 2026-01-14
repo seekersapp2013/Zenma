@@ -19,7 +19,7 @@ export function AdminLayout({ children, currentPage, pageTitle, totalCount, titl
     document.body.style.backgroundColor = '#1a1a1a';
     document.body.style.fontFamily = 'Inter, sans-serif';
     
-    // Add custom CSS for sidebar counts
+    // Add custom CSS for sidebar counts and text color fixes
     const customCSS = `
       .sidebar__nav-count {
         background: rgba(255, 255, 255, 0.1);
@@ -54,6 +54,211 @@ export function AdminLayout({ children, currentPage, pageTitle, totalCount, titl
       .catalog__row--clickable:hover .catalog__user h3 {
         color: #007bff !important;
         transition: color 0.2s ease;
+      }
+
+      /* Fix black text on black background issues - scoped to admin template elements */
+      
+      /* Sign form elements */
+      .sign__title {
+        color: #fff !important;
+      }
+      .sign__label {
+        color: #fff !important;
+      }
+      .sign__subtitle {
+        color: #fff !important;
+      }
+      .sign__text {
+        color: #fff !important;
+      }
+      .sign__text--small {
+        color: #c0c0c0 !important;
+        font-size: 0.875rem;
+      }
+
+      /* Catalog elements */
+      .catalog__title {
+        color: #fff !important;
+      }
+      .catalog__title-wrap h3 {
+        color: #fff !important;
+      }
+      .catalog__title-wrap p {
+        color: #c0c0c0 !important;
+      }
+      .catalog__text {
+        color: #c0c0c0 !important;
+      }
+      .catalog__text strong {
+        color: #fff !important;
+      }
+
+      /* Table elements - only for admin template tables */
+      .main__table {
+        color: #c0c0c0 !important;
+      }
+      .main__table thead th {
+        color: #c0c0c0 !important;
+      }
+      .main__table tbody td {
+        color: #c0c0c0 !important;
+      }
+      .main__table-text {
+        color: #c0c0c0 !important;
+      }
+      .catalog__table {
+        color: #c0c0c0 !important;
+      }
+      .catalog__table thead th {
+        color: #c0c0c0 !important;
+      }
+      .catalog__table tbody td {
+        color: #c0c0c0 !important;
+      }
+
+      /* Bootstrap overrides - only within admin template containers */
+      .catalog .text-muted,
+      .sign__wrap .text-muted,
+      .main .text-muted {
+        color: #9ca3af !important;
+      }
+      .catalog .form-text,
+      .sign__wrap .form-text,
+      .main .form-text {
+        color: #9ca3af !important;
+      }
+      .catalog .form-label,
+      .sign__wrap .form-label,
+      .main .form-label {
+        color: #fff !important;
+      }
+
+      /* Modal elements - only for admin template modals with dark backgrounds */
+      .modal-content:not(.bg-white) .modal-title,
+      .modal__content .modal-title,
+      .bg-dark .modal-title {
+        color: #fff !important;
+      }
+      .modal-content:not(.bg-white) .modal-body,
+      .modal__content .modal-body,
+      .bg-dark .modal-body {
+        color: #c0c0c0 !important;
+      }
+      .modal-content:not(.bg-white) .modal-body p,
+      .modal__content .modal-body p,
+      .bg-dark .modal-body p {
+        color: #c0c0c0 !important;
+      }
+      .modal-content:not(.bg-white) .modal-body strong,
+      .modal__content .modal-body strong,
+      .bg-dark .modal-body strong {
+        color: #fff !important;
+      }
+      .modal-content:not(.bg-white) .modal-body ul,
+      .modal__content .modal-body ul,
+      .bg-dark .modal-body ul {
+        color: #c0c0c0 !important;
+      }
+      .modal-content:not(.bg-white) .modal-body li,
+      .modal__content .modal-body li,
+      .bg-dark .modal-body li {
+        color: #c0c0c0 !important;
+      }
+
+      /* Nav tabs - only for admin template tabs */
+      .main__tabs .nav-link {
+        color: #c0c0c0 !important;
+      }
+      .main__tabs .nav-link.active {
+        color: #fff !important;
+      }
+
+      /* Generic elements in admin context - scoped to admin containers */
+      .sign__wrap h4,
+      .sign__wrap h5 {
+        color: #fff !important;
+      }
+      .sign__wrap p {
+        color: #c0c0c0 !important;
+      }
+      .sign__wrap strong {
+        color: #fff !important;
+      }
+
+      /* Small helper text - only in admin containers */
+      .catalog small.text-muted,
+      .sign__wrap small.text-muted,
+      .main small.text-muted,
+      .catalog small.form-text,
+      .sign__wrap small.form-text,
+      .main small.form-text {
+        color: #9ca3af !important;
+      }
+
+      /* Empty state messages - only in catalog/admin tables */
+      .catalog .text-center p,
+      .main__table-wrap .text-center p {
+        color: #c0c0c0 !important;
+      }
+      .catalog .text-center h4,
+      .main__table-wrap .text-center h4 {
+        color: #fff !important;
+      }
+      .catalog .text-center small,
+      .main__table-wrap .text-center small {
+        color: #9ca3af !important;
+      }
+
+      /* Card elements - only for admin template cards with dark backgrounds */
+      .catalog .card-title,
+      [style*="backgroundColor: #2b2b2b"] .card-title,
+      [style*="background-color: #2b2b2b"] .card-title {
+        color: #fff !important;
+      }
+      .catalog .card-text,
+      [style*="backgroundColor: #2b2b2b"] .card-text,
+      [style*="background-color: #2b2b2b"] .card-text {
+        color: #c0c0c0 !important;
+      }
+
+      /* Ensure all paragraph and heading elements have proper colors - only in catalog */
+      .catalog p,
+      .catalog h3,
+      .catalog h4,
+      .catalog h5,
+      .catalog h6 {
+        color: #fff !important;
+      }
+      
+      .catalog small {
+        color: #9ca3af !important;
+      }
+
+      /* Fix for strong tags - only in admin containers */
+      .catalog strong,
+      .sign__wrap strong,
+      .main strong {
+        color: #fff !important;
+      }
+
+      /* Preserve dark text on white/light backgrounds */
+      .bg-white,
+      .bg-white *:not(.text-white):not(.text-blue-600):not(.text-blue-700):not(.text-green-600):not(.text-yellow-600):not(.text-red-600):not(.text-gray-500):not(.text-gray-600):not(.text-gray-700):not(.text-gray-900) {
+        color: inherit;
+      }
+      
+      /* Ensure Tailwind utility classes work properly */
+      .text-gray-700 {
+        color: #374151 !important;
+      }
+      .text-gray-900 {
+        color: #111827 !important;
+      }
+      .text-gray-500 {
+        color: #6b7280 !important;
+      }
+      .text-gray-600 {
+        color: #4b5563 !important;
       }
     `;
     
