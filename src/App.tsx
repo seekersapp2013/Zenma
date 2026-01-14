@@ -23,6 +23,10 @@ import { AboutUs } from "./AboutUs";
 import { AboutUsEditor } from "./AboutUsEditor";
 import { ContactUs } from "./ContactUs";
 import { ContactUsEditor } from "./ContactUsEditor";
+import { BlogAdmin } from "./BlogAdmin";
+import { BlogPostEditor } from "./BlogPostEditor";
+import { Blog } from "./Blog";
+import { BlogPost } from "./BlogPost";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -58,6 +62,11 @@ export default function App() {
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/contactus-editor" element={<AdminRoute><ContactUsEditor /></AdminRoute>} />
         <Route path="/contactus" element={<ContactUs />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
+        <Route path="/blog-admin" element={<AdminRoute><BlogAdmin /></AdminRoute>} />
+        <Route path="/blog-admin/new" element={<AdminRoute><BlogPostEditor /></AdminRoute>} />
+        <Route path="/blog-admin/edit/:id" element={<AdminRoute><BlogPostEditor /></AdminRoute>} />
         <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
         <Route path="/actor/:slug" element={<Actor />} />
         <Route path="/actor" element={<Actor />} />

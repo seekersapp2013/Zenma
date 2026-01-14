@@ -15,6 +15,7 @@ export function AdminDashboard() {
   const allActors = useQuery(api.actors.getAllActors);
   const allDirectors = useQuery(api.directors.getAllDirectors);
   const allUsers = useQuery(api.auth.getAllUsers);
+  const blogStats = useQuery(api.pages.getBlogStats);
 
   const totalItems = allItems?.reduce((total, category) => total + category.items.length, 0) || 0;
   const totalComments = allComments?.length || 0;
@@ -64,7 +65,10 @@ export function AdminDashboard() {
     reviews: totalReviews,
     actors: totalActors,
     directors: totalDirectors,
-    users: totalUsers
+    users: totalUsers,
+    blogPublished: blogStats?.published || 0,
+    blogDrafts: blogStats?.drafts || 0,
+    blogTotal: blogStats?.total || 0,
   };
 
   return (
@@ -96,6 +100,9 @@ function DashboardContent({
     actors: number;
     directors: number;
     users: number;
+    blogPublished: number;
+    blogDrafts: number;
+    blogTotal: number;
   };
 }) {
   return (
@@ -167,6 +174,15 @@ function DashboardContent({
               </div>
             </div>
 
+            {/* Blog Card */}
+            <div className="col-12 col-sm-6 col-lg-3">
+              <div className="stats">
+                <span>Blog Posts</span>
+                <p>{stats.blogTotal}</p>
+                <i className="ti ti-pencil"></i>
+              </div>
+            </div>
+
             {/* Settings Card */}
             <div className="col-12 col-sm-6 col-lg-3">
               <div className="stats">
@@ -231,6 +247,23 @@ function DashboardContent({
                       className="btn btn-warning"
                     >
                       Go to Directors
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-12 col-md-6 col-lg-4">
+                <div className="card" style={{ backgroundColor: '#2b2b2b', border: '1px solid #404040' }}>
+                  <div className="card-body text-center">
+                    <i className="ti ti-pencil" style={{ fontSize: '2rem', color: '#e83e8c', marginBottom: '1rem' }}></i>
+                    <h5 className="card-title text-white">Manage Blog</h5>
+                    <p className="card-text text-muted">{stats.blogPublished} Published • {stats.blogDrafts} Drafts</p>
+                    <button 
+                      onClick={() => navigate('/blog-admin')}
+                      className="btn btn-primary"
+                      style={{ backgroundColor: '#e83e8c', borderColor: '#e83e8c' }}
+                    >
+                      Go to Blog
                     </button>
                   </div>
                 </div>

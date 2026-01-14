@@ -32,6 +32,7 @@ export function Sidebar({ currentPage }: SidebarProps) {
   const allActors = useQuery(api.actors.getAllActors);
   const allDirectors = useQuery(api.directors.getAllDirectors);
   const allUsers = useQuery(api.auth.getAllUsers);
+  const blogStats = useQuery(api.pages.getBlogStats);
 
   const totalItems = allItems?.reduce((total, category) => total + category.items.length, 0) || 0;
 
@@ -62,6 +63,14 @@ export function Sidebar({ currentPage }: SidebarProps) {
       label: "Directors", 
       key: "directors",
       count: allDirectors?.length || 0
+    },
+    { 
+      href: "/blog-admin", 
+      icon: "ti-pencil", 
+      label: "Blog", 
+      key: "blog",
+      count: blogStats?.total || 0,
+      badge: blogStats?.drafts || 0
     },
     { 
       href: "/users", 
@@ -145,6 +154,16 @@ export function Sidebar({ currentPage }: SidebarProps) {
                 <span>{item.label}</span>
                 {item.count !== undefined && (
                   <span className="sidebar__nav-count">{item.count}</span>
+                )}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className="sidebar__nav-badge" style={{
+                    backgroundColor: '#e83e8c',
+                    color: '#fff',
+                    fontSize: '0.7rem',
+                    padding: '2px 6px',
+                    borderRadius: '10px',
+                    marginLeft: '8px'
+                  }}>{item.badge}</span>
                 )}
               </a>
             </li>

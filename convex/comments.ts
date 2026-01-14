@@ -243,6 +243,8 @@ export const addComment = mutation({
 
     const commentId = await ctx.db.insert("comments", {
       itemId: args.itemId,
+      targetId: args.itemId,
+      targetType: "item",
       userId,
       content: args.content.trim(),
       parentCommentId: args.parentCommentId,
@@ -402,6 +404,16 @@ export const deleteComment = mutation({
 
     // Delete the comment
     await ctx.db.delete(args.commentId);
+
+    // Decrement comment count if this was a top-level comment on a page
+    if (!comment.parentCommentId && comment.targetId && comment.targetType === "page") {
+      const page = await ctx.db.get(comment.targetId as any);
+      if (page && 'commentCount' in page) {
+        await ctx.db.patch(comment.targetId as any, {
+          commentCount: Math.max(0, ((page as any).commentCount || 0) - 1),
+        });
+      }
+    }
 
     // Also delete any replies to this comment
     const replies = await ctx.db
@@ -612,5 +624,192 @@ export const getAllComments = query({
     }
 
     return await ctx.db.query("comments").collect();
+  },
+});
+
+// Get comments for a page with page-based pagination (only top-level comments)
+export const getPageComments = query({
+  args: { 
+    pageId: v.id("pages"),
+    page: v.optional(v.number()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const page = args.page || 1;
+      const limit = args.limit || 10;
+      const offset = (page - 1) * limit;
+
+      // Verify page exists
+      const pageDoc = await ctx.db.get(args.pageId);
+      if (!pageDoc) {
+        return {
+          comments: [],
+          totalCount: 0,
+          currentPage: page,
+          totalPages: 0,
+          hasMore: false,
+        };
+      }
+
+      // Get all top-level comments for counting
+      const allComments = await ctx.db
+        .query("comments")
+        .withIndex("by_target_and_created", (q) => 
+          q.eq("targetId", args.pageId)
+        )
+        .filter((q) => q.eq(q.field("parentCommentId"), undefined))
+        .order("desc")
+        .collect();
+
+      const totalCount = allComments.length;
+      const totalPages = Math.ceil(totalCount / limit);
+      
+      // Get comments for current page
+      const comments = allComments.slice(offset, offset + limit);
+
+      // Get user profiles and vote counts for each comment
+      const commentsWithDetails = await Promise.all(
+        comments.map(async (comment) => {
+          try {
+            const user = await ctx.db.get(comment.userId);
+            const userProfile = await ctx.db
+              .query("userProfiles")
+              .withIndex("by_user", (q) => q.eq("userId", comment.userId))
+              .first();
+
+            // Get quoted comment details if exists
+            let quotedComment = null;
+            if (comment.quotedCommentId) {
+              const quoted = await ctx.db.get(comment.quotedCommentId);
+              if (quoted) {
+                const quotedUser = await ctx.db.get(quoted.userId);
+                const quotedUserProfile = await ctx.db
+                  .query("userProfiles")
+                  .withIndex("by_user", (q) => q.eq("userId", quoted.userId))
+                  .first();
+                quotedComment = {
+                  ...quoted,
+                  username: quotedUserProfile?.username || "Unknown User",
+                };
+              }
+            }
+
+            // Get replies count
+            const repliesCount = await ctx.db
+              .query("comments")
+              .withIndex("by_parent", (q) => q.eq("parentCommentId", comment._id))
+              .collect()
+              .then(replies => replies.length);
+
+            return {
+              ...comment,
+              username: userProfile?.username || "Unknown User",
+              quotedComment,
+              repliesCount,
+            };
+          } catch (error) {
+            console.error("Error processing comment:", error);
+            return {
+              ...comment,
+              username: "Unknown User",
+              quotedComment: null,
+              repliesCount: 0,
+            };
+          }
+        })
+      );
+
+      return {
+        comments: commentsWithDetails,
+        totalCount,
+        currentPage: page,
+        totalPages,
+        hasMore: page < totalPages,
+      };
+    } catch (error) {
+      console.error("Error fetching page comments:", error);
+      return null;
+    }
+  },
+});
+
+// Add a new comment to a page
+export const addPageComment = mutation({
+  args: {
+    pageId: v.id("pages"),
+    content: v.string(),
+    parentCommentId: v.optional(v.id("comments")),
+    quotedCommentId: v.optional(v.id("comments")),
+    quotedText: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be logged in to comment");
+    }
+
+    // Check if user is banned
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (userProfile && userProfile.isBanned === true) {
+      throw new Error("You have been banned from the platform. Please contact admin for details.");
+    }
+
+    // Validate content
+    if (!args.content.trim()) {
+      throw new Error("Comment content cannot be empty");
+    }
+
+    if (args.content.length > 2000) {
+      throw new Error("Comment is too long (max 2000 characters)");
+    }
+
+    // Verify page exists
+    const page = await ctx.db.get(args.pageId);
+    if (!page) {
+      throw new Error("Page not found");
+    }
+
+    // Verify parent comment exists if provided
+    if (args.parentCommentId) {
+      const parentComment = await ctx.db.get(args.parentCommentId);
+      if (!parentComment) {
+        throw new Error("Parent comment not found");
+      }
+    }
+
+    // Verify quoted comment exists if provided
+    if (args.quotedCommentId) {
+      const quotedComment = await ctx.db.get(args.quotedCommentId);
+      if (!quotedComment) {
+        throw new Error("Quoted comment not found");
+      }
+    }
+
+    const commentId = await ctx.db.insert("comments", {
+      targetId: args.pageId,
+      targetType: "page",
+      userId,
+      content: args.content.trim(),
+      parentCommentId: args.parentCommentId,
+      quotedCommentId: args.quotedCommentId,
+      quotedText: args.quotedText,
+      upvotes: 0,
+      downvotes: 0,
+      createdAt: Date.now(),
+    });
+
+    // Increment comment count on the page (only for top-level comments, not replies)
+    if (!args.parentCommentId) {
+      await ctx.db.patch(args.pageId, {
+        commentCount: (page.commentCount || 0) + 1,
+      });
+    }
+
+    return commentId;
   },
 });

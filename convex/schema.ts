@@ -7,12 +7,24 @@ const applicationTables = {
     slug: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
+    excerpt: v.optional(v.string()), // For blog feed preview
+    coverImageId: v.optional(v.id("_storage")), // Featured image
+    coverImageUrl: v.optional(v.string()), // Or external URL
+    content: v.optional(v.string()), // Rich text JSON (TipTap format)
     authorId: v.id("users"),
     isPublished: v.boolean(),
+    publishedAt: v.optional(v.number()), // Publish timestamp
+    tags: v.optional(v.array(v.string())), // Tags for categorization
+    readingTimeMinutes: v.optional(v.number()), // Calculated reading time
+    totalClaps: v.optional(v.number()), // Denormalized clap count
+    commentCount: v.optional(v.number()), // Denormalized comment count
+    viewCount: v.optional(v.number()), // Simple view counter
   })
     .index("by_slug", ["slug"])
     .index("by_author", ["authorId"])
-    .index("by_published", ["isPublished"]),
+    .index("by_published", ["isPublished"])
+    .index("by_published_date", ["isPublished", "publishedAt"])
+    .index("by_tags", ["tags"]),
 
   contentBlocks: defineTable({
     pageId: v.id("pages"),
@@ -85,7 +97,9 @@ const applicationTables = {
     .index("by_slug", ["slug"]),
 
   comments: defineTable({
-    itemId: v.id("items"),
+    itemId: v.optional(v.id("items")), // Legacy field, kept for backward compatibility
+    targetId: v.optional(v.union(v.id("items"), v.id("pages"))), // Support both items and pages (optional for backward compatibility)
+    targetType: v.optional(v.union(v.literal("item"), v.literal("page"))), // Type discriminator (optional for backward compatibility)
     userId: v.id("users"),
     content: v.string(),
     parentCommentId: v.optional(v.id("comments")), // For replies
@@ -96,9 +110,11 @@ const applicationTables = {
     createdAt: v.number(), // timestamp
   })
     .index("by_item", ["itemId"])
+    .index("by_target", ["targetId", "targetType"]) // New composite index
     .index("by_user", ["userId"])
     .index("by_parent", ["parentCommentId"])
-    .index("by_item_and_created", ["itemId", "createdAt"]),
+    .index("by_item_and_created", ["itemId", "createdAt"])
+    .index("by_target_and_created", ["targetId", "createdAt"]),
 
   commentVotes: defineTable({
     commentId: v.id("comments"),
@@ -207,6 +223,17 @@ const applicationTables = {
   })
     .index("by_status", ["status"])
     .index("by_created", ["createdAt"]),
+
+  // Page claps (Medium-style appreciation)
+  pageClaps: defineTable({
+    pageId: v.id("pages"),
+    userId: v.id("users"),
+    clapCount: v.number(), // 1-50 claps from this user
+    lastClappedAt: v.number(), // Timestamp of last clap
+    createdAt: v.number(), // First clap timestamp
+  })
+    .index("by_page", ["pageId"])
+    .index("by_user_and_page", ["userId", "pageId"]), // Unique constraint
 };
 
 export default defineSchema({

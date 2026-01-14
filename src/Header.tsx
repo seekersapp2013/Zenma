@@ -29,6 +29,11 @@ export function Header() {
                   <a className="header__nav-link" href="/aboutus" role="button">
                     About Us</a>
                 </li>
+                               <li className="header__nav-item">
+                  <a className="header__nav-link" href="/blog" role="button">
+                    Blog</a>
+                </li>
+
                 <li className="header__nav-item">
                   <a className="header__nav-link" href="/contactus" role="button">
                     Contact Us</a>

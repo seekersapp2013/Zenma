@@ -11,6 +11,8 @@
 import type * as actors from "../actors.js";
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
+import type * as checkMigrationStatus from "../checkMigrationStatus.js";
+import type * as claps from "../claps.js";
 import type * as comments from "../comments.js";
 import type * as contacts from "../contacts.js";
 import type * as content from "../content.js";
@@ -20,9 +22,11 @@ import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as items from "../items.js";
 import type * as migrations from "../migrations.js";
+import type * as migrations_migrateComments from "../migrations/migrateComments.js";
 import type * as pages from "../pages.js";
 import type * as reviews from "../reviews.js";
 import type * as router from "../router.js";
+import type * as runMigration from "../runMigration.js";
 import type * as seed from "../seed.js";
 import type * as settings from "../settings.js";
 
@@ -36,6 +40,8 @@ declare const fullApi: ApiFromModules<{
   actors: typeof actors;
   auth: typeof auth;
   categories: typeof categories;
+  checkMigrationStatus: typeof checkMigrationStatus;
+  claps: typeof claps;
   comments: typeof comments;
   contacts: typeof contacts;
   content: typeof content;
@@ -45,9 +51,11 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   items: typeof items;
   migrations: typeof migrations;
+  "migrations/migrateComments": typeof migrations_migrateComments;
   pages: typeof pages;
   reviews: typeof reviews;
   router: typeof router;
+  runMigration: typeof runMigration;
   seed: typeof seed;
   settings: typeof settings;
 }>;
