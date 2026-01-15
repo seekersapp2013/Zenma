@@ -72,7 +72,7 @@ export function Dashboard({ navigate }: DashboardProps) {
         <h1 className="text-3xl font-bold text-gray-900">My Pages</h1>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="bg-[#ff1493] text-white px-4 py-2 rounded-lg hover:bg-[#d91a72] transition-colors"
         >
           Create New Page
         </button>
@@ -93,7 +93,7 @@ export function Dashboard({ navigate }: DashboardProps) {
                   value={newPage.slug}
                   onChange={(e) => setNewPage({ ...newPage, slug: e.target.value })}
                   placeholder="about-us"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
                   required
                 />
               </div>
@@ -107,7 +107,7 @@ export function Dashboard({ navigate }: DashboardProps) {
                 value={newPage.title}
                 onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
                 placeholder="About Us"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
                 required
               />
             </div>
@@ -119,14 +119,14 @@ export function Dashboard({ navigate }: DashboardProps) {
                 value={newPage.description}
                 onChange={(e) => setNewPage({ ...newPage, description: e.target.value })}
                 placeholder="A brief description of this page"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
                 rows={3}
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                className="bg-[#ff1493] text-white px-4 py-2 rounded-md hover:bg-[#d91a72] transition-colors"
               >
                 Create Page
               </button>
@@ -145,7 +145,7 @@ export function Dashboard({ navigate }: DashboardProps) {
       <div className="grid gap-4">
         {pages === undefined ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
           </div>
         ) : pages.length === 0 ? (
           <div className="text-center py-12">
@@ -180,7 +180,7 @@ export function Dashboard({ navigate }: DashboardProps) {
                 <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => setEditingPageId(page._id)}
-                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition-colors text-sm"
+                    className="bg-[#ffe5f3] text-[#d91a72] px-3 py-1 rounded hover:bg-[#ffc9e5] transition-colors text-sm"
                   >
                     Edit
                   </button>

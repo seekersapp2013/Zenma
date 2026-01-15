@@ -631,7 +631,7 @@ export function ItemDetails() {
   if (item === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
       </div>
     );
   }
@@ -644,7 +644,7 @@ export function ItemDetails() {
           <p className="text-gray-600 mb-4">The item you're looking for doesn't exist.</p>
           <button 
             onClick={() => navigate('/')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="bg-[#ff1493] text-white px-4 py-2 rounded-md hover:bg-[#d91a72] transition-colors"
           >
             Go to Homepage
           </button>

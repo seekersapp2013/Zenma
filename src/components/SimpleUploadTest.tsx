@@ -116,7 +116,7 @@ export function SimpleUploadTest() {
         <div className="mb-4">
           <div className="bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-[#ff1493] h-2 rounded-full transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>

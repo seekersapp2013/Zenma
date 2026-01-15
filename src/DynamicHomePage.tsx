@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Header } from "./Header";
@@ -11,6 +11,17 @@ interface HomePageProps {
 
 export function DynamicHomePage({ background = true }: HomePageProps) {
   const categoriesWithItems = useQuery(api.items.getAllItemsWithCategories);
+  const actors = useQuery(api.actors.getActors);
+  const directors = useQuery(api.directors.getDirectors);
+
+  // Filter states
+  const [filterType, setFilterType] = useState<string>("All");
+  const [filterGenre, setFilterGenre] = useState<string>("All");
+  const [filterActor, setFilterActor] = useState<string>("All");
+  const [filterDirector, setFilterDirector] = useState<string>("All");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  
+  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     // Check if CSS files are already loaded to avoid duplicates
@@ -150,7 +161,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                               <a href={`/details/${item.slug}`}>{item.title}</a>
                             </h3>
                             <span className="item__category">
-                              {item.genres.map((genre: string, index: number) => (
+                              {item.genres.map((genre: string) => (
                                 <a key={genre} href="#">{genre}</a>
                               ))}
                             </span>
@@ -168,7 +179,79 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
     </div>
   );
 
-  const renderFullSection = (category: any) => (
+  // Extract unique genres from all items
+  const allGenres = useMemo(() => {
+    if (!categoriesWithItems) return [];
+    const genres = new Set<string>();
+    categoriesWithItems.forEach(category => {
+      category.items.forEach((item: any) => {
+        item.genres.forEach((genre: string) => genres.add(genre));
+      });
+    });
+    return Array.from(genres).sort();
+  }, [categoriesWithItems]);
+
+  // Filter and paginate items for the second category (full section)
+  const getFilteredAndPaginatedItems = (category: any) => {
+    if (!category.items) return { items: [], totalPages: 0 };
+
+    let filtered = [...category.items];
+
+    // Apply Type filter
+    if (filterType !== "All") {
+      if (filterType === "Movies") {
+        // Keep all items (assuming all items in this section are movies)
+        filtered = filtered;
+      } else if (filterType === "Actors") {
+        // Filter items that have the selected actor
+        filtered = filtered.filter((item: any) => 
+          item.cast && item.cast.some((c: any) => c.actorName === filterActor)
+        );
+      } else if (filterType === "Directors") {
+        // Filter items that have the selected director
+        filtered = filtered.filter((item: any) => 
+          item.director && item.director.includes(filterDirector)
+        );
+      }
+    }
+
+    // Apply Genre filter
+    if (filterGenre !== "All") {
+      filtered = filtered.filter((item: any) => 
+        item.genres && item.genres.includes(filterGenre)
+      );
+    }
+
+    // Apply Actor filter
+    if (filterActor !== "All") {
+      filtered = filtered.filter((item: any) => 
+        item.cast && item.cast.some((c: any) => c.actorName === filterActor)
+      );
+    }
+
+    // Apply Director filter
+    if (filterDirector !== "All") {
+      filtered = filtered.filter((item: any) => 
+        item.director && item.director.includes(filterDirector)
+      );
+    }
+
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedItems = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    return { items: paginatedItems, totalPages, totalItems: filtered.length };
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, filterGenre, filterActor, filterDirector]);
+
+  const renderFullSection = (category: any) => {
+    const { items: filteredItems, totalPages, totalItems } = getFilteredAndPaginatedItems(category);
+    
+    return (
     <div className="section section--catalog" key={category._id}>
       <div className="container">
         <div className="row">
@@ -181,37 +264,311 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
             </div>
           </div>
         </div>
-        <div className="row">
-          {category.items.map((item: any) => (
-            <div key={item._id} className="col-6 col-sm-4 col-lg-3 col-xl-2">
-              <div className="item">
-                <div className="item__cover">
-                  <img src={item.imageUrl} alt={item.title} />
-                  <a href={`/details/${item.slug}`} className="item__play">
-                    <i className="ti ti-player-play-filled"></i>
-                  </a>
-                  <span className="item__rate item__rate--green">8.4</span>
-                  <button className="item__favorite" type="button">
-                    <i className="ti ti-bookmark"></i>
-                  </button>
-                </div>
-                <div className="item__content">
-                  <h3 className="item__title">
-                    <a href={`/details/${item.slug}`}>{item.title}</a>
-                  </h3>
-                  <span className="item__category">
-                    {item.genres.map((genre: string) => (
-                      <a key={genre} href="#">{genre}</a>
-                    ))}
-                  </span>
-                </div>
+
+        {/* Filter Dropdowns */}
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="filter__dropdowns" style={{ 
+              display: 'flex', 
+              gap: '15px', 
+              flexWrap: 'wrap',
+              marginBottom: '30px'
+            }}>
+              {/* Type Filter */}
+              <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#fff', 
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Filter by Type
+                </label>
+                <select 
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 15px',
+                    backgroundColor: '#28282d',
+                    color: '#fff',
+                    border: '1px solid #3d3d42',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="All">All</option>
+                  <option value="Movies">Movies</option>
+                  <option value="Actors">Actors</option>
+                  <option value="Directors">Directors</option>
+                </select>
+              </div>
+
+              {/* Genre Filter */}
+              <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#fff', 
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Filter by Genre
+                </label>
+                <select 
+                  value={filterGenre}
+                  onChange={(e) => setFilterGenre(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 15px',
+                    backgroundColor: '#28282d',
+                    color: '#fff',
+                    border: '1px solid #3d3d42',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="All">All Genres</option>
+                  {allGenres.map((genre) => (
+                    <option key={genre} value={genre}>{genre}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Actor Filter */}
+              <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#fff', 
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Filter by Actor
+                </label>
+                <select 
+                  value={filterActor}
+                  onChange={(e) => setFilterActor(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 15px',
+                    backgroundColor: '#28282d',
+                    color: '#fff',
+                    border: '1px solid #3d3d42',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                  disabled={!actors || actors.length === 0}
+                >
+                  <option value="All">All Actors</option>
+                  {actors && actors.map((actor) => (
+                    <option key={actor._id} value={actor.name}>{actor.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Director Filter */}
+              <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#fff', 
+                  marginBottom: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  Filter by Director
+                </label>
+                <select 
+                  value={filterDirector}
+                  onChange={(e) => setFilterDirector(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 15px',
+                    backgroundColor: '#28282d',
+                    color: '#fff',
+                    border: '1px solid #3d3d42',
+                    borderRadius: '6px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                  disabled={!directors || directors.length === 0}
+                >
+                  <option value="All">All Directors</option>
+                  {directors && directors.map((director) => (
+                    <option key={director._id} value={director.name}>{director.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
-          ))}
+
+            {/* Results count */}
+            <div style={{ 
+              color: '#b3b3b3', 
+              fontSize: '14px', 
+              marginBottom: '20px' 
+            }}>
+              Showing {filteredItems.length} of {totalItems} results
+            </div>
+          </div>
         </div>
+
+        <div className="row">
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item: any) => (
+              <div key={item._id} className="col-6 col-sm-4 col-lg-3 col-xl-2">
+                <div className="item">
+                  <div className="item__cover">
+                    <img src={item.imageUrl} alt={item.title} />
+                    <a href={`/details/${item.slug}`} className="item__play">
+                      <i className="ti ti-player-play-filled"></i>
+                    </a>
+                    <span className="item__rate item__rate--green">8.4</span>
+                    <button className="item__favorite" type="button">
+                      <i className="ti ti-bookmark"></i>
+                    </button>
+                  </div>
+                  <div className="item__content">
+                    <h3 className="item__title">
+                      <a href={`/details/${item.slug}`}>{item.title}</a>
+                    </h3>
+                    <span className="item__category">
+                      {item.genres.map((genre: string) => (
+                        <a key={genre} href="#">{genre}</a>
+                      ))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-12">
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '60px 20px',
+                color: '#b3b3b3'
+              }}>
+                <i className="ti ti-search" style={{ fontSize: '48px', marginBottom: '20px', display: 'block' }}></i>
+                <h3 style={{ color: '#fff', marginBottom: '10px' }}>No results found</h3>
+                <p>Try adjusting your filters to find what you're looking for.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="row">
+            <div className="col-12">
+              <div className="pagination" style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '10px',
+                marginTop: '40px',
+                flexWrap: 'wrap'
+              }}>
+                {/* Previous Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: currentPage === 1 ? '#28282d' : '#ff1493',
+                    color: currentPage === 1 ? '#666' : '#fff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <i className="ti ti-chevron-left"></i> Previous
+                </button>
+
+                {/* Page Numbers */}
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    // Show first page, last page, current page, and pages around current
+                    const showPage = 
+                      page === 1 || 
+                      page === totalPages || 
+                      (page >= currentPage - 1 && page <= currentPage + 1);
+                    
+                    const showEllipsis = 
+                      (page === currentPage - 2 && currentPage > 3) ||
+                      (page === currentPage + 2 && currentPage < totalPages - 2);
+
+                    if (showEllipsis) {
+                      return (
+                        <span key={page} style={{ 
+                          padding: '10px 15px', 
+                          color: '#666' 
+                        }}>
+                          ...
+                        </span>
+                      );
+                    }
+
+                    if (!showPage) return null;
+
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        style={{
+                          padding: '10px 15px',
+                          backgroundColor: currentPage === page ? '#ff1493' : '#28282d',
+                          color: '#fff',
+                          border: currentPage === page ? '2px solid #ff1493' : '1px solid #3d3d42',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: currentPage === page ? '600' : '400',
+                          minWidth: '45px',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Next Button */}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: currentPage === totalPages ? '#28282d' : '#ff1493',
+                    color: currentPage === totalPages ? '#666' : '#fff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  Next <i className="ti ti-chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
+  };
 
   const renderShortSection = (category: any) => (
     <section className="section section--border" key={category._id}>
@@ -276,7 +633,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
   if (categoriesWithItems === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
       </div>
     );
   }

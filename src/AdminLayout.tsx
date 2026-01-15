@@ -243,7 +243,7 @@ export function AdminLayout({ children, currentPage, pageTitle, totalCount, titl
 
       /* Preserve dark text on white/light backgrounds */
       .bg-white,
-      .bg-white *:not(.text-white):not(.text-blue-600):not(.text-blue-700):not(.text-green-600):not(.text-yellow-600):not(.text-red-600):not(.text-gray-500):not(.text-gray-600):not(.text-gray-700):not(.text-gray-900) {
+      .bg-white *:not(.text-white):not(.text-[#ff1493]):not(.text-[#d91a72]):not(.text-green-600):not(.text-yellow-600):not(.text-red-600):not(.text-gray-500):not(.text-gray-600):not(.text-gray-700):not(.text-gray-900) {
         color: inherit;
       }
       

@@ -116,7 +116,7 @@ export function Director() {
   if (director === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
       </div>
     );
   }
@@ -135,7 +135,7 @@ export function Director() {
               : "The director you're looking for doesn't exist."
             }
           </p>
-          <a href="/" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+          <a href="/" className="bg-[#ff1493] text-white px-4 py-2 rounded-md hover:bg-[#d91a72] transition-colors">
             Go to Homepage
           </a>
         </div>

@@ -27,6 +27,7 @@ import type * as pages from "../pages.js";
 import type * as reviews from "../reviews.js";
 import type * as router from "../router.js";
 import type * as runMigration from "../runMigration.js";
+import type * as search from "../search.js";
 import type * as seed from "../seed.js";
 import type * as settings from "../settings.js";
 
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   reviews: typeof reviews;
   router: typeof router;
   runMigration: typeof runMigration;
+  search: typeof search;
   seed: typeof seed;
   settings: typeof settings;
 }>;

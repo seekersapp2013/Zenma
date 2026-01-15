@@ -25,7 +25,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
   if (!page) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
       </div>
     );
   }
@@ -101,7 +101,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => setEditingBlock(block._id)}
-            className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs mr-1 hover:bg-blue-200"
+            className="bg-[#ffe5f3] text-[#d91a72] px-2 py-1 rounded text-xs mr-1 hover:bg-[#ffc9e5]"
           >
             Edit
           </button>
@@ -122,7 +122,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={onBack}
-          className="text-blue-600 hover:text-blue-700 flex items-center gap-2"
+          className="text-[#ff1493] hover:text-[#d91a72] flex items-center gap-2"
         >
           ← Back to Dashboard
         </button>
@@ -140,7 +140,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
           {page.isPublished && (
             <button
               onClick={() => navigate(`/${page.slug}`)}
-              className="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors"
+              className="bg-[#ffe5f3] text-[#d91a72] px-4 py-2 rounded-lg hover:bg-[#ffc9e5] transition-colors"
             >
               View Page
             </button>
@@ -181,7 +181,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
                 <select
                   value={newBlockType}
                   onChange={(e) => setNewBlockType(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
                 >
                   <option value="text">Text</option>
                   <option value="image">Image URL</option>
@@ -197,7 +197,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
                     value={newBlockContent}
                     onChange={(e) => setNewBlockContent(e.target.value)}
                     placeholder="Enter your text content..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
                     rows={4}
                     required
                   />
@@ -207,7 +207,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
                     value={newBlockContent}
                     onChange={(e) => setNewBlockContent(e.target.value)}
                     placeholder={`Enter ${newBlockType} URL...`}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
                     required
                   />
                 )}
@@ -215,7 +215,7 @@ export function PageEditor({ pageId, onBack, navigate }: PageEditorProps) {
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="bg-[#ff1493] text-white px-4 py-2 rounded-md hover:bg-[#d91a72] transition-colors"
                 >
                   Add Block
                 </button>
@@ -260,7 +260,7 @@ function ContentBlockEditor({ block, onSave, onCancel }: any) {
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
             rows={4}
             required
           />
@@ -269,7 +269,7 @@ function ContentBlockEditor({ block, onSave, onCancel }: any) {
             type="url"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff1493]"
             required
           />
         )}
@@ -277,7 +277,7 @@ function ContentBlockEditor({ block, onSave, onCancel }: any) {
       <div className="flex gap-2">
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="bg-[#ff1493] text-white px-4 py-2 rounded-md hover:bg-[#d91a72] transition-colors"
         >
           Save
         </button>

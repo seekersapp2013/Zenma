@@ -27,6 +27,7 @@ import { BlogAdmin } from "./BlogAdmin";
 import { BlogPostEditor } from "./BlogPostEditor";
 import { Blog } from "./Blog";
 import { BlogPost } from "./BlogPost";
+import { SearchResults } from "./SearchResults";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/" element={<HomeRoute />} />
         <Route path="/site" element={<DynamicHomePage />} />
         <Route path="/login" element={<SignInForm />} />
+        <Route path="/search" element={<SearchResults />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/dashboard" element={<AdminDashboardRoute />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
@@ -86,7 +88,7 @@ function HomeRoute() {
   if (loggedInUser === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
       </div>
     );
   }

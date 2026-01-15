@@ -1,9 +1,20 @@
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignOutButton } from "./SignOutButton";
+import { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = (e: FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
     <header className="header">
@@ -43,30 +54,39 @@ export function Header() {
 
               {/* header auth */}
               <div className="header__auth">
-                <form action="#" className="header__search">
-                  <input className="header__search-input" type="text" placeholder="Search..." />
-                  <button className="header__search-button" type="button">
+                <form onSubmit={handleSearch} className="header__search">
+                  <input 
+                    className="header__search-input" 
+                    type="text" 
+                    placeholder="Search..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <button className="header__search-button" type="submit">
                     <i className="ti ti-search"></i>
                   </button>
-                  <button className="header__search-close" type="button">
+                  <button 
+                    className="header__search-close" 
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                  >
                     <i className="ti ti-x"></i>
                   </button>
                 </form>
 
-                <button className="header__search-btn" type="button">
+                <button 
+                  className="header__search-btn" 
+                  type="button"
+                  onClick={() => {
+                    const searchForm = document.querySelector('.header__search') as HTMLElement;
+                    if (searchForm) {
+                      searchForm.classList.toggle('header__search--active');
+                    }
+                  }}
+                >
                   <i className="ti ti-search"></i>
                 </button>
 
-                <div className="header__lang">
-                  <a className="header__nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    EN <i className="ti ti-chevron-down"></i>
-                  </a>
-                  <ul className="dropdown-menu header__dropdown-menu">
-                    <li><a href="#">English</a></li>
-                    <li><a href="#">Spanish</a></li>
-                    <li><a href="#">French</a></li>
-                  </ul>
-                </div>
 
                 <div className="header__profile">
                   <Authenticated>

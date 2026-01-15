@@ -33,7 +33,7 @@ export function Admin() {
   if (loggedInUser === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
       </div>
     );
   }
@@ -48,7 +48,7 @@ export function Admin() {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => navigate('/')}
-                  className="text-2xl font-bold text-blue-600 hover:text-blue-700"
+                  className="text-2xl font-bold text-[#ff1493] hover:text-[#d91a72]"
                 >
                   Zenma
                 </button>
@@ -63,7 +63,7 @@ export function Admin() {
         ) : (
           // This will be handled by the useEffect redirect, but show loading in case
           <div className="min-h-screen flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
           </div>
         )}
       </Authenticated>

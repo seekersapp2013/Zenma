@@ -12,8 +12,8 @@ export function Footer() {
               <span className="footer__copyright">© ZENMA, {new Date().getFullYear()} <br /> </span>
 
               <nav className="footer__nav">
-                {/* <a href="/aboutus">About Us</a> */}
-                {/* <a href="/contacts">Contacts</a> */}
+                <a href="/aboutus">About Us</a>
+                <a href="/contacts">Contacts</a>
 
               </nav>
 
