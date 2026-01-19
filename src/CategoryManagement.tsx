@@ -36,12 +36,15 @@ export function CategoryManagement() {
     type: "featured",
     title: "",
   });
+  const [isTestLoading, setIsTestLoading] = useState(false);
 
   const categories = useQuery(api.categories.getCategories);
   const createCategory = useMutation(api.categories.createCategory);
   const deleteCategory = useMutation(api.categories.deleteCategory);
   const updateCategoryOrder = useMutation(api.categories.updateCategoryOrder);
   const deleteItem = useMutation(api.items.deleteItem);
+  const duplicateItemsTo100 = useMutation(api.seed.duplicateItemsTo100);
+  const deleteDuplicatedItems = useMutation(api.seed.deleteDuplicatedItems);
 
   // Add custom CSS for dropdown and form elements
   useEffect(() => {
@@ -158,6 +161,38 @@ export function CategoryManagement() {
     }
   };
 
+  const handleDuplicateItems = async () => {
+    if (!confirm("This will duplicate your existing items to reach 100 items for testing. Continue?")) {
+      return;
+    }
+    
+    setIsTestLoading(true);
+    try {
+      const result = await duplicateItemsTo100();
+      alert(result);
+    } catch (error) {
+      alert(`Error: ${error}`);
+    } finally {
+      setIsTestLoading(false);
+    }
+  };
+
+  const handleDeleteDuplicates = async () => {
+    if (!confirm("This will delete all duplicated items (items with 'Copy' in title). Continue?")) {
+      return;
+    }
+    
+    setIsTestLoading(true);
+    try {
+      const result = await deleteDuplicatedItems();
+      alert(result);
+    } catch (error) {
+      alert(`Error: ${error}`);
+    } finally {
+      setIsTestLoading(false);
+    }
+  };
+
   if (categories === undefined) {
     return (
       <div className="d-flex align-items-center justify-content-center p-4">
@@ -174,14 +209,81 @@ export function CategoryManagement() {
       pageTitle="Categories" 
       totalCount={categories?.length}
       titleActions={
-        <button 
-          onClick={() => setShowCategoryForm(true)}
-          className="main__title-link main__title-link--wrap"
-        >
-          Add Category
-        </button>
+        <>
+          <button 
+            onClick={() => setShowCategoryForm(true)}
+            className="main__title-link main__title-link--wrap"
+          >
+            Add Category
+          </button>
+        </>
       }
     >
+      {/* Test Buttons for Lazy Loading */}
+      <div style={{ 
+        marginBottom: '20px', 
+        padding: '15px', 
+        backgroundColor: '#2b2b31', 
+        borderRadius: '8px',
+        border: '2px solid #ff9800'
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '15px',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{ 
+            color: '#ff9800', 
+            fontWeight: 'bold',
+            fontSize: '14px'
+          }}>
+            ⚠️ TEST TOOLS (Lazy Loading):
+          </span>
+          <button
+            onClick={handleDuplicateItems}
+            disabled={isTestLoading}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#4caf50',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isTestLoading ? 'not-allowed' : 'pointer',
+              fontSize: '13px',
+              fontWeight: '500',
+              opacity: isTestLoading ? 0.6 : 1
+            }}
+          >
+            {isTestLoading ? 'Processing...' : 'Duplicate to 100 Items'}
+          </button>
+          <button
+            onClick={handleDeleteDuplicates}
+            disabled={isTestLoading}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#f44336',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isTestLoading ? 'not-allowed' : 'pointer',
+              fontSize: '13px',
+              fontWeight: '500',
+              opacity: isTestLoading ? 0.6 : 1
+            }}
+          >
+            {isTestLoading ? 'Processing...' : 'Delete Duplicates'}
+          </button>
+          <span style={{ 
+            color: '#b3b3b3', 
+            fontSize: '12px',
+            fontStyle: 'italic'
+          }}>
+            Use these to test lazy loading on /movies page
+          </span>
+        </div>
+      </div>
+
       {/* Categories Table */}
       <div className="catalog catalog--1">
         <DndContext

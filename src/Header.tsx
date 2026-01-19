@@ -97,7 +97,7 @@ export function Header() {
                   <li className="header__nav-item">
                     <a 
                       className={`header__nav-link ${isActive('/movies') ? 'header__nav-link--active' : ''}`}
-                      href="#" 
+                      href="/movies" 
                       role="button" 
                       onClick={() => setIsMobileMenuOpen(false)}
                     >

@@ -246,3 +246,92 @@ export const seedActorsAndDirectors = mutation({
     return `Seeded ${existingActors.length === 0 ? 3 : 0} actors and ${existingDirectors.length === 0 ? 3 : 0} directors`;
   },
 });
+
+// Duplicate existing items to reach 100 items for testing lazy loading
+export const duplicateItemsTo100 = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get all existing items
+    const existingItems = await ctx.db.query("items").collect();
+    
+    if (existingItems.length === 0) {
+      return "No items to duplicate. Please add some items first.";
+    }
+
+    const currentCount = existingItems.length;
+    const targetCount = 100;
+
+    if (currentCount >= targetCount) {
+      return `Already have ${currentCount} items. No need to duplicate.`;
+    }
+
+    const itemsNeeded = targetCount - currentCount;
+    let duplicatedCount = 0;
+
+    // Duplicate items in a round-robin fashion
+    for (let i = 0; i < itemsNeeded; i++) {
+      const sourceItem = existingItems[i % existingItems.length];
+      
+      // Create a unique slug by appending a number
+      const baseSlug = sourceItem.slug;
+      const newSlug = `${baseSlug}-copy-${currentCount + i + 1}`;
+      
+      // Create a new title with a number
+      const newTitle = `${sourceItem.title} (Copy ${currentCount + i + 1})`;
+
+      // Insert the duplicated item
+      await ctx.db.insert("items", {
+        categoryId: sourceItem.categoryId,
+        title: newTitle,
+        slug: newSlug,
+        imageId: sourceItem.imageId,
+        genres: sourceItem.genres,
+        description: sourceItem.description,
+        director: sourceItem.director,
+        cast: sourceItem.cast,
+        premiereYear: sourceItem.premiereYear,
+        runningTime: sourceItem.runningTime,
+        country: sourceItem.country,
+        rating: sourceItem.rating,
+        posterImageId: sourceItem.posterImageId,
+        posterImageUrl: sourceItem.posterImageUrl,
+        videoSources: sourceItem.videoSources,
+        captions: sourceItem.captions,
+        createdBy: userId,
+      });
+
+      duplicatedCount++;
+    }
+
+    return `Successfully duplicated ${duplicatedCount} items. Total items now: ${currentCount + duplicatedCount}`;
+  },
+});
+
+// Delete all duplicated items (items with "Copy" in title)
+export const deleteDuplicatedItems = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get all items with "Copy" in the title
+    const allItems = await ctx.db.query("items").collect();
+    const duplicatedItems = allItems.filter(item => item.title.includes("(Copy"));
+
+    if (duplicatedItems.length === 0) {
+      return "No duplicated items found to delete.";
+    }
+
+    // Delete all duplicated items
+    for (const item of duplicatedItems) {
+      await ctx.db.delete(item._id);
+    }
+
+    return `Successfully deleted ${duplicatedItems.length} duplicated items. Remaining items: ${allItems.length - duplicatedItems.length}`;
+  },
+});

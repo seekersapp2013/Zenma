@@ -1,6 +1,7 @@
 import { Routes, Route, useParams } from "react-router-dom";
 import { Toaster } from "sonner";
 import { DynamicHomePage } from "./DynamicHomePage";
+import { Movies } from "./movies";
 import { Admin } from "./Admin";
 import { AdminDashboard } from "./AdminDashboard";
 import { CategoryManagement } from "./CategoryManagement";
@@ -43,6 +44,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomeRoute />} />
         <Route path="/site" element={<DynamicHomePage />} />
+        <Route path="/movies" element={<Movies />} />
         <Route path="/login" element={<SignInForm />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/admin" element={<Admin />} />

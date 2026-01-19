@@ -44,28 +44,28 @@ export function Sidebar({ currentPage }: SidebarProps) {
       key: "dashboard" 
     },
     { 
-      href: "/categories", 
+      href: "/admin/categories", 
       icon: "ti-category", 
       label: "Categories", 
       key: "categories",
       count: categories?.length || 0
     },
     { 
-      href: "/actors", 
+      href: "/admin/actors", 
       icon: "ti-user", 
       label: "Actors", 
       key: "actors",
       count: allActors?.length || 0
     },
     { 
-      href: "/directors", 
+      href: "/admin/directors", 
       icon: "ti-video", 
       label: "Directors", 
       key: "directors",
       count: allDirectors?.length || 0
     },
     { 
-      href: "/blog-admin", 
+      href: "/admin/blog-admin", 
       icon: "ti-pencil", 
       label: "Blog", 
       key: "blog",
@@ -73,40 +73,40 @@ export function Sidebar({ currentPage }: SidebarProps) {
       badge: blogStats?.drafts || 0
     },
     { 
-      href: "/users", 
+      href: "/admin/users", 
       icon: "ti-users", 
       label: "Users", 
       key: "users",
       count: allUsers?.length || 0
     },
     { 
-      href: "/comments", 
+      href: "/admin/comments", 
       icon: "ti-message", 
       label: "Comments", 
       key: "comments",
       count: allComments?.length || 0
     },
     { 
-      href: "/reviews", 
+      href: "/admin/reviews", 
       icon: "ti-star-half-filled", 
       label: "Reviews", 
       key: "reviews",
       count: allReviews?.length || 0
     },
     { 
-      href: "/aboutus-editor", 
+      href: "/admin/aboutus-editor", 
       icon: "ti-info-circle", 
       label: "About Us", 
       key: "aboutus" 
     },
     { 
-      href: "/contactus-editor", 
+      href: "/admin/contactus-editor", 
       icon: "ti-mail", 
       label: "Contact Us", 
       key: "contactus" 
     },
     { 
-      href: "/settings", 
+      href: "/admin/settings", 
       icon: "ti-settings", 
       label: "Settings", 
       key: "settings" 

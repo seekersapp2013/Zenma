@@ -484,3 +484,20 @@ export const deleteItem = mutation({
     return await ctx.db.delete(args.itemId);
   },
 });
+
+// Query to get all items (for movies page)
+export const getAllItems = query({
+  handler: async (ctx) => {
+    const items = await ctx.db.query("items").collect();
+    
+    // Get image URLs for all items
+    const itemsWithImages = await Promise.all(
+      items.map(async (item) => ({
+        ...item,
+        imageUrl: await ctx.storage.getUrl(item.imageId),
+      }))
+    );
+
+    return itemsWithImages;
+  },
+});
