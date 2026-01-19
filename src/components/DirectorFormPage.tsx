@@ -108,7 +108,7 @@ export function DirectorFormPage() {
 
   const handleCancel = () => {
     if (confirm("Are you sure you want to cancel? Any unsaved changes will be lost.")) {
-      navigate("/directors");
+      navigate("/admin/directors");
     }
   };
 
@@ -163,7 +163,7 @@ export function DirectorFormPage() {
         toast.success("Director created successfully!");
       }
 
-      navigate("/directors");
+      navigate("/admin/directors");
     } catch (error) {
       console.error("Failed to save director:", error);
       toast.error("Failed to save director. Please try again.");
@@ -495,7 +495,7 @@ export function DirectorFormPage() {
       <AdminLayout currentPage="directors" pageTitle="Director Not Found">
         <div className="text-center py-5">
           <h4 className="text-white mb-3">Director not found</h4>
-          <button onClick={() => navigate("/directors")} className="btn btn-primary">
+          <button onClick={() => navigate("/admin/directors")} className="btn btn-primary">
             Back to Directors
           </button>
         </div>
@@ -508,7 +508,7 @@ export function DirectorFormPage() {
       currentPage="directors"
       pageTitle={isEditing ? "Edit Director" : "Add New Director"}
       titleActions={
-        <button onClick={() => navigate("/directors")} className="main__title-link">
+        <button onClick={() => navigate("/admin/directors")} className="main__title-link">
           <i className="ti ti-arrow-left"></i> Back to Directors
         </button>
       }

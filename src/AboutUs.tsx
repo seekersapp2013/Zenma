@@ -9,25 +9,6 @@ export function AboutUs() {
   // Fetch about us content from app settings
   const aboutContent = useQuery(api.settings.getAboutUsContent);
 
-  useEffect(() => {
-    // Load essential CSS files for consistent styling
-    const essentialCssFiles = [
-      '/css/bootstrap.min.css',
-      '/css/main.css',
-      '/webfont/tabler-icons.min.css'
-    ];
-
-    essentialCssFiles.forEach(href => {
-      if (!document.querySelector(`link[href="${href}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        link.media = 'all';
-        document.head.appendChild(link);
-      }
-    });
-  }, []);
-
   if (aboutContent === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">

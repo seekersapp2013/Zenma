@@ -19,22 +19,6 @@ export function Blog() {
   const allTags = useQuery(api.pages.getAllTags);
 
   useEffect(() => {
-    // Load CSS files
-    const cssFiles = [
-      '/css/bootstrap.min.css',
-      '/css/main.css',
-      '/webfont/tabler-icons.min.css'
-    ];
-
-    cssFiles.forEach(href => {
-      if (!document.querySelector(`link[href="${href}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        document.head.appendChild(link);
-      }
-    });
-
     // Load JS files
     const jsFiles = [
       '/js/bootstrap.bundle.min.js',

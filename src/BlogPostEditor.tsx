@@ -164,7 +164,7 @@ export function BlogPostEditor() {
         toast.success(publish ? "Post published successfully!" : "Post created as draft!");
       }
 
-      navigate("/blog-admin");
+      navigate("/admin/blog");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save post");
     } finally {
@@ -179,7 +179,7 @@ export function BlogPostEditor() {
       titleActions={
         <div className="d-flex gap-2">
           <button 
-            onClick={() => navigate('/blog-admin')}
+            onClick={() => navigate('/admin/blog')}
             className="header__action"
           >
             <i className="ti ti-arrow-left"></i>
@@ -394,7 +394,7 @@ export function BlogPostEditor() {
                       type="button"
                       className="sign__btn"
                       style={{ backgroundColor: '#dc3545' }}
-                      onClick={() => navigate('/blog-admin')}
+                      onClick={() => navigate('/admin/blog')}
                       disabled={isPublishing}
                     >
                       <i className="ti ti-x"></i>

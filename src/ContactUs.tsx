@@ -17,24 +17,6 @@ export function ContactUs() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const essentialCssFiles = [
-      '/css/bootstrap.min.css',
-      '/css/main.css',
-      '/webfont/tabler-icons.min.css'
-    ];
-
-    essentialCssFiles.forEach(href => {
-      if (!document.querySelector(`link[href="${href}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        link.media = 'all';
-        document.head.appendChild(link);
-      }
-    });
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     

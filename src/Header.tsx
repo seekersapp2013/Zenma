@@ -55,7 +55,15 @@ export function Header() {
   };
 
   return (
-    <header className="header">
+    <>
+      <style>{`
+        @media (min-width: 1200px) {
+          .header__nav-wrapper {
+            margin-left: 60px !important;
+          }
+        }
+      `}</style>
+      <header className="header">
       <div className="container">
         <div className="row">
           <div className="col-12">
@@ -99,7 +107,7 @@ export function Header() {
                   <li className="header__nav-item">
                     <a 
                       className={`header__nav-link ${isActive('/actors') ? 'header__nav-link--active' : ''}`}
-                      href="#" 
+                      href="/actors" 
                       role="button" 
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -196,5 +204,6 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }

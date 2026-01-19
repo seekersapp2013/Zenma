@@ -16,20 +16,13 @@ export function Director() {
   );
   const [activeTab, setActiveTab] = useState('filmography');
 
-  // Load essential CSS files that should load immediately
-  const essentialCssFiles = [
-    '/css/bootstrap.min.css',
+  // Non-essential CSS files that can load after
+  const nonEssentialCssFiles = [
     '/css/splide.min.css',
     '/css/slimselect.css',
     '/css/plyr.css',
     '/css/photoswipe.css',
-    '/css/default-skin.css',
-    '/css/main.css'
-  ];
-
-  // Non-essential CSS files that can load after
-  const nonEssentialCssFiles = [
-    '/webfont/tabler-icons.min.css'
+    '/css/default-skin.css'
   ];
 
   const jsFiles = [
@@ -49,17 +42,6 @@ export function Director() {
   };
 
   useEffect(() => {
-    // Load essential CSS files with high priority
-    essentialCssFiles.forEach(href => {
-      if (!isStylesheetLoaded(href)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        link.media = 'all';
-        document.head.appendChild(link);
-      }
-    });
-
     // Load non-essential CSS files after a short delay
     setTimeout(() => {
       nonEssentialCssFiles.forEach(href => {

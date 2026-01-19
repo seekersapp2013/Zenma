@@ -108,7 +108,7 @@ export function ActorFormPage() {
 
   const handleCancel = () => {
     if (confirm("Are you sure you want to cancel? Any unsaved changes will be lost.")) {
-      navigate("/actors");
+      navigate("/admin/actors");
     }
   };
 
@@ -163,7 +163,7 @@ export function ActorFormPage() {
         toast.success("Actor created successfully!");
       }
 
-      navigate("/actors");
+      navigate("/admin/actors");
     } catch (error) {
       console.error("Failed to save actor:", error);
       toast.error("Failed to save actor. Please try again.");
@@ -495,7 +495,7 @@ export function ActorFormPage() {
       <AdminLayout currentPage="actors" pageTitle="Actor Not Found">
         <div className="text-center py-5">
           <h4 className="text-white mb-3">Actor not found</h4>
-          <button onClick={() => navigate("/actors")} className="btn btn-primary">
+          <button onClick={() => navigate("/admin/actors")} className="btn btn-primary">
             Back to Actors
           </button>
         </div>
@@ -508,7 +508,7 @@ export function ActorFormPage() {
       currentPage="actors"
       pageTitle={isEditing ? "Edit Actor" : "Add New Actor"}
       titleActions={
-        <button onClick={() => navigate("/actors")} className="main__title-link">
+        <button onClick={() => navigate("/admin/actors")} className="main__title-link">
           <i className="ti ti-arrow-left"></i> Back to Actors
         </button>
       }

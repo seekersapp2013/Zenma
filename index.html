@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/src/index.css" />
     
-    <!-- Tabler Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/icons-sprite.svg">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/tabler-icons.min.css">
+    <!-- Preload critical font for faster icon loading -->
+    <link rel="preload" href="/webfont/fonts/tabler-icons.woff2" as="font" type="font/woff2" crossorigin />
+    
+    <!-- Load CSS globally once -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/webfont/tabler-icons.min.css" />
 
     <title>Zenma - Admin Panel</title>
 

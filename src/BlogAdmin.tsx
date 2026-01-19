@@ -50,7 +50,7 @@ export function BlogAdmin() {
       pageTitle="Blog Management"
       titleActions={
         <a 
-          href="/blog-admin/new"
+          href="/admin/blog/new"
           className="header__action header__action--add"
           style={{
             display: 'inline-flex',
@@ -147,7 +147,7 @@ export function BlogAdmin() {
                 </select>
 
                 <a 
-                  href="/blog-admin/new"
+                  href="/admin/blog/new"
                   className="main__filter-btn"
                   style={{
                     display: 'inline-flex',
@@ -245,7 +245,7 @@ export function BlogAdmin() {
                         <td>
                           <div className="main__table-btns">
                             <button
-                              onClick={() => navigate(`/blog-admin/edit/${post._id}`)}
+                              onClick={() => navigate(`/admin/blog/edit/${post._id}`)}
                               className="main__table-btn main__table-btn--edit"
                               title="Edit"
                             >

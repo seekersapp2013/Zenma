@@ -19,11 +19,11 @@ export function ItemWizardPage() {
   }
 
   const handleClose = () => {
-    navigate("/categories");
+    navigate("/admin/categories");
   };
 
   const handleSuccess = () => {
-    navigate("/categories");
+    navigate("/admin/categories");
   };
 
   if (!categoryId) {

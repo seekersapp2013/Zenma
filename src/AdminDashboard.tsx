@@ -211,7 +211,7 @@ function DashboardContent({
                     <h5 className="card-title text-white">Manage Categories</h5>
                     <p className="card-text text-muted">Create and organize content categories</p>
                     <button 
-                      onClick={() => navigate('/categories')}
+                      onClick={() => navigate('/admin/categories')}
                       className="btn btn-primary"
                     >
                       Go to Categories
@@ -227,7 +227,7 @@ function DashboardContent({
                     <h5 className="card-title text-white">Manage Actors</h5>
                     <p className="card-text text-muted">Add and edit actor profiles</p>
                     <button 
-                      onClick={() => navigate('/actors')}
+                      onClick={() => navigate('/admin/actors')}
                       className="btn btn-success"
                     >
                       Go to Actors
@@ -243,7 +243,7 @@ function DashboardContent({
                     <h5 className="card-title text-white">Manage Directors</h5>
                     <p className="card-text text-muted">Add and edit director profiles</p>
                     <button 
-                      onClick={() => navigate('/directors')}
+                      onClick={() => navigate('/admin/directors')}
                       className="btn btn-warning"
                     >
                       Go to Directors
@@ -259,7 +259,7 @@ function DashboardContent({
                     <h5 className="card-title text-white">Manage Blog</h5>
                     <p className="card-text text-muted">{stats.blogPublished} Published • {stats.blogDrafts} Drafts</p>
                     <button 
-                      onClick={() => navigate('/blog-admin')}
+                      onClick={() => navigate('/admin/blog')}
                       className="btn btn-primary"
                       style={{ backgroundColor: '#e83e8c', borderColor: '#e83e8c' }}
                     >
@@ -276,7 +276,7 @@ function DashboardContent({
                     <h5 className="card-title text-white">Manage Comments</h5>
                     <p className="card-text text-muted">Moderate user comments</p>
                     <button 
-                      onClick={() => navigate('/comments')}
+                      onClick={() => navigate('/admin/comments')}
                       className="btn btn-info"
                     >
                       Go to Comments
@@ -292,7 +292,7 @@ function DashboardContent({
                     <h5 className="card-title text-white">Manage Reviews</h5>
                     <p className="card-text text-muted">Moderate user reviews</p>
                     <button 
-                      onClick={() => navigate('/reviews')}
+                      onClick={() => navigate('/admin/reviews')}
                       className="btn btn-warning"
                     >
                       Go to Reviews
@@ -308,7 +308,7 @@ function DashboardContent({
                     <h5 className="card-title text-white">Settings</h5>
                     <p className="card-text text-muted">Configure app settings</p>
                     <button 
-                      onClick={() => navigate('/settings')}
+                      onClick={() => navigate('/admin/settings')}
                       className="btn btn-secondary"
                     >
                       Go to Settings

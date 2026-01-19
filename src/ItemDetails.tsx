@@ -378,13 +378,6 @@ export function ItemDetails() {
       return document.querySelector(`link[href="${href}"]`) !== null;
     };
 
-    // Essential CSS files that should load immediately
-    const essentialCssFiles = [
-      '/css/bootstrap.min.css',
-      '/css/main.css',
-      '/webfont/tabler-icons.min.css'
-    ];
-
     // Non-essential CSS files that can load after
     const nonEssentialCssFiles = [
       '/css/splide.min.css',
@@ -393,17 +386,6 @@ export function ItemDetails() {
       '/css/photoswipe.css',
       '/css/default-skin.css'
     ];
-
-    // Load essential CSS files first
-    essentialCssFiles.forEach(href => {
-      if (!isStylesheetLoaded(href)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = href;
-        link.media = 'all';
-        document.head.appendChild(link);
-      }
-    });
 
     // Load non-essential CSS files after a short delay
     setTimeout(() => {

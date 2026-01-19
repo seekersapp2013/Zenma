@@ -8,6 +8,7 @@ import { Users } from "./Users";
 import { Settings } from "./Settings";
 import { Catalog } from "./Catalog";
 import { Actors } from "./Actors";
+import { PublicActors } from "./PublicActors";
 import { Directors } from "./Directors";
 import { Comments } from "./Comments";
 import { Reviews } from "./Reviews";
@@ -47,29 +48,30 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/dashboard" element={<AdminDashboardRoute />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
-        <Route path="/categories" element={<AdminRoute><CategoryManagement /></AdminRoute>} />
-        <Route path="/categories/:categoryId/items/new" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
-        <Route path="/categories/:categoryId/items/edit" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
-        <Route path="/catalog" element={<AdminRoute><Catalog /></AdminRoute>} />
-        <Route path="/actors" element={<AdminRoute><Actors /></AdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute><CategoryManagement /></AdminRoute>} />
+        <Route path="/admin/categories/:categoryId/items/new" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
+        <Route path="/admin/categories/:categoryId/items/edit" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
+        <Route path="/admin/catalog" element={<AdminRoute><Catalog /></AdminRoute>} />
+        <Route path="/admin/actors" element={<AdminRoute><Actors /></AdminRoute>} />
+        <Route path="/actors" element={<PublicActors />} />
         <Route path="/actors/new" element={<AdminRoute><ActorFormPage /></AdminRoute>} />
         <Route path="/actors/edit/:id" element={<AdminRoute><ActorFormPage /></AdminRoute>} />
-        <Route path="/directors" element={<AdminRoute><Directors /></AdminRoute>} />
+        <Route path="/admin/directors" element={<AdminRoute><Directors /></AdminRoute>} />
         <Route path="/directors/new" element={<AdminRoute><DirectorFormPage /></AdminRoute>} />
         <Route path="/directors/edit/:id" element={<AdminRoute><DirectorFormPage /></AdminRoute>} />
-        <Route path="/users" element={<AdminRoute><Users /></AdminRoute>} />
-        <Route path="/comments" element={<AdminRoute><Comments /></AdminRoute>} />
-        <Route path="/reviews" element={<AdminRoute><Reviews /></AdminRoute>} />
-        <Route path="/aboutus-editor" element={<AdminRoute><AboutUsEditor /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><Users /></AdminRoute>} />
+        <Route path="/admin/comments" element={<AdminRoute><Comments /></AdminRoute>} />
+        <Route path="/admin/reviews" element={<AdminRoute><Reviews /></AdminRoute>} />
+        <Route path="/admin/aboutus-editor" element={<AdminRoute><AboutUsEditor /></AdminRoute>} />
         <Route path="/aboutus" element={<AboutUs />} />
-        <Route path="/contactus-editor" element={<AdminRoute><ContactUsEditor /></AdminRoute>} />
+        <Route path="/admin/contactus-editor" element={<AdminRoute><ContactUsEditor /></AdminRoute>} />
         <Route path="/contactus" element={<ContactUs />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
-        <Route path="/blog-admin" element={<AdminRoute><BlogAdmin /></AdminRoute>} />
-        <Route path="/blog-admin/new" element={<AdminRoute><BlogPostEditor /></AdminRoute>} />
-        <Route path="/blog-admin/edit/:id" element={<AdminRoute><BlogPostEditor /></AdminRoute>} />
-        <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
+        <Route path="/admin/blog" element={<AdminRoute><BlogAdmin /></AdminRoute>} />
+        <Route path="/admin/blog/new" element={<AdminRoute><BlogPostEditor /></AdminRoute>} />
+        <Route path="/admin/blog/edit/:id" element={<AdminRoute><BlogPostEditor /></AdminRoute>} />
+        <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>} />
         <Route path="/actor/:slug" element={<Actor />} />
         <Route path="/actor" element={<Actor />} />
         <Route path="/director/:slug" element={<Director />} />
@@ -121,16 +123,45 @@ function AdminDashboardRoute() {
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <Authenticated>
-        {children}
-      </Authenticated>
-      <Unauthenticated>
-        <SignInForm />
-      </Unauthenticated>
-    </>
-  );
+  const loggedInUser = useQuery(api.auth.loggedInUser);
+
+  if (loggedInUser === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
+      </div>
+    );
+  }
+
+  // Not authenticated - redirect to login
+  if (!loggedInUser) {
+    return <SignInForm />;
+  }
+
+  // Authenticated but not admin - show access denied
+  if (loggedInUser.profile?.role !== "admin") {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#1a1a1a',
+        color: '#fff'
+      }}>
+        <div className="text-center">
+          <h2 className="mb-4">Access Denied</h2>
+          <p className="mb-4">You don't have permission to access this page.</p>
+          <a href="/" className="btn btn-primary">
+            Go to Homepage
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin user - render children
+  return <>{children}</>;
 }
 
 function DynamicPageRoute() {
