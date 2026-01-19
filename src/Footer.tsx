@@ -13,6 +13,7 @@ export function Footer() {
 
               <nav className="footer__nav">
                 <a href="/aboutus">About Us</a>
+                 <a href="/blog">Blog</a>
                 <a href="/contacts">Contacts</a>
 
               </nav>
