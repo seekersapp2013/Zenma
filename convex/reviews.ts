@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { internal } from "./_generated/api";
 
 // Get reviews for an item with page-based pagination
 export const getReviews = query({
@@ -160,6 +161,11 @@ export const addReview = mutation({
       createdAt: Date.now(),
     });
 
+    // Update item's dynamic rating
+    await ctx.scheduler.runAfter(0, internal.ratings.updateItemRating, {
+      itemId: args.itemId,
+    });
+
     return reviewId;
   },
 });
@@ -297,6 +303,11 @@ export const editReview = mutation({
       title: args.title.trim(),
       content: args.content.trim(),
       rating: args.rating,
+    });
+
+    // Update item's dynamic rating
+    await ctx.scheduler.runAfter(0, internal.ratings.updateItemRating, {
+      itemId: review.itemId,
     });
 
     return { success: true };
@@ -470,6 +481,9 @@ export const adminDeleteReview = mutation({
       throw new Error("Review not found");
     }
 
+    // Store itemId before deleting
+    const itemId = review.itemId;
+
     // Delete the review
     await ctx.db.delete(args.reviewId);
 
@@ -480,6 +494,11 @@ export const adminDeleteReview = mutation({
       .collect();
 
     await Promise.all(votes.map(vote => ctx.db.delete(vote._id)));
+
+    // Update item's dynamic rating
+    await ctx.scheduler.runAfter(0, internal.ratings.updateItemRating, {
+      itemId,
+    });
 
     return { success: true };
   },

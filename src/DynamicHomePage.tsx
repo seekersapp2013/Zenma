@@ -133,7 +133,13 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                             <a href={`/details/${item.slug}`} className="item__play">
                               <i className="ti ti-player-play-filled"></i>
                             </a>
-                            <span className="item__rate item__rate--green">8.4</span>
+                            <span className={`item__rate ${
+                              (item.dynamicRating || item.adminRating || item.rating) >= 8 ? 'item__rate--green' :
+                              (item.dynamicRating || item.adminRating || item.rating) >= 6 ? 'item__rate--yellow' :
+                              'item__rate--red'
+                            }`}>
+                              {item.dynamicRating?.toFixed(1) || item.adminRating?.toFixed(1) || item.rating?.toFixed(1) || 'N/A'}
+                            </span>
                             <button className="item__favorite" type="button">
                               <i className="ti ti-bookmark"></i>
                             </button>
@@ -412,7 +418,13 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                     <a href={`/details/${item.slug}`} className="item__play">
                       <i className="ti ti-player-play-filled"></i>
                     </a>
-                    <span className="item__rate item__rate--green">8.4</span>
+                    <span className={`item__rate ${
+                      (item.dynamicRating || item.adminRating || item.rating) >= 8 ? 'item__rate--green' :
+                      (item.dynamicRating || item.adminRating || item.rating) >= 6 ? 'item__rate--yellow' :
+                      'item__rate--red'
+                    }`}>
+                      {item.dynamicRating?.toFixed(1) || item.adminRating?.toFixed(1) || item.rating?.toFixed(1) || 'N/A'}
+                    </span>
                     <button className="item__favorite" type="button">
                       <i className="ti ti-bookmark"></i>
                     </button>
@@ -585,7 +597,13 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                           <a href={`/details/${item.slug}`} className="item__play">
                             <i className="ti ti-player-play-filled"></i>
                           </a>
-                          <span className="item__rate item__rate--green">8.4</span>
+                          <span className={`item__rate ${
+                            (item.dynamicRating || item.adminRating || item.rating) >= 8 ? 'item__rate--green' :
+                            (item.dynamicRating || item.adminRating || item.rating) >= 6 ? 'item__rate--yellow' :
+                            'item__rate--red'
+                          }`}>
+                            {item.dynamicRating?.toFixed(1) || item.adminRating?.toFixed(1) || item.rating?.toFixed(1) || 'N/A'}
+                          </span>
                           <button className="item__favorite" type="button">
                             <i className="ti ti-bookmark"></i>
                           </button>

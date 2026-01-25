@@ -466,11 +466,11 @@ function FilmographyTab({ filmography }: {
                   <i className="ti ti-player-play-filled"></i>
                 </a>
                 <span className={`item__rate ${
-                  movie.rating && movie.rating >= 8 ? 'item__rate--green' :
-                  movie.rating && movie.rating >= 6 ? 'item__rate--yellow' :
+                  (movie.dynamicRating || movie.adminRating || movie.rating) >= 8 ? 'item__rate--green' :
+                  (movie.dynamicRating || movie.adminRating || movie.rating) >= 6 ? 'item__rate--yellow' :
                   'item__rate--red'
                 }`}>
-                  {movie.rating || '8.4'}
+                  {movie.dynamicRating?.toFixed(1) || movie.adminRating?.toFixed(1) || movie.rating?.toFixed(1) || 'N/A'}
                 </span>
                 <button className="item__favorite" type="button">
                   <i className="ti ti-bookmark"></i>

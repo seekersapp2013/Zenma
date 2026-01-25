@@ -35,6 +35,8 @@ import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
 import { useAppSettings } from "./hooks/useAppSettings";
 
+import { RatingManagement } from "./RatingManagement";
+
 export default function App() {
   // Initialize app settings (title, favicon, theme)
   useAppSettings();
@@ -64,6 +66,7 @@ export default function App() {
         <Route path="/admin/users" element={<AdminRoute><Users /></AdminRoute>} />
         <Route path="/admin/comments" element={<AdminRoute><Comments /></AdminRoute>} />
         <Route path="/admin/reviews" element={<AdminRoute><Reviews /></AdminRoute>} />
+        <Route path="/admin/ratings" element={<AdminRoute><RatingManagement /></AdminRoute>} />
         <Route path="/admin/aboutus-editor" element={<AdminRoute><AboutUsEditor /></AdminRoute>} />
         <Route path="/aboutus" element={<AboutUs />} />
         <Route path="/admin/contactus-editor" element={<AdminRoute><ContactUsEditor /></AdminRoute>} />

@@ -78,7 +78,13 @@ export function SearchResults() {
               <i className="ti ti-player-play-filled"></i>
             </a>
             {movie.rating && (
-              <span className="item__rate item__rate--green">{movie.rating}</span>
+              <span className={`item__rate ${
+                (movie.dynamicRating || movie.adminRating || movie.rating) >= 8 ? 'item__rate--green' :
+                (movie.dynamicRating || movie.adminRating || movie.rating) >= 6 ? 'item__rate--yellow' :
+                'item__rate--red'
+              }`}>
+                {movie.dynamicRating?.toFixed(1) || movie.adminRating?.toFixed(1) || movie.rating?.toFixed(1)}
+              </span>
             )}
           </div>
           <div className="item__content">

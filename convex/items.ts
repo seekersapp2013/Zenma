@@ -169,6 +169,7 @@ export const createItem = mutation({
     runningTime: v.optional(v.number()),
     country: v.optional(v.string()),
     rating: v.optional(v.number()),
+    adminRating: v.optional(v.number()),
     posterImageId: v.optional(v.id("_storage")),
     posterImageUrl: v.optional(v.string()),
     videoSources: v.optional(v.array(v.object({
@@ -224,6 +225,7 @@ export const createItem = mutation({
       runningTime: args.runningTime,
       country: args.country,
       rating: args.rating,
+      adminRating: args.rating, // Set adminRating same as rating for new items
       posterImageId: args.posterImageId,
       posterImageUrl: args.posterImageUrl,
       videoSources: args.videoSources,
@@ -250,6 +252,7 @@ export const updateItem = mutation({
     runningTime: v.optional(v.number()),
     country: v.optional(v.string()),
     rating: v.optional(v.number()),
+    adminRating: v.optional(v.number()),
     posterImageId: v.optional(v.id("_storage")),
     posterImageUrl: v.optional(v.string()),
     videoSources: v.optional(v.array(v.object({
@@ -304,6 +307,7 @@ export const updateItem = mutation({
       runningTime: args.runningTime,
       country: args.country,
       rating: args.rating,
+      adminRating: args.rating, // Update adminRating when rating is updated
       posterImageId: args.posterImageId,
       posterImageUrl: args.posterImageUrl,
       videoSources: args.videoSources,

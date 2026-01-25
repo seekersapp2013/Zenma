@@ -755,7 +755,13 @@ export function ItemDetails() {
                   <div className="col-12 col-sm-5 col-md-5 col-lg-4 col-xl-6 col-xxl-5">
                     <div className="item__cover">
                       <img src={item.imageUrl || ''} alt={item.title} />
-                      <span className="item__rate item__rate--green">{item.rating || '8.4'}</span>
+                      <span className={`item__rate ${
+                        (item.dynamicRating || item.adminRating || item.rating) >= 8 ? 'item__rate--green' :
+                        (item.dynamicRating || item.adminRating || item.rating) >= 6 ? 'item__rate--yellow' :
+                        'item__rate--red'
+                      }`}>
+                        {item.dynamicRating?.toFixed(1) || item.adminRating?.toFixed(1) || item.rating?.toFixed(1) || 'N/A'}
+                      </span>
                       <button className="item__favorite item__favorite--static" type="button"><i className="ti ti-bookmark"></i></button>
                     </div>
                   </div>
@@ -802,6 +808,22 @@ export function ItemDetails() {
                         )}
                         {item.country && (
                           <li><span>Country:</span> <a href="catalog.html">{item.country}</a></li>
+                        )}
+                        {/* Rating Breakdown */}
+                        {(item.dynamicRating || item.adminRating || item.rating) && (
+                          <li style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontWeight: 'bold' }}>Rating: {item.dynamicRating?.toFixed(1) || item.adminRating?.toFixed(1) || item.rating?.toFixed(1)}/10</span>
+                            {item.userRatingCount > 0 && (
+                              <span style={{ fontSize: '0.85em', color: '#b3b3b3' }}>
+                                Based on admin baseline ({item.adminRating?.toFixed(1) || item.rating?.toFixed(1)}) + {item.userRatingCount} user review{item.userRatingCount !== 1 ? 's' : ''} (avg: {item.userRatingAverage?.toFixed(1)})
+                              </span>
+                            )}
+                            {(!item.userRatingCount || item.userRatingCount === 0) && (
+                              <span style={{ fontSize: '0.85em', color: '#b3b3b3' }}>
+                                Admin baseline rating (no user reviews yet)
+                              </span>
+                            )}
+                          </li>
                         )}
                       </ul>
 
@@ -986,11 +1008,11 @@ export function ItemDetails() {
                             <i className="ti ti-player-play-filled"></i>
                           </a>
                           <span className={`item__rate ${
-                            relatedItem.rating && relatedItem.rating >= 8 ? 'item__rate--green' :
-                            relatedItem.rating && relatedItem.rating >= 6 ? 'item__rate--yellow' :
+                            (relatedItem.dynamicRating || relatedItem.adminRating || relatedItem.rating) >= 8 ? 'item__rate--green' :
+                            (relatedItem.dynamicRating || relatedItem.adminRating || relatedItem.rating) >= 6 ? 'item__rate--yellow' :
                             'item__rate--red'
                           }`}>
-                            {relatedItem.rating || '8.4'}
+                            {relatedItem.dynamicRating?.toFixed(1) || relatedItem.adminRating?.toFixed(1) || relatedItem.rating?.toFixed(1) || 'N/A'}
                           </span>
                           <button className="item__favorite" type="button">
                             <i className="ti ti-bookmark"></i>

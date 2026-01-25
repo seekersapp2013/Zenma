@@ -75,7 +75,12 @@ const applicationTables = {
     premiereYear: v.optional(v.number()),
     runningTime: v.optional(v.number()), // in minutes
     country: v.optional(v.string()),
-    rating: v.optional(v.number()), // e.g., 8.4
+    rating: v.optional(v.number()), // Legacy field - kept for backward compatibility
+    adminRating: v.optional(v.number()), // Admin baseline rating (1-10)
+    userRatingAverage: v.optional(v.number()), // Average of all user ratings
+    userRatingCount: v.optional(v.number()), // Total number of user ratings
+    dynamicRating: v.optional(v.number()), // Calculated weighted rating
+    lastRatingUpdate: v.optional(v.number()), // Timestamp of last calculation
     // Video player fields - hybrid approach (either storage ID or direct URL)
     posterImageId: v.optional(v.id("_storage")), // For uploaded files
     posterImageUrl: v.optional(v.string()), // For direct URLs

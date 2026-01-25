@@ -94,6 +94,12 @@ export function Sidebar({ currentPage }: SidebarProps) {
       count: allReviews?.length || 0
     },
     { 
+      href: "/admin/ratings", 
+      icon: "ti-chart-bar", 
+      label: "Ratings", 
+      key: "ratings"
+    },
+    { 
       href: "/admin/aboutus-editor", 
       icon: "ti-info-circle", 
       label: "About Us", 
