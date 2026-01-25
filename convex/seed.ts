@@ -38,17 +38,38 @@ export const seedData = mutation({
       createdBy: userId,
     });
 
+    const trendingCategory = await ctx.db.insert("categories", {
+      type: "trending",
+      title: "<b>TRENDING</b> NOW",
+      order: 2,
+      createdBy: userId,
+    });
+
+    const topRatedCategory = await ctx.db.insert("categories", {
+      type: "topRated",
+      title: "<b>TOP RATED</b> MOVIES",
+      order: 3,
+      createdBy: userId,
+    });
+
+    const newReleasesCategory = await ctx.db.insert("categories", {
+      type: "newReleases",
+      title: "<b>NEW</b> RELEASES",
+      order: 4,
+      createdBy: userId,
+    });
+
     const fullCategory = await ctx.db.insert("categories", {
       type: "full", 
       title: "MOVIES FOR <b>YOU</b>",
-      order: 2,
+      order: 5,
       createdBy: userId,
     });
 
     const shortCategory = await ctx.db.insert("categories", {
       type: "short",
       title: "Expected premiere",
-      order: 3,
+      order: 6,
       createdBy: userId,
     });
 
@@ -333,5 +354,270 @@ export const deleteDuplicatedItems = mutation({
     }
 
     return `Successfully deleted ${duplicatedItems.length} duplicated items. Remaining items: ${allItems.length - duplicatedItems.length}`;
+  },
+});
+
+// Delete items created by populateNewCategories (items with -trending, -toprated, -new in slug)
+export const deletePopulatedCategoryItems = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get all items with special slugs
+    const allItems = await ctx.db.query("items").collect();
+    const populatedItems = allItems.filter(item => 
+      item.slug.includes("-trending") || 
+      item.slug.includes("-toprated") || 
+      item.slug.includes("-new")
+    );
+
+    // Delete all populated items
+    for (const item of populatedItems) {
+      await ctx.db.delete(item._id);
+    }
+
+    // Also delete the new categories if they exist
+    const trendingCategory = await ctx.db
+      .query("categories")
+      .withIndex("by_type", (q) => q.eq("type", "trending"))
+      .first();
+    
+    const topRatedCategory = await ctx.db
+      .query("categories")
+      .withIndex("by_type", (q) => q.eq("type", "topRated"))
+      .first();
+    
+    const newReleasesCategory = await ctx.db
+      .query("categories")
+      .withIndex("by_type", (q) => q.eq("type", "newReleases"))
+      .first();
+
+    let deletedCategories = 0;
+    if (trendingCategory) {
+      await ctx.db.delete(trendingCategory._id);
+      deletedCategories++;
+    }
+    if (topRatedCategory) {
+      await ctx.db.delete(topRatedCategory._id);
+      deletedCategories++;
+    }
+    if (newReleasesCategory) {
+      await ctx.db.delete(newReleasesCategory._id);
+      deletedCategories++;
+    }
+
+    if (populatedItems.length === 0 && deletedCategories === 0) {
+      return "No populated category items or categories found to delete.";
+    }
+
+    return `Successfully deleted ${populatedItems.length} populated items and ${deletedCategories} categories.`;
+  },
+});
+
+// Populate new categories with sample data
+export const populateNewCategories = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get all items
+    const allItems = await ctx.db.query("items").collect();
+    
+    if (allItems.length === 0) {
+      return "No items found. Please add some items first.";
+    }
+
+    // Get or create the new categories
+    let trendingCategory = await ctx.db
+      .query("categories")
+      .withIndex("by_type", (q) => q.eq("type", "trending"))
+      .first();
+    
+    let topRatedCategory = await ctx.db
+      .query("categories")
+      .withIndex("by_type", (q) => q.eq("type", "topRated"))
+      .first();
+    
+    let newReleasesCategory = await ctx.db
+      .query("categories")
+      .withIndex("by_type", (q) => q.eq("type", "newReleases"))
+      .first();
+
+    // Create missing categories
+    if (!trendingCategory) {
+      trendingCategory = {
+        _id: await ctx.db.insert("categories", {
+          type: "trending",
+          title: "<b>TRENDING</b> NOW",
+          order: 2,
+          createdBy: userId,
+        }),
+        type: "trending" as const,
+        title: "<b>TRENDING</b> NOW",
+        order: 2,
+        createdBy: userId,
+        _creationTime: Date.now(),
+      };
+    }
+    
+    if (!topRatedCategory) {
+      topRatedCategory = {
+        _id: await ctx.db.insert("categories", {
+          type: "topRated",
+          title: "<b>TOP RATED</b> MOVIES",
+          order: 3,
+          createdBy: userId,
+        }),
+        type: "topRated" as const,
+        title: "<b>TOP RATED</b> MOVIES",
+        order: 3,
+        createdBy: userId,
+        _creationTime: Date.now(),
+      };
+    }
+    
+    if (!newReleasesCategory) {
+      newReleasesCategory = {
+        _id: await ctx.db.insert("categories", {
+          type: "newReleases",
+          title: "<b>NEW</b> RELEASES",
+          order: 4,
+          createdBy: userId,
+        }),
+        type: "newReleases" as const,
+        title: "<b>NEW</b> RELEASES",
+        order: 4,
+        createdBy: userId,
+        _creationTime: Date.now(),
+      };
+    }
+
+    const now = Date.now();
+    const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+    let updatedCount = 0;
+
+    // Update existing items with new fields and assign to new categories
+    for (let i = 0; i < allItems.length; i++) {
+      const item = allItems[i];
+      const randomViewCount = Math.floor(Math.random() * 10000) + 1000;
+      const randomRatingCount = Math.floor(Math.random() * 500) + 50;
+      const randomReviewCount = Math.floor(Math.random() * 100) + 10;
+      const randomPopularity = Math.random() * 100;
+      const randomAddedDate = now - Math.floor(Math.random() * 90 * 24 * 60 * 60 * 1000); // Random date within last 90 days
+      const isNew = randomAddedDate > thirtyDaysAgo;
+
+      // Update item with new fields
+      await ctx.db.patch(item._id, {
+        ratingCount: randomRatingCount,
+        reviewCount: randomReviewCount,
+        viewCount: randomViewCount,
+        popularityScore: randomPopularity,
+        addedDate: randomAddedDate,
+        isNew: isNew,
+        releaseDate: item.premiereYear ? new Date(item.premiereYear, 0, 1).getTime() : randomAddedDate,
+      });
+
+      // Assign some items to trending category (top 10 by popularity)
+      if (i < 10) {
+        await ctx.db.insert("items", {
+          categoryId: trendingCategory._id,
+          title: item.title,
+          slug: `${item.slug}-trending`,
+          imageId: item.imageId,
+          genres: item.genres,
+          description: item.description,
+          director: item.director,
+          cast: item.cast,
+          premiereYear: item.premiereYear,
+          runningTime: item.runningTime,
+          country: item.country,
+          rating: item.rating,
+          adminRating: item.adminRating,
+          ratingCount: randomRatingCount,
+          reviewCount: randomReviewCount,
+          viewCount: randomViewCount,
+          popularityScore: randomPopularity,
+          addedDate: randomAddedDate,
+          isNew: isNew,
+          releaseDate: item.premiereYear ? new Date(item.premiereYear, 0, 1).getTime() : randomAddedDate,
+          posterImageId: item.posterImageId,
+          posterImageUrl: item.posterImageUrl,
+          videoSources: item.videoSources,
+          captions: item.captions,
+          createdBy: userId,
+        });
+      }
+
+      // Assign high-rated items to top rated category (rating >= 8.5)
+      const itemRating = item.dynamicRating || item.adminRating || item.rating || 0;
+      if (itemRating >= 8.5 && i < 15) {
+        await ctx.db.insert("items", {
+          categoryId: topRatedCategory._id,
+          title: item.title,
+          slug: `${item.slug}-toprated`,
+          imageId: item.imageId,
+          genres: item.genres,
+          description: item.description,
+          director: item.director,
+          cast: item.cast,
+          premiereYear: item.premiereYear,
+          runningTime: item.runningTime,
+          country: item.country,
+          rating: item.rating,
+          adminRating: item.adminRating,
+          ratingCount: randomRatingCount,
+          reviewCount: randomReviewCount,
+          viewCount: randomViewCount,
+          popularityScore: randomPopularity,
+          addedDate: randomAddedDate,
+          isNew: isNew,
+          releaseDate: item.premiereYear ? new Date(item.premiereYear, 0, 1).getTime() : randomAddedDate,
+          posterImageId: item.posterImageId,
+          posterImageUrl: item.posterImageUrl,
+          videoSources: item.videoSources,
+          captions: item.captions,
+          createdBy: userId,
+        });
+      }
+
+      // Assign new items to new releases category
+      if (isNew && i < 12) {
+        await ctx.db.insert("items", {
+          categoryId: newReleasesCategory._id,
+          title: item.title,
+          slug: `${item.slug}-new`,
+          imageId: item.imageId,
+          genres: item.genres,
+          description: item.description,
+          director: item.director,
+          cast: item.cast,
+          premiereYear: item.premiereYear,
+          runningTime: item.runningTime,
+          country: item.country,
+          rating: item.rating,
+          adminRating: item.adminRating,
+          ratingCount: randomRatingCount,
+          reviewCount: randomReviewCount,
+          viewCount: randomViewCount,
+          popularityScore: randomPopularity,
+          addedDate: randomAddedDate,
+          isNew: true,
+          releaseDate: item.premiereYear ? new Date(item.premiereYear, 0, 1).getTime() : randomAddedDate,
+          posterImageId: item.posterImageId,
+          posterImageUrl: item.posterImageUrl,
+          videoSources: item.videoSources,
+          captions: item.captions,
+          createdBy: userId,
+        });
+      }
+
+      updatedCount++;
+    }
+
+    return `Successfully updated ${updatedCount} items and populated new categories with sample data.`;
   },
 });

@@ -52,7 +52,14 @@ const applicationTables = {
     .index("by_banned", ["isBanned"]),
 
   categories: defineTable({
-    type: v.union(v.literal("featured"), v.literal("full"), v.literal("short")),
+    type: v.union(
+      v.literal("featured"), 
+      v.literal("full"), 
+      v.literal("short"),
+      v.literal("trending"),
+      v.literal("topRated"),
+      v.literal("newReleases")
+    ),
     title: v.string(),
     order: v.number(),
     createdBy: v.id("users"),
@@ -81,6 +88,14 @@ const applicationTables = {
     userRatingCount: v.optional(v.number()), // Total number of user ratings
     dynamicRating: v.optional(v.number()), // Calculated weighted rating
     lastRatingUpdate: v.optional(v.number()), // Timestamp of last calculation
+    // New fields for high-priority features
+    ratingCount: v.optional(v.number()), // Total number of ratings (for display)
+    reviewCount: v.optional(v.number()), // Total number of reviews (for display)
+    viewCount: v.optional(v.number()), // View/watch count for trending
+    popularityScore: v.optional(v.number()), // Calculated popularity metric
+    releaseDate: v.optional(v.number()), // Timestamp for release date
+    addedDate: v.optional(v.number()), // Timestamp when added to platform
+    isNew: v.optional(v.boolean()), // Flag for new releases (added in last 30 days)
     // Video player fields - hybrid approach (either storage ID or direct URL)
     posterImageId: v.optional(v.id("_storage")), // For uploaded files
     posterImageUrl: v.optional(v.string()), // For direct URLs
@@ -99,7 +114,10 @@ const applicationTables = {
     createdBy: v.id("users"),
   })
     .index("by_category", ["categoryId"])
-    .index("by_slug", ["slug"]),
+    .index("by_slug", ["slug"])
+    .index("by_rating", ["dynamicRating"])
+    .index("by_popularity", ["popularityScore"])
+    .index("by_added_date", ["addedDate"]),
 
   comments: defineTable({
     itemId: v.optional(v.id("items")), // Legacy field, kept for backward compatibility

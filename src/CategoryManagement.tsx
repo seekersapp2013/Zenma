@@ -25,7 +25,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 interface CategoryFormData {
-  type: "featured" | "full" | "short";
+  type: "featured" | "full" | "short" | "trending" | "topRated" | "newReleases";
   title: string;
 }
 
@@ -45,6 +45,8 @@ export function CategoryManagement() {
   const deleteItem = useMutation(api.items.deleteItem);
   const duplicateItemsTo100 = useMutation(api.seed.duplicateItemsTo100);
   const deleteDuplicatedItems = useMutation(api.seed.deleteDuplicatedItems);
+  const populateNewCategories = useMutation(api.seed.populateNewCategories);
+  const deletePopulatedCategoryItems = useMutation(api.seed.deletePopulatedCategoryItems);
 
   // Add custom CSS for dropdown and form elements
   useEffect(() => {
@@ -156,6 +158,12 @@ export function CategoryManagement() {
         return "Grid layout style (like 'MOVIES FOR YOU')";
       case "short":
         return "Horizontal carousel style (like 'Expected premiere')";
+      case "trending":
+        return "Trending movies carousel with TRENDING badge";
+      case "topRated":
+        return "Top rated movies carousel (8.5+ rating)";
+      case "newReleases":
+        return "New releases carousel with NEW badge";
       default:
         return "";
     }
@@ -185,6 +193,38 @@ export function CategoryManagement() {
     setIsTestLoading(true);
     try {
       const result = await deleteDuplicatedItems();
+      alert(result);
+    } catch (error) {
+      alert(`Error: ${error}`);
+    } finally {
+      setIsTestLoading(false);
+    }
+  };
+
+  const handlePopulateNewCategories = async () => {
+    if (!confirm("This will populate the new categories (Trending, Top Rated, New Releases) with sample data. Continue?")) {
+      return;
+    }
+    
+    setIsTestLoading(true);
+    try {
+      const result = await populateNewCategories();
+      alert(result);
+    } catch (error) {
+      alert(`Error: ${error}`);
+    } finally {
+      setIsTestLoading(false);
+    }
+  };
+
+  const handleDeletePopulatedItems = async () => {
+    if (!confirm("This will delete all items created by 'Populate New Categories' and remove the new category types. Continue?")) {
+      return;
+    }
+    
+    setIsTestLoading(true);
+    try {
+      const result = await deletePopulatedCategoryItems();
       alert(result);
     } catch (error) {
       alert(`Error: ${error}`);
@@ -238,8 +278,42 @@ export function CategoryManagement() {
             fontWeight: 'bold',
             fontSize: '14px'
           }}>
-            ⚠️ TEST TOOLS (Lazy Loading):
+            ⚠️ TEST TOOLS:
           </span>
+          <button
+            onClick={handlePopulateNewCategories}
+            disabled={isTestLoading}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#9c27b0',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isTestLoading ? 'not-allowed' : 'pointer',
+              fontSize: '13px',
+              fontWeight: '500',
+              opacity: isTestLoading ? 0.6 : 1
+            }}
+          >
+            {isTestLoading ? 'Processing...' : '🚀 Populate New Categories'}
+          </button>
+          <button
+            onClick={handleDeletePopulatedItems}
+            disabled={isTestLoading}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#ff5722',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isTestLoading ? 'not-allowed' : 'pointer',
+              fontSize: '13px',
+              fontWeight: '500',
+              opacity: isTestLoading ? 0.6 : 1
+            }}
+          >
+            {isTestLoading ? 'Processing...' : '🗑️ Delete Populated Items'}
+          </button>
           <button
             onClick={handleDuplicateItems}
             disabled={isTestLoading}
@@ -274,13 +348,9 @@ export function CategoryManagement() {
           >
             {isTestLoading ? 'Processing...' : 'Delete Duplicates'}
           </button>
-          <span style={{ 
-            color: '#b3b3b3', 
-            fontSize: '12px',
-            fontStyle: 'italic'
-          }}>
-            Use these to test lazy loading on /movies page
-          </span>
+        </div>
+        <div style={{ marginTop: '10px', fontSize: '12px', color: '#b3b3b3', fontStyle: 'italic' }}>
+          Click "Populate New Categories" to create Trending, Top Rated & New Releases sections. Use "Delete Populated Items" to remove them.
         </div>
       </div>
 
@@ -368,6 +438,9 @@ export function CategoryManagement() {
                           }}
                         >
                           <option value="featured" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Featured (Hero Carousel)</option>
+                          <option value="trending" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Trending (With Badge)</option>
+                          <option value="topRated" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Top Rated (8.5+)</option>
+                          <option value="newReleases" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>New Releases (With Badge)</option>
                           <option value="full" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Full (Grid Layout)</option>
                           <option value="short" style={{ backgroundColor: '#2b2b2b', color: '#ffffff' }}>Short (Horizontal Carousel)</option>
                         </select>
