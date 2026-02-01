@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { useQuery } from "convex/react";
-import { Authenticated, Unauthenticated } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useParams, useNavigate } from "react-router-dom";
 import { Comments } from './components/Comments';
 import { Reviews } from './components/Reviews';
-import { SignOutButton } from './SignOutButton';
+import { Header } from './Header';
+import { Footer } from './Footer';
 import './sign.css';
 
 export function ItemDetails() {
@@ -13,7 +13,6 @@ export function ItemDetails() {
   const navigate = useNavigate();
   const playerRef = useRef<HTMLVideoElement>(null);
   const plyrInstanceRef = useRef<any>(null);
-  const loggedInUser = useQuery(api.auth.loggedInUser);
   const item = useQuery(api.items.getItemBySlug, { slug: slug || "" });
   const relatedItems = useQuery(
     api.items.getRelatedItemsByGenre, 
@@ -42,61 +41,18 @@ export function ItemDetails() {
         padding: 20px;
       }
       
-      /* Custom video player styling to match poster height */
+      /* Video player container */
       .video-player-container {
         position: relative;
         width: 100%;
-        height: 100%;
-        min-height: 386px;
-      }
-      
-      .video-player-container video,
-      .video-player-container .plyr {
-        width: 100% !important;
-        height: 100% !important;
-        min-height: 386px !important;
-        object-fit: cover;
         border-radius: 6px;
+        overflow: hidden;
+        max-height: 300px;
       }
       
-      /* Ensure consistent height at different breakpoints - override existing CSS */
-      @media (min-width: 1200px) {
-        .video-player-container {
-          min-height: 386px;
-        }
-        .video-player-container video,
-        .video-player-container .plyr,
-        .video-player-container .plyr video {
-          height: 386px !important;
-          min-height: 386px !important;
-          max-height: 386px !important;
-        }
-      }
-      
-      @media (min-width: 1400px) {
-        .video-player-container {
-          min-height: 366px;
-        }
-        .video-player-container video,
-        .video-player-container .plyr,
-        .video-player-container .plyr video {
-          height: 366px !important;
-          min-height: 366px !important;
-          max-height: 366px !important;
-        }
-      }
-      
-      /* Ensure video wrapper maintains height */
-      .video-player-container .plyr__video-wrapper {
-        height: 100% !important;
-        min-height: inherit !important;
-      }
-      
-      /* Maintain aspect ratio while filling container */
-      .video-player-container .plyr__video-wrapper video {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
+      .video-player-container video {
+        max-height: 300px;
+        object-fit: contain;
       }
       
       /* Override Plyr styles with magenta theme */
@@ -118,11 +74,6 @@ export function ItemDetails() {
         border-color: rgba(255, 20, 147, 0.5) !important;
       }
       
-      .plyr--video .plyr__control--overlaid:before {
-        background-color: #ff1493 !important;
-        color: #fff !important;
-      }
-      
       .plyr--full-ui input[type="range"] {
         color: #ff1493 !important;
       }
@@ -139,10 +90,8 @@ export function ItemDetails() {
         background-color: #ff1493 !important;
       }
       
-      /* Ensure video maintains aspect ratio and fills container */
       .plyr__video-wrapper {
         background: #222028 !important;
-        height: 100% !important;
       }
       
       .plyr__poster {
@@ -153,225 +102,10 @@ export function ItemDetails() {
       
       .plyr--video {
         background: #222028 !important;
-        height: 100% !important;
-      }
-      
-      /* Professional People List Styling */
-      .item__meta-directors,
-      .item__meta-cast {
-        display: flex !important;
-        align-items: flex-start;
-        gap: 0.5rem;
-        margin-bottom: 1rem;
-      }
-      
-      .item__meta-directors > span,
-      .item__meta-cast > span {
-        flex-shrink: 0;
-        min-width: fit-content;
-      }
-      
-      /* Cast section below description */
-      .item__cast-section {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid #2a2937;
-      }
-      
-      .item__cast-title {
-        color: #fff;
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-      
-      .item__people-scroll-container {
-        max-height: 200px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        margin-top: 0;
-        padding-right: 5px;
-        flex: 1;
-        /* Custom scrollbar styling */
-        scrollbar-width: thin;
-        scrollbar-color: #ff1493 #222028;
-      }
-      
-      .item__people-scroll-container::-webkit-scrollbar {
-        width: 6px;
-      }
-      
-      .item__people-scroll-container::-webkit-scrollbar-track {
-        background: #222028;
-        border-radius: 3px;
-      }
-      
-      .item__people-scroll-container::-webkit-scrollbar-thumb {
-        background: #ff1493;
-        border-radius: 3px;
-      }
-      
-      .item__people-scroll-container::-webkit-scrollbar-thumb:hover {
-        background: #d91a72;
-      }
-      
-      .item__people-list {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-        align-items: start;
-        justify-items: center;
-      }
-      
-      .item__person {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        transition: transform 0.2s ease;
-        width: 100%;
-        max-width: 70px;
-      }
-      
-      .item__person:hover {
-        transform: translateY(-2px);
-      }
-      
-      .item__person-avatar-link {
-        display: block;
-        text-decoration: none;
-        margin-bottom: 0.5rem;
-      }
-      
-      .item__person-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 6px;
-        overflow: hidden;
-        position: relative;
-        background: #222028;
-        border: 2px solid #1a191f;
-        transition: border-color 0.2s ease;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .item__person:hover .item__person-avatar {
-        border-color: #ff1493;
-      }
-      
-      .item__person-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-      
-      .item__person-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #1a191f 0%, #222028 100%);
-        color: #8b8b8b;
-        font-size: 1.2rem;
-      }
-      
-      .item__person-name {
-        font-size: 0.7rem;
-        color: #fff;
-        text-decoration: none;
-        line-height: 1.2;
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        width: 100%;
-        transition: color 0.2s ease;
-      }
-      
-      .item__person-name:hover {
-        color: #ff1493;
-        text-decoration: none;
-      }
-      
-      /* Responsive adjustments */
-      @media (max-width: 767px) {
-        .item__people-list {
-          gap: 0.5rem;
-        }
-        
-        .item__person {
-          max-width: 65px;
-        }
-        
-        .item__person-avatar {
-          width: 45px;
-          height: 45px;
-        }
-        
-        .item__person-name {
-          font-size: 0.65rem;
-        }
-        
-        .item__people-scroll-container {
-          max-height: 180px;
-        }
-      }
-      
-      @media (max-width: 575px) {
-        .item__people-list {
-          grid-template-columns: repeat(3, 1fr);
-          gap: 0.4rem;
-        }
-        
-        .item__person {
-          max-width: 60px;
-        }
-        
-        .item__person-avatar {
-          width: 40px;
-          height: 40px;
-        }
-        
-        .item__person-placeholder {
-          font-size: 1rem;
-        }
-        
-        .item__person-name {
-          font-size: 0.6rem;
-        }
-        
-        .item__people-scroll-container {
-          max-height: 160px;
-        }
-      }
-      
-      @media (max-width: 480px) {
-        .item__people-list {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        
-        .item__person {
-          max-width: 80px;
-        }
-        
-        .item__person-avatar {
-          width: 45px;
-          height: 45px;
-        }
-        
-        .item__person-name {
-          font-size: 0.65rem;
-        }
       }
     `;
     document.head.appendChild(style);
+    style.setAttribute('data-itemdetails-styles', 'true');
 
     // Check if CSS files are already loaded to avoid duplicates
     const isStylesheetLoaded = (href: string) => {
@@ -452,116 +186,82 @@ export function ItemDetails() {
       });
       
       // Remove added styles
-      const styles = document.querySelectorAll('style');
-      styles.forEach(style => {
-        if (style.textContent?.includes('.video-placeholder') || style.textContent?.includes('.video-player-container')) {
-          style.remove();
-        }
-      });
+      const styles = document.querySelectorAll('style[data-itemdetails-styles]');
+      styles.forEach(style => style.remove());
     };
   }, []);
 
   // Initialize Plyr video player
   useEffect(() => {
-    if (playerRef.current && item?.videoSources && item.videoSources.length > 0) {
-      // Wait for Plyr to be available
-      const initializePlayer = () => {
-        if ((window as any).Plyr && !plyrInstanceRef.current) {
-          try {
-            plyrInstanceRef.current = new (window as any).Plyr(playerRef.current, {
-              controls: [
-                'play-large',
-                'play',
-                'progress',
-                'current-time',
-                'duration',
-                'mute',
-                'volume',
-                'settings',
-                'fullscreen'
-              ],
-              settings: ['quality', 'speed'],
-              quality: {
-                default: 720,
-                options: item.videoSources?.map(source => parseInt(source.quality.replace('p', ''))) || []
-              },
-              ratio: null, // Let CSS handle the sizing
-              fullscreen: {
-                enabled: true,
-                fallback: true,
-                iosNative: false
-              }
-            });
+    if (!playerRef.current || !item?.videoSources || item.videoSources.length === 0) {
+      return;
+    }
 
-            // Force height consistency after Plyr initialization
-            setTimeout(() => {
-              if (plyrInstanceRef.current && playerRef.current) {
-                const plyrElement = playerRef.current.closest('.plyr');
-                if (plyrElement) {
-                  const container = plyrElement.closest('.video-player-container');
-                  if (container) {
-                    const containerHeight = window.getComputedStyle(container).height;
-                    (plyrElement as HTMLElement).style.height = containerHeight;
-                    (plyrElement as HTMLElement).style.minHeight = containerHeight;
-                    (plyrElement as HTMLElement).style.maxHeight = containerHeight;
-                  }
-                }
-              }
-            }, 100);
-
-            // Add resize observer to maintain height consistency
-            if (playerRef.current) {
-              const container = playerRef.current.closest('.video-player-container');
-              if (container && window.ResizeObserver) {
-                const resizeObserver = new ResizeObserver(() => {
-                  if (plyrInstanceRef.current && playerRef.current) {
-                    const plyrElement = playerRef.current.closest('.plyr');
-                    if (plyrElement && container) {
-                      const containerHeight = window.getComputedStyle(container).height;
-                      (plyrElement as HTMLElement).style.height = containerHeight;
-                      (plyrElement as HTMLElement).style.minHeight = containerHeight;
-                      (plyrElement as HTMLElement).style.maxHeight = containerHeight;
-                    }
-                  }
-                });
-                resizeObserver.observe(container);
-                
-                // Store observer for cleanup
-                (plyrInstanceRef.current as any)._resizeObserver = resizeObserver;
-              }
-            }
-          } catch (error) {
-            console.warn('Failed to initialize Plyr:', error);
-          }
-        }
-      };
-
-      // Check if Plyr is already loaded
-      if ((window as any).Plyr) {
-        initializePlayer();
-      } else {
-        // Wait for Plyr to load
-        const checkPlyr = setInterval(() => {
-          if ((window as any).Plyr) {
-            clearInterval(checkPlyr);
-            initializePlayer();
-          }
-        }, 100);
-
-        // Cleanup interval after 10 seconds
-        setTimeout(() => clearInterval(checkPlyr), 10000);
+    // Cleanup any existing player instance
+    if (plyrInstanceRef.current) {
+      try {
+        plyrInstanceRef.current.destroy();
+        plyrInstanceRef.current = null;
+      } catch (error) {
+        console.warn('Failed to destroy existing Plyr instance:', error);
       }
+    }
+
+    const initializePlayer = () => {
+      if (!(window as any).Plyr || !playerRef.current) {
+        return;
+      }
+
+      try {
+        // Simple Plyr initialization matching the original template
+        plyrInstanceRef.current = new (window as any).Plyr(playerRef.current, {
+          controls: [
+            'play-large',
+            'play',
+            'progress',
+            'current-time',
+            'duration',
+            'mute',
+            'volume',
+            'settings',
+            'fullscreen'
+          ],
+          settings: ['quality', 'speed'],
+          quality: {
+            default: 720,
+            options: item.videoSources?.map(source => parseInt(source.quality.replace('p', ''))) || []
+          }
+        });
+
+        console.log('Plyr initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize Plyr:', error);
+      }
+    };
+
+    // Check if Plyr is already loaded
+    if ((window as any).Plyr) {
+      initializePlayer();
+    } else {
+      // Wait for Plyr to load with timeout
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds max
+      const checkPlyr = setInterval(() => {
+        attempts++;
+        if ((window as any).Plyr) {
+          clearInterval(checkPlyr);
+          initializePlayer();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkPlyr);
+          console.warn('Plyr failed to load after 5 seconds');
+        }
+      }, 100);
     }
 
     // Cleanup function
     return () => {
       if (plyrInstanceRef.current) {
         try {
-          // Cleanup resize observer
-          if ((plyrInstanceRef.current as any)._resizeObserver) {
-            (plyrInstanceRef.current as any)._resizeObserver.disconnect();
-          }
-          
           plyrInstanceRef.current.destroy();
           plyrInstanceRef.current = null;
         } catch (error) {
@@ -569,7 +269,7 @@ export function ItemDetails() {
         }
       }
     };
-  }, [item?.videoSources]);
+  }, [item?._id, item?.videoSources]);
 
   // Set page title and meta tags for SEO
   useEffect(() => {
@@ -637,104 +337,7 @@ export function ItemDetails() {
 
   return (
     <div>
-      {/* header */}
-      <header className="header">
-        <div className="container">
-          <div className="row">
-            <div className="col-12">
-              <div className="header__content">
-                {/* header logo */}
-                <a href="/" className="header__logo">
-                 <h1><span className="logo-zen">ZEN</span><span className="logo-ma">MA</span></h1>
-                </a>
-                {/* end header logo */}
-
-                {/* header nav */}
-                <ul className="header__nav">
-                  <li className="header__nav-item">
-                    <a href="/" className="header__nav-link">Home</a>
-                  </li>
-                  <li className="header__nav-item">
-                    <a href="/catalog" className="header__nav-link">Catalog</a>
-                  </li>
-                  <li className="header__nav-item">
-                    <a href="/pricing" className="header__nav-link">Pricing plan</a>
-                  </li>
-                </ul>
-                {/* end header nav */}
-
-                {/* header auth */}
-                <div className="header__auth">
-                  <form action="#" className="header__search">
-                    <input className="header__search-input" type="text" placeholder="Search..." />
-                    <button className="header__search-button" type="button">
-                      <i className="ti ti-search"></i>
-                    </button>
-                    <button className="header__search-close" type="button">
-                      <i className="ti ti-x"></i>
-                    </button>
-                  </form>
-
-                  <button className="header__search-btn" type="button">
-                    <i className="ti ti-search"></i>
-                  </button>
-
-                  <div className="header__lang">
-                    <a className="header__nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      EN <i className="ti ti-chevron-down"></i>
-                    </a>
-                    <ul className="dropdown-menu header__dropdown-menu">
-                      <li><a href="#">English</a></li>
-                      <li><a href="#">Spanish</a></li>
-                      <li><a href="#">French</a></li>
-                    </ul>
-                  </div>
-
-                  <div className="header__profile">
-                    <Authenticated>
-                      <div 
-                        className="header__sign-in header__sign-in--user" 
-                        role="button"
-                        data-bs-toggle="dropdown" 
-                        aria-expanded="false"
-                      >
-                        <i className="ti ti-user"></i>
-                        <span>
-                          {loggedInUser?.profile?.username || loggedInUser?.name || 'User'}
-                        </span>
-                      </div>
-                      <ul className="dropdown-menu dropdown-menu-end header__dropdown-menu header__dropdown-menu--user">
-                        <li><a href="/profile"><i className="ti ti-ghost"></i>Profile</a></li>
-                        <li><a href="/profile"><i className="ti ti-stereo-glasses"></i>Subscription</a></li>
-                        <li><a href="/profile"><i className="ti ti-bookmark"></i>Favorites</a></li>
-                        <li><a href="/profile"><i className="ti ti-settings"></i>Settings</a></li>
-                        {loggedInUser?.profile?.role === "admin" && (
-                          <li><a href="/admin-dashboard"><i className="ti ti-settings-cog"></i>Admin Dashboard</a></li>
-                        )}
-                        <li><SignOutButton variant="dropdown" /></li>
-                      </ul>
-                    </Authenticated>
-                    <Unauthenticated>
-                      <a className="header__sign-in header__sign-in--user" href="/login" role="button">
-                        <i className="ti ti-user"></i>
-                        <span>Login</span>
-                      </a>
-                    </Unauthenticated>
-                  </div>
-                </div>
-                {/* end header auth */}
-
-                <button className="header__btn" type="button">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-      {/* end header */}
+      <Header />
 
       {/* details */}
       <section className="section section--details">
@@ -752,44 +355,27 @@ export function ItemDetails() {
               <div className="item item--details">
                 <div className="row">
                   {/* card cover */}
-                  <div className="col-12 col-sm-5 col-md-5 col-lg-4 col-xl-6 col-xxl-5">
+                  <div className="col-4 col-sm-4 col-md-4 col-lg-3 col-xl-4 col-xxl-4">
                     <div className="item__cover">
                       <img src={item.imageUrl || ''} alt={item.title} />
-                      <span className={`item__rate ${
-                        (item.dynamicRating || item.adminRating || item.rating) >= 8 ? 'item__rate--green' :
-                        (item.dynamicRating || item.adminRating || item.rating) >= 6 ? 'item__rate--yellow' :
-                        'item__rate--red'
-                      }`}>
-                        {item.dynamicRating?.toFixed(1) || item.adminRating?.toFixed(1) || item.rating?.toFixed(1) || 'N/A'}
-                      </span>
+                      <span className="item__rate item__rate--green">{item.rating || '8.4'}</span>
                       <button className="item__favorite item__favorite--static" type="button"><i className="ti ti-bookmark"></i></button>
                     </div>
                   </div>
                   {/* end card cover */}
 
                   {/* card content */}
-                  <div className="col-12 col-md-7 col-lg-8 col-xl-6 col-xxl-7">
+                  <div className="col-8 col-sm-8 col-md-8 col-lg-9 col-xl-8 col-xxl-8">
                     <div className="item__content">
-                      <ul className="item__meta">
+                      <ul className="item__meta" style={{ marginBottom: '8px' }}>
                         {item.directorsWithDetails && item.directorsWithDetails.length > 0 && (
-                          <li className="item__meta-directors">
-                            <span>Directors:</span>
-                            <div className="item__people-scroll-container">
-                              <div className="item__people-list">
-                                {item.directorsWithDetails.map((director, index) => (
-                                  <div key={director.name} className="item__person">
-                                   
-                                    <a 
-                                      href={`/director/${director.slug}`} 
-                                      className="item__person-name"
-                                      title={director.name}
-                                    >
-                                      {director.name}
-                                    </a>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                          <li>
+                            <span>Director:</span> 
+                            {item.directorsWithDetails.map((director, index) => (
+                              <a key={director.slug} href={`/director/${director.slug}`}>
+                                {director.name}
+                              </a>
+                            ))}
                           </li>
                         )}
                         <li><span>Genre:</span> 
@@ -809,76 +395,80 @@ export function ItemDetails() {
                         {item.country && (
                           <li><span>Country:</span> <a href="catalog.html">{item.country}</a></li>
                         )}
-                        {/* Rating Breakdown */}
-                        {(item.dynamicRating || item.adminRating || item.rating) && (
-                          <li style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontWeight: 'bold' }}>Rating: {item.dynamicRating?.toFixed(1) || item.adminRating?.toFixed(1) || item.rating?.toFixed(1)}/10</span>
-                            {item.userRatingCount > 0 && (
-                              <span style={{ fontSize: '0.85em', color: '#b3b3b3' }}>
-                                Based on admin baseline ({item.adminRating?.toFixed(1) || item.rating?.toFixed(1)}) + {item.userRatingCount} user review{item.userRatingCount !== 1 ? 's' : ''} (avg: {item.userRatingAverage?.toFixed(1)})
-                              </span>
-                            )}
-                            {(!item.userRatingCount || item.userRatingCount === 0) && (
-                              <span style={{ fontSize: '0.85em', color: '#b3b3b3' }}>
-                                Admin baseline rating (no user reviews yet)
-                              </span>
-                            )}
-                          </li>
-                        )}
                       </ul>
 
-                      <div className="item__description">
+                      <div className="item__description" style={{ marginTop: '5px', marginBottom: '10px' }}>
                         {item.description ? (
-                          <p>{item.description}</p>
+                          <p style={{ marginBottom: '0' }}>{item.description}</p>
                         ) : (
-                          <p>No description available.</p>
+                          <p style={{ marginBottom: '0' }}>No description available.</p>
                         )}
                       </div>
 
-                      {/* Cast section moved below description */}
+                      {/* Cast section with images below description */}
                       {item.castWithDetails && item.castWithDetails.length > 0 && (
-                        <div className="item__cast-section">
-                          <h4 className="item__cast-title">Cast</h4>
-                          <div className="item__people-scroll-container">
-                            <div className="item__people-list">
-                              {item.castWithDetails.map((actor, index) => (
-                                <div key={`${actor.name}-${actor.castName || index}`} className="item__person">
-                                  <a 
-                                    href={`/actor/${actor.slug}`} 
-                                    className="item__person-avatar-link"
-                                    title={`${actor.name}${actor.castName ? ` as ${actor.castName}` : ''}`}
-                                  >
-                                    <div className="item__person-avatar">
-                                      {actor.imageUrl ? (
-                                        <img 
-                                          src={actor.imageUrl} 
-                                          alt={actor.name}
-                                          className="item__person-image"
-                                        />
-                                      ) : (
-                                        <div className="item__person-placeholder">
-                                          <i className="ti ti-user"></i>
-                                        </div>
-                                      )}
+                        <div style={{ marginTop: '10px' }}>
+                          <h4 style={{ color: '#fff', fontSize: '14px', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase' }}>Cast</h4>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'flex-start' }}>
+                            {item.castWithDetails.map((actor) => (
+                              <div key={actor.slug} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '60px' }}>
+                                <a href={`/actor/${actor.slug}`} style={{ display: 'block', marginBottom: '4px' }}>
+                                  {actor.imageUrl ? (
+                                    <img 
+                                      src={actor.imageUrl} 
+                                      alt={actor.name}
+                                      style={{
+                                        width: '50px',
+                                        height: '50px',
+                                        borderRadius: '4px',
+                                        objectFit: 'cover',
+                                        border: '2px solid #1a191f',
+                                        transition: 'border-color 0.2s ease',
+                                        display: 'block'
+                                      }}
+                                      onMouseOver={(e) => (e.currentTarget.style.borderColor = '#ff1493')}
+                                      onMouseOut={(e) => (e.currentTarget.style.borderColor = '#1a191f')}
+                                    />
+                                  ) : (
+                                    <div style={{
+                                      width: '50px',
+                                      height: '50px',
+                                      borderRadius: '4px',
+                                      background: 'linear-gradient(135deg, #1a191f 0%, #222028 100%)',
+                                      border: '2px solid #1a191f',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: '#8b8b8b'
+                                    }}>
+                                      <i className="ti ti-user"></i>
                                     </div>
-                                  </a>
-                                  <div className="item__person-info">
-                                    {actor.castName && (
-                                      <div className="item__person-character" title={`Character: ${actor.castName}`}>
-                                        {actor.castName}
-                                      </div>
-                                    )}
-                                    <a 
-                                      href={`/actor/${actor.slug}`} 
-                                      className="item__person-name"
-                                      title={actor.name}
-                                    >
-                                      {actor.name}
-                                    </a>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
+                                  )}
+                                </a>
+                                <a 
+                                  href={`/actor/${actor.slug}`}
+                                  style={{
+                                    color: '#ff1493',
+                                    textDecoration: 'none',
+                                    fontSize: '11px',
+                                    textAlign: 'center',
+                                    lineHeight: '1.2',
+                                    transition: 'color 0.2s ease',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    width: '100%',
+                                    wordBreak: 'break-word'
+                                  }}
+                                  onMouseOver={(e) => (e.currentTarget.style.color = '#d91a72')}
+                                  onMouseOut={(e) => (e.currentTarget.style.color = '#ff1493')}
+                                >
+                                  {actor.name}
+                                </a>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}
@@ -1008,11 +598,11 @@ export function ItemDetails() {
                             <i className="ti ti-player-play-filled"></i>
                           </a>
                           <span className={`item__rate ${
-                            (relatedItem.dynamicRating || relatedItem.adminRating || relatedItem.rating) >= 8 ? 'item__rate--green' :
-                            (relatedItem.dynamicRating || relatedItem.adminRating || relatedItem.rating) >= 6 ? 'item__rate--yellow' :
+                            relatedItem.rating && relatedItem.rating >= 8 ? 'item__rate--green' :
+                            relatedItem.rating && relatedItem.rating >= 6 ? 'item__rate--yellow' :
                             'item__rate--red'
                           }`}>
-                            {relatedItem.dynamicRating?.toFixed(1) || relatedItem.adminRating?.toFixed(1) || relatedItem.rating?.toFixed(1) || 'N/A'}
+                            {relatedItem.rating || '8.4'}
                           </span>
                           <button className="item__favorite" type="button">
                             <i className="ti ti-bookmark"></i>
@@ -1048,33 +638,7 @@ export function ItemDetails() {
       </section>
       {/* end content */}
 
-      {/* footer */}
-      <footer className="footer">
-        <div className="container">
-          <div className="row">
-            <div className="col-12">
-              <div className="footer__content">
-                <a href="/" className="footer__logo">
-                 <h1><span className="logo-zen">ZEN</span><span className="logo-ma">MA</span></h1>
-                </a>
-
-                <span className="footer__copyright">© ZENMA, 2019—2024 <br /> Create by <a href="https://themeforest.net/user/dmitryvolkov/portfolio" target="_blank">Dmitry Volkov</a></span>
-
-                <nav className="footer__nav">
-                  <a href="/about">About Us</a>
-                  <a href="/contacts">Contacts</a>
-                  <a href="/privacy">Privacy policy</a>
-                </nav>
-
-                <button className="footer__back" type="button">
-                  <i className="ti ti-arrow-narrow-up"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-      {/* end footer */}
+      <Footer />
 
       {/* Root element of PhotoSwipe. Must have class pswp. */}
       <div className="pswp" tabIndex={-1} role="dialog" aria-hidden="true">

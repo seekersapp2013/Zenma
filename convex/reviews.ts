@@ -152,6 +152,7 @@ export const addReview = mutation({
 
     const reviewId = await ctx.db.insert("reviews", {
       itemId: args.itemId,
+      targetType: "item" as const,
       userId,
       title: args.title.trim(),
       content: args.content.trim(),
@@ -306,9 +307,11 @@ export const editReview = mutation({
     });
 
     // Update item's dynamic rating
-    await ctx.scheduler.runAfter(0, internal.ratings.updateItemRating, {
-      itemId: review.itemId,
-    });
+    if (review.itemId) {
+      await ctx.scheduler.runAfter(0, internal.ratings.updateItemRating, {
+        itemId: review.itemId,
+      });
+    }
 
     return { success: true };
   },
@@ -495,10 +498,12 @@ export const adminDeleteReview = mutation({
 
     await Promise.all(votes.map(vote => ctx.db.delete(vote._id)));
 
-    // Update item's dynamic rating
-    await ctx.scheduler.runAfter(0, internal.ratings.updateItemRating, {
-      itemId,
-    });
+    // Update item's dynamic rating if this was an item review
+    if (itemId) {
+      await ctx.scheduler.runAfter(0, internal.ratings.updateItemRating, {
+        itemId,
+      });
+    }
 
     return { success: true };
   },

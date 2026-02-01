@@ -453,12 +453,34 @@ export const getAllItemsWithCategories = query({
         .withIndex("by_category", (q) => q.eq("categoryId", category._id))
         .collect();
       
-      // Get image URLs for all items
+      // Get image URLs and counts for all items
       const itemsWithImages = await Promise.all(
-        items.map(async (item) => ({
-          ...item,
-          imageUrl: await ctx.storage.getUrl(item.imageId),
-        }))
+        items.map(async (item) => {
+          // Count reviews for this item (reviews include ratings)
+          const reviews = await ctx.db
+            .query("reviews")
+            .withIndex("by_item", (q) => q.eq("itemId", item._id))
+            .collect();
+          
+          const reviewCount = reviews.length;
+          const ratingCount = reviewCount; // Each review includes a rating
+          
+          // Count comments for this item (all comments, including replies)
+          const comments = await ctx.db
+            .query("comments")
+            .withIndex("by_item", (q) => q.eq("itemId", item._id))
+            .collect();
+          
+          const commentCount = comments.length;
+          
+          return {
+            ...item,
+            imageUrl: await ctx.storage.getUrl(item.imageId),
+            ratingCount,
+            reviewCount,
+            commentCount,
+          };
+        })
       );
       
       result.push({
@@ -494,12 +516,34 @@ export const getAllItems = query({
   handler: async (ctx) => {
     const items = await ctx.db.query("items").collect();
     
-    // Get image URLs for all items
+    // Get image URLs and counts for all items
     const itemsWithImages = await Promise.all(
-      items.map(async (item) => ({
-        ...item,
-        imageUrl: await ctx.storage.getUrl(item.imageId),
-      }))
+      items.map(async (item) => {
+        // Count reviews for this item (reviews include ratings)
+        const reviews = await ctx.db
+          .query("reviews")
+          .withIndex("by_item", (q) => q.eq("itemId", item._id))
+          .collect();
+        
+        const reviewCount = reviews.length;
+        const ratingCount = reviewCount; // Each review includes a rating
+        
+        // Count comments for this item (all comments, including replies)
+        const comments = await ctx.db
+          .query("comments")
+          .withIndex("by_item", (q) => q.eq("itemId", item._id))
+          .collect();
+        
+        const commentCount = comments.length;
+        
+        return {
+          ...item,
+          imageUrl: await ctx.storage.getUrl(item.imageId),
+          ratingCount,
+          reviewCount,
+          commentCount,
+        };
+      })
     );
 
     return itemsWithImages;

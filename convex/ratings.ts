@@ -197,8 +197,171 @@ export const recalculateAllRatings = mutation({
 });
 
 /**
- * Get rating breakdown for an item (for display purposes)
+ * Update the dynamic rating for a specific actor
  */
+export const updateActorRating = internalMutation({
+  args: { actorId: v.id("actors") },
+  handler: async (ctx, args) => {
+    // Get the actor
+    const actor = await ctx.db.get(args.actorId);
+    if (!actor) {
+      throw new Error("Actor not found");
+    }
+
+    // Get all reviews for this actor
+    const reviews = await ctx.db
+      .query("reviews")
+      .withIndex("by_actor", (q) => q.eq("actorId", args.actorId))
+      .collect();
+
+    // Calculate user rating statistics
+    const userRatingCount = reviews.length;
+    let userRatingAverage: number | undefined = undefined;
+
+    if (userRatingCount > 0) {
+      const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+      userRatingAverage = totalRating / userRatingCount;
+      // Round to 1 decimal place
+      userRatingAverage = Math.round(userRatingAverage * 10) / 10;
+    }
+
+    // Get admin rating (check both new and legacy fields)
+    const adminRating = actor.adminRating || actor.rating;
+
+    // Calculate dynamic rating
+    const dynamicRating = calculateDynamicRating(
+      adminRating,
+      userRatingAverage,
+      userRatingCount
+    );
+
+    // Update the actor
+    await ctx.db.patch(args.actorId, {
+      adminRating: adminRating, // Ensure adminRating is set
+      userRatingAverage,
+      userRatingCount,
+      dynamicRating,
+      lastRatingUpdate: Date.now(),
+    });
+
+    return {
+      adminRating,
+      userRatingAverage,
+      userRatingCount,
+      dynamicRating,
+    };
+  },
+});
+
+/**
+ * Get rating breakdown for an actor (for display purposes)
+ */
+export const getActorRatingBreakdown = query({
+  args: { actorId: v.id("actors") },
+  handler: async (ctx, args) => {
+    const actor = await ctx.db.get(args.actorId);
+    if (!actor) {
+      return null;
+    }
+
+    const adminRating = actor.adminRating || actor.rating;
+
+    return {
+      adminRating,
+      userRatingAverage: actor.userRatingAverage,
+      userRatingCount: actor.userRatingCount || 0,
+      dynamicRating: actor.dynamicRating,
+      lastRatingUpdate: actor.lastRatingUpdate,
+    };
+  },
+});
+
+/**
+ * Recalculate ratings for all actors (admin only)
+ */
+export const recalculateAllActorRatings = mutation({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be logged in");
+    }
+
+    // Check if user is admin
+    const userProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (userProfile?.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+
+    // Get all actors
+    const actors = await ctx.db.query("actors").collect();
+
+    let updatedCount = 0;
+    const results = [];
+
+    for (const actor of actors) {
+      try {
+        // Get all reviews for this actor
+        const reviews = await ctx.db
+          .query("reviews")
+          .withIndex("by_actor", (q) => q.eq("actorId", actor._id))
+          .collect();
+
+        // Calculate user rating statistics
+        const userRatingCount = reviews.length;
+        let userRatingAverage: number | undefined = undefined;
+
+        if (userRatingCount > 0) {
+          const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+          userRatingAverage = totalRating / userRatingCount;
+          userRatingAverage = Math.round(userRatingAverage * 10) / 10;
+        }
+
+        // Get admin rating (check both new and legacy fields)
+        const adminRating = actor.adminRating || actor.rating;
+
+        // Calculate dynamic rating
+        const dynamicRating = calculateDynamicRating(
+          adminRating,
+          userRatingAverage,
+          userRatingCount
+        );
+
+        // Update the actor
+        await ctx.db.patch(actor._id, {
+          adminRating: adminRating,
+          userRatingAverage,
+          userRatingCount,
+          dynamicRating,
+          lastRatingUpdate: Date.now(),
+        });
+
+        updatedCount++;
+        results.push({
+          actorId: actor._id,
+          name: actor.name,
+          adminRating,
+          userRatingAverage,
+          userRatingCount,
+          dynamicRating,
+        });
+      } catch (error) {
+        console.error(`Error updating rating for actor ${actor._id}:`, error);
+      }
+    }
+
+    return {
+      success: true,
+      updatedCount,
+      totalActors: actors.length,
+      results,
+    };
+  },
+});
+
 export const getItemRatingBreakdown = query({
   args: { itemId: v.id("items") },
   handler: async (ctx, args) => {

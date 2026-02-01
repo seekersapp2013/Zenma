@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { Authenticated, Unauthenticated } from "convex/react";
-import { SignOutButton } from "./SignOutButton";
 import { useParams } from "react-router-dom";
+import { Header } from "./Header";
+import { Footer } from "./Footer";
 import './sign.css';
 
 export function Actor() {
   const { slug } = useParams<{ slug: string }>();
-  const loggedInUser = useQuery(api.auth.loggedInUser);
   const actor = useQuery(api.actors.getActorBySlug, { slug: slug || "" });
   const filmography = useQuery(
     api.actors.getActorFilmography, 
@@ -42,6 +41,26 @@ export function Actor() {
   };
 
   useEffect(() => {
+    // Add video placeholder styles to match ItemDetails
+    const style = document.createElement('style');
+    style.textContent = `
+      .video-placeholder {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        text-align: center;
+      }
+      .video-placeholder__content {
+        padding: 20px;
+      }
+    `;
+    document.head.appendChild(style);
+    style.setAttribute('data-actor-styles', 'true');
+
     // Load non-essential CSS files after a short delay
     setTimeout(() => {
       nonEssentialCssFiles.forEach(href => {
@@ -91,6 +110,10 @@ export function Actor() {
           script.remove();
         }
       });
+
+      // Remove added styles
+      const styles = document.querySelectorAll('style[data-actor-styles]');
+      styles.forEach(style => style.remove());
     };
   }, []);
 
@@ -125,107 +148,17 @@ export function Actor() {
     );
   }
 
-  // Only use dynamic actor data from database
-  const actorData = actor;
+  // Calculate the display rating using the same algorithm as movies
+  const getDisplayRating = () => {
+    return actor.dynamicRating ?? actor.adminRating ?? actor.rating ?? 8.4;
+  };
+
+  const displayRating = getDisplayRating();
 
   return (
     <div>
       {/* Header */}
-      <header className="header">
-        <div className="container">
-          <div className="row">
-            <div className="col-12">
-              <div className="header__content">
-                {/* Header logo */}
-                <a href="/" className="header__logo">
-                  <h1><span className="logo-zen">ZEN</span><span className="logo-ma">MA</span></h1>
-                </a>
-
-                {/* Header nav */}
-                <ul className="header__nav">
-                  <li className="header__nav-item">
-                    <a href="/" className="header__nav-link">Home</a>
-                  </li>
-                  <li className="header__nav-item">
-                    <a href="/catalog" className="header__nav-link">Catalog</a>
-                  </li>
-                  <li className="header__nav-item">
-                    <a href="/pricing" className="header__nav-link">Pricing plan</a>
-                  </li>
-                </ul>
-
-                {/* Header auth */}
-                <div className="header__auth">
-                  <form action="#" className="header__search">
-                    <input className="header__search-input" type="text" placeholder="Search..." />
-                    <button className="header__search-button" type="button">
-                      <i className="ti ti-search"></i>
-                    </button>
-                    <button className="header__search-close" type="button">
-                      <i className="ti ti-x"></i>
-                    </button>
-                  </form>
-
-                  <button className="header__search-btn" type="button">
-                    <i className="ti ti-search"></i>
-                  </button>
-
-                  {/* Language dropdown */}
-                  <div className="header__lang">
-                    <a className="header__nav-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                      EN <i className="ti ti-chevron-down"></i>
-                    </a>
-                    <ul className="dropdown-menu header__dropdown-menu">
-                      <li><a href="#">English</a></li>
-                      <li><a href="#">Spanish</a></li>
-                      <li><a href="#">French</a></li>
-                    </ul>
-                  </div>
-
-                  <div className="header__profile">
-                    <Authenticated>
-                      <div 
-                        className="header__sign-in header__sign-in--user" 
-                        role="button"
-                        data-bs-toggle="dropdown" 
-                        aria-expanded="false"
-                      >
-                        <i className="ti ti-user"></i>
-                        <span>
-                          {loggedInUser?.profile?.username || loggedInUser?.name || 'User'}
-                        </span>
-                      </div>
-                      <ul className="dropdown-menu dropdown-menu-end header__dropdown-menu header__dropdown-menu--user">
-                        <li><a href="/profile"><i className="ti ti-ghost"></i>Profile</a></li>
-                        <li><a href="/profile"><i className="ti ti-stereo-glasses"></i>Subscription</a></li>
-                        <li><a href="/profile"><i className="ti ti-bookmark"></i>Favorites</a></li>
-                        <li><a href="/profile"><i className="ti ti-settings"></i>Settings</a></li>
-                        {loggedInUser?.profile?.role === "admin" && (
-                          <li><a href="/admin-dashboard"><i className="ti ti-settings-cog"></i>Admin Dashboard</a></li>
-                        )}
-                        <li><SignOutButton variant="dropdown" /></li>
-                      </ul>
-                    </Authenticated>
-                    <Unauthenticated>
-                      <a className="header__sign-in header__sign-in--user" href="/login" role="button">
-                        <i className="ti ti-user"></i>
-                        <span>Login</span>
-                      </a>
-                    </Unauthenticated>
-                  </div>
-                </div>
-
-                {/* Header menu btn */}
-                <button className="header__btn" type="button">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* Actor Details Section */}
       <section className="section section--details">
@@ -237,44 +170,60 @@ export function Actor() {
           <div className="row">
             {/* Title */}
             <div className="col-12">
-              <h1 className="section__title section__title--head">{actorData.name}</h1>
+              <h1 className="section__title section__title--head">{actor.name}</h1>
             </div>
 
-            {/* Content */}
-            <div className="col-12 col-lg-9 col-xl-6">
+            {/* Content - Match ItemDetails layout exactly */}
+            <div className="col-12 col-xl-6">
               <div className="item item--details">
                 <div className="row">
-                  <div className="col-12 col-sm-5 col-md-5">
+                  {/* Actor cover - Match ItemDetails column sizes */}
+                  <div className="col-4 col-sm-4 col-md-4 col-lg-3 col-xl-4 col-xxl-4">
                     <div className="item__cover">
-                      <img src={actorData.imageUrl || "/img/covers/actor.jpg"} alt={actorData.name} />
+                      <img src={actor.imageUrl || "/img/covers/actor.jpg"} alt={actor.name} />
+                      <span className={`item__rate ${
+                        displayRating >= 8 ? 'item__rate--green' :
+                        displayRating >= 6 ? 'item__rate--yellow' :
+                        'item__rate--red'
+                      }`}>
+                        {displayRating.toFixed(1)}
+                      </span>
+                      <button className="item__favorite item__favorite--static" type="button">
+                        <i className="ti ti-bookmark"></i>
+                      </button>
                     </div>
                   </div>
 
-                  <div className="col-12 col-md-7">
+                  {/* Actor content - Match ItemDetails column sizes */}
+                  <div className="col-8 col-sm-8 col-md-8 col-lg-9 col-xl-8 col-xxl-8">
                     <div className="item__content">
-                      <ul className="item__meta">
-                        <li><span>Career:</span> {actorData.career}</li>
-                        {actorData.height && <li><span>Height:</span> {actorData.height}</li>}
-                        {actorData.dateOfBirth && <li><span>Date of birth:</span> {actorData.dateOfBirth}</li>}
-                        {actorData.placeOfBirth && <li><span>Place of birth:</span> {actorData.placeOfBirth}</li>}
-                        {actorData.age && <li><span>Age:</span> {actorData.age}</li>}
-                        {actorData.zodiac && <li><span>Zodiac:</span> {actorData.zodiac}</li>}
-                        {actorData.genres && actorData.genres.length > 0 && (
+                      <ul className="item__meta" style={{ marginBottom: '8px' }}>
+                        <li><span>Career:</span> {actor.career}</li>
+                        {actor.height && <li><span>Height:</span> {actor.height}</li>}
+                        {actor.dateOfBirth && <li><span>Date of birth:</span> {actor.dateOfBirth}</li>}
+                        {actor.placeOfBirth && <li><span>Place of birth:</span> {actor.placeOfBirth}</li>}
+                        {actor.age && <li><span>Age:</span> {actor.age}</li>}
+                        {actor.zodiac && <li><span>Zodiac:</span> {actor.zodiac}</li>}
+                        {actor.genres && actor.genres.length > 0 && (
                           <li>
                             <span>Genres:</span> 
-                            {actorData.genres.map((genre, index) => (
-                              <a key={index} href="#" className="mr-2">{genre}</a>
+                            {actor.genres.map((genre, index) => (
+                              <span key={genre}>
+                                <a href="#" className="mr-2">{genre}</a>
+                                {index < actor.genres.length - 1 && ' '}
+                              </span>
                             ))}
                           </li>
                         )}
-                        {actorData.totalMovies && <li><span>Total number of movies:</span> {actorData.totalMovies}</li>}
-                        {actorData.firstMovie && <li><span>First movie:</span> <a href="/details">{actorData.firstMovie}</a></li>}
-                        {actorData.lastMovie && <li><span>Last movie:</span> <a href="/details">{actorData.lastMovie}</a></li>}
-                        {actorData.bestMovie && <li><span>Best movie:</span> <a href="/details">{actorData.bestMovie}</a></li>}
+                        {actor.totalMovies && <li><span>Total number of movies:</span> {actor.totalMovies}</li>}
+                        {actor.firstMovie && <li><span>First movie:</span> <a href="/details">{actor.firstMovie}</a></li>}
+                        {actor.lastMovie && <li><span>Last movie:</span> <a href="/details">{actor.lastMovie}</a></li>}
+                        {actor.bestMovie && <li><span>Best movie:</span> <a href="/details">{actor.bestMovie}</a></li>}
                       </ul>
-                      {actorData.biography && (
-                        <div className="item__text">
-                          <p>{actorData.biography}</p>
+
+                      {actor.biography && (
+                        <div className="item__description" style={{ marginTop: '5px', marginBottom: '10px' }}>
+                          <p style={{ marginBottom: '0' }}>{actor.biography}</p>
                         </div>
                       )}
                     </div>
@@ -282,6 +231,8 @@ export function Actor() {
                 </div>
               </div>
             </div>
+
+            
           </div>
         </div>
       </section>
@@ -336,7 +287,7 @@ export function Actor() {
 
         <div className="container">
           <div className="row">
-            <div className="col-12">
+            <div className="col-12 col-lg-8">
               {/* Content tabs */}
               <div className="tab-content">
                 <div 
@@ -360,39 +311,27 @@ export function Actor() {
                 </div>
               </div>
             </div>
+
+            {/* Sidebar - Match ItemDetails structure */}
+            <div className="col-12 col-lg-4">
+              <div className="row">
+                {/* Section title */}
+                <div className="col-12">
+                  <h2 className="section__title section__title--sidebar">You may also like...</h2>
+                </div>
+
+                {/* Placeholder for related actors or content */}
+                <div className="col-12">
+                  <p className="text-center text-gray-500">Related actors coming soon...</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="footer">
-        <div className="container">
-          <div className="row">
-            <div className="col-12">
-              <div className="footer__content">
-                <a href="/" className="footer__logo">
-                  <h1><span className="logo-zen">ZEN</span><span className="logo-ma">MA</span></h1>
-                </a>
-
-                <span className="footer__copyright">
-                  © ZENMA, 2019—2024 <br /> 
-                  Create by <a href="https://themeforest.net/user/dmitryvolkov/portfolio" target="_blank">Dmitry Volkov</a>
-                </span>
-
-                <nav className="footer__nav">
-                  <a href="/about">About Us</a>
-                  <a href="/contacts">Contacts</a>
-                  <a href="/privacy">Privacy policy</a>
-                </nav>
-
-                <button className="footer__back" type="button">
-                  <i className="ti ti-arrow-narrow-up"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* PhotoSwipe Root element */}
       <div className="pswp" tabIndex={-1} role="dialog" aria-hidden="true">
@@ -439,6 +378,8 @@ function FilmographyTab({ filmography }: {
     slug: string;
     imageUrl: string | null;
     rating?: number;
+    dynamicRating?: number;
+    adminRating?: number;
     genres: string[];
   }> | undefined 
 }) {
@@ -466,11 +407,11 @@ function FilmographyTab({ filmography }: {
                   <i className="ti ti-player-play-filled"></i>
                 </a>
                 <span className={`item__rate ${
-                  (movie.dynamicRating || movie.adminRating || movie.rating) >= 8 ? 'item__rate--green' :
-                  (movie.dynamicRating || movie.adminRating || movie.rating) >= 6 ? 'item__rate--yellow' :
+                  ((movie.dynamicRating ?? movie.adminRating ?? movie.rating) ?? 0) >= 8 ? 'item__rate--green' :
+                  ((movie.dynamicRating ?? movie.adminRating ?? movie.rating) ?? 0) >= 6 ? 'item__rate--yellow' :
                   'item__rate--red'
                 }`}>
-                  {movie.dynamicRating?.toFixed(1) || movie.adminRating?.toFixed(1) || movie.rating?.toFixed(1) || 'N/A'}
+                  {(movie.dynamicRating ?? movie.adminRating ?? movie.rating)?.toFixed(1) ?? 'N/A'}
                 </span>
                 <button className="item__favorite" type="button">
                   <i className="ti ti-bookmark"></i>

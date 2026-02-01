@@ -382,7 +382,7 @@ export function CategoryManagement() {
                     category={category}
                     index={index}
                     onDelete={() => deleteCategory({ categoryId: category._id })}
-                    onAddItem={() => navigate(`/categories/${category._id}/items/new`)}
+                    onAddItem={() => navigate(`/admin/categories/${category._id}/items/new`)}
                     onEditItem={(item) => {
                       const initialData = {
                         title: item.title,
@@ -400,7 +400,7 @@ export function CategoryManagement() {
                         videoSources: item.videoSources || [],
                         captions: item.captions || [],
                       };
-                      navigate(`/categories/${category._id}/items/edit?editingItem=${item._id}&initialData=${encodeURIComponent(JSON.stringify(initialData))}`);
+                      navigate(`/admin/categories/${category._id}/items/edit?editingItem=${item._id}&initialData=${encodeURIComponent(JSON.stringify(initialData))}`);
                     }}
                     onDeleteItem={(itemId) => deleteItem({ itemId })}
                     formatTitle={formatTitle}

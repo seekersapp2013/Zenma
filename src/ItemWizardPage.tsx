@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ItemWizard } from "./ItemWizard";
+import { AdminLayout } from "./AdminLayout";
 import { Id } from "../convex/_generated/dataModel";
 
 export function ItemWizardPage() {
@@ -28,27 +29,34 @@ export function ItemWizardPage() {
 
   if (!categoryId) {
     return (
-      <div className="main__content">
-        <div className="container-fluid">
-          <div className="row">
-            <div className="col-12">
-              <div className="alert alert-danger">
-                Category ID is required
+      <AdminLayout currentPage="categories" pageTitle="Item Management">
+        <div className="main__content">
+          <div className="container-fluid">
+            <div className="row">
+              <div className="col-12">
+                <div className="alert alert-danger">
+                  Category ID is required
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <ItemWizard
-      categoryId={categoryId as Id<"categories">}
-      editingItem={editingItemId as Id<"items"> | null}
-      initialData={initialData}
-      onClose={handleClose}
-      onSuccess={handleSuccess}
-    />
+    <AdminLayout 
+      currentPage="categories" 
+      pageTitle={editingItemId ? "Edit Item" : "Add New Item"}
+    >
+      <ItemWizard
+        categoryId={categoryId as Id<"categories">}
+        editingItem={editingItemId as Id<"items"> | null}
+        initialData={initialData}
+        onClose={handleClose}
+        onSuccess={handleSuccess}
+      />
+    </AdminLayout>
   );
 }

@@ -148,7 +148,9 @@ const applicationTables = {
     .index("by_user_and_comment", ["userId", "commentId"]),
 
   reviews: defineTable({
-    itemId: v.id("items"),
+    itemId: v.optional(v.id("items")), // Made optional for backward compatibility
+    actorId: v.optional(v.id("actors")), // New field for actor reviews
+    targetType: v.optional(v.union(v.literal("item"), v.literal("actor"))), // Made optional for backward compatibility
     userId: v.id("users"),
     title: v.string(),
     content: v.string(),
@@ -158,8 +160,11 @@ const applicationTables = {
     createdAt: v.number(), // timestamp
   })
     .index("by_item", ["itemId"])
+    .index("by_actor", ["actorId"])
+    .index("by_target_type", ["targetType"])
     .index("by_user", ["userId"])
     .index("by_item_and_created", ["itemId", "createdAt"])
+    .index("by_actor_and_created", ["actorId", "createdAt"])
     .index("by_rating", ["rating"]),
 
   reviewVotes: defineTable({
@@ -204,11 +209,19 @@ const applicationTables = {
     bestMovie: v.optional(v.string()),
     imageId: v.optional(v.id("_storage")), // Profile image
     biography: v.optional(v.string()),
+    // Rating system fields (same as items)
+    rating: v.optional(v.number()), // Legacy field - kept for backward compatibility
+    adminRating: v.optional(v.number()), // Admin baseline rating (1-10)
+    userRatingAverage: v.optional(v.number()), // Average of all user ratings
+    userRatingCount: v.optional(v.number()), // Total number of user ratings
+    dynamicRating: v.optional(v.number()), // Calculated weighted rating
+    lastRatingUpdate: v.optional(v.number()), // Timestamp of last calculation
     createdBy: v.id("users"),
     createdAt: v.number(),
   })
     .index("by_slug", ["slug"])
-    .index("by_name", ["name"]),
+    .index("by_name", ["name"])
+    .index("by_rating", ["dynamicRating"]),
 
   // Directors table
   directors: defineTable({
