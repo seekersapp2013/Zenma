@@ -516,7 +516,7 @@ export function ActorFormPage() {
       <div className="row">
         <div className="col-12 col-lg-10 col-xl-8 mx-auto">
           <div className="sign__wrap">
-            <form onSubmit={handleSubmit}>
+            <div>
               {renderStepIndicator()}
 
               <div className="mb-4">
@@ -560,7 +560,8 @@ export function ActorFormPage() {
                     </button>
                   ) : (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={(e) => handleSubmit(e)}
                       className="sign__btn"
                       style={{ width: "auto", padding: "0 30px" }}
                       disabled={isSubmitting}
@@ -570,7 +571,7 @@ export function ActorFormPage() {
                   )}
                 </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>

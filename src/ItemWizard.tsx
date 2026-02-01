@@ -826,7 +826,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
         <div className="row">
           <div className="col-12">
-            <form onSubmit={(e) => { e.preventDefault(); if (currentStep === 4) handleSubmit(); }} className="sign__form sign__form--profile">
+            <div className="sign__form sign__form--profile">
               {renderStep()}
 
               {/* Navigation Buttons */}
@@ -854,7 +854,8 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                     </button>
                   ) : (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={handleSubmit}
                       className="sign__btn"
                       disabled={!canProceed()}
                     >
@@ -863,7 +864,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                   )}
                 </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>

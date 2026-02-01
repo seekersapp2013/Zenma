@@ -149,6 +149,7 @@ export function DirectorForm() {
         await createDirector(directorData);
       }
 
+      // Navigate back after successful save
       navigate("/directors");
     } catch (error) {
       console.error("Failed to save director:", error);
@@ -201,7 +202,7 @@ export function DirectorForm() {
 
         <div className="row">
           <div className="col-12">
-            <form onSubmit={handleSubmit} className="sign__form sign__form--profile">
+            <div className="sign__form sign__form--profile">
               {/* Step 1: Basic Information */}
               {currentStep === 1 && (
                 <div className="row">
@@ -462,7 +463,8 @@ export function DirectorForm() {
                     </button>
                   ) : (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={handleSubmit}
                       className="sign__btn"
                       disabled={isSubmitting}
                     >
@@ -471,7 +473,7 @@ export function DirectorForm() {
                   )}
                 </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>

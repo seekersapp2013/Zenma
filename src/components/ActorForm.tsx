@@ -149,6 +149,7 @@ export function ActorForm() {
         await createActor(actorData);
       }
 
+      // Navigate back after successful save
       navigate("/actors");
     } catch (error) {
       console.error("Failed to save actor:", error);
@@ -201,7 +202,7 @@ export function ActorForm() {
 
         <div className="row">
           <div className="col-12">
-            <form onSubmit={handleSubmit} className="sign__form sign__form--profile">
+            <div className="sign__form sign__form--profile">
               {/* Step 1: Basic Information */}
               {currentStep === 1 && (
                 <div className="row">
@@ -462,7 +463,8 @@ export function ActorForm() {
                     </button>
                   ) : (
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={handleSubmit}
                       className="sign__btn"
                       disabled={isSubmitting}
                     >
@@ -471,7 +473,7 @@ export function ActorForm() {
                   )}
                 </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>
