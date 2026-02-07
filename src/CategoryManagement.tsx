@@ -389,7 +389,7 @@ export function CategoryManagement() {
                         imageId: item.imageId,
                         genres: item.genres,
                         description: item.description || "",
-                        director: item.director || "",
+                        director: item.director || [],
                         cast: item.cast || [],
                         premiereYear: item.premiereYear || undefined,
                         runningTime: item.runningTime || undefined,
