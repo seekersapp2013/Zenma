@@ -5,6 +5,9 @@ import { Movies } from "./movies";
 import { Admin } from "./Admin";
 import { AdminDashboard } from "./AdminDashboard";
 import { CategoryManagement } from "./CategoryManagement";
+import { MoviesManagement } from "./MoviesManagement";
+import { MovieWizard } from "./MovieWizard";
+import { MigrationRunner } from "./MigrationRunner";
 import { Users } from "./Users";
 import { Settings } from "./Settings";
 import { Catalog } from "./Catalog";
@@ -54,6 +57,10 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/dashboard" element={<AdminDashboardRoute />} />
         <Route path="/admin-dashboard" element={<AdminDashboardRoute />} />
+        <Route path="/admin/movies" element={<AdminRoute><MoviesManagement /></AdminRoute>} />
+        <Route path="/admin/movies/new" element={<AdminRoute><MovieWizard /></AdminRoute>} />
+        <Route path="/admin/movies/edit/:movieId" element={<AdminRoute><MovieWizard /></AdminRoute>} />
+        <Route path="/admin/migration" element={<AdminRoute><MigrationRunner /></AdminRoute>} />
         <Route path="/admin/categories" element={<AdminRoute><CategoryManagement /></AdminRoute>} />
         <Route path="/admin/categories/:categoryId/items/new" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
         <Route path="/admin/categories/:categoryId/items/edit" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />

@@ -14,6 +14,7 @@ export function ActorForm() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const actors = useQuery(api.actors.getActors);
   const actor = actors?.find(a => a._id === actorId);
+  const genres = useQuery(api.genres.getGenres);
 
   const createActor = useMutation(api.actors.createActor);
   const updateActor = useMutation(api.actors.updateActor);
@@ -32,7 +33,7 @@ export function ActorForm() {
     placeOfBirth: actor?.placeOfBirth || "",
     age: actor?.age?.toString() || "",
     zodiac: actor?.zodiac || "",
-    genres: actor?.genres?.join(", ") || "",
+    genres: actor?.genres || [],
     totalMovies: actor?.totalMovies?.toString() || "",
     firstMovie: actor?.firstMovie || "",
     lastMovie: actor?.lastMovie || "",
@@ -40,7 +41,7 @@ export function ActorForm() {
     biography: actor?.biography || "",
   });
 
-  if (loggedInUser === undefined || actors === undefined) {
+  if (loggedInUser === undefined || actors === undefined || genres === undefined) {
     return (
       <div className="main__content">
         <div className="d-flex align-items-center justify-content-center p-4">
@@ -81,6 +82,15 @@ export function ActorForm() {
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const toggleGenre = (genreName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      genres: prev.genres.includes(genreName)
+        ? prev.genres.filter(g => g !== genreName)
+        : [...prev.genres, genreName]
     }));
   };
 
@@ -134,7 +144,7 @@ export function ActorForm() {
         placeOfBirth: formData.placeOfBirth || undefined,
         age: formData.age ? parseInt(formData.age) : undefined,
         zodiac: formData.zodiac || undefined,
-        genres: formData.genres.split(",").map(g => g.trim()).filter(g => g),
+        genres: formData.genres.length > 0 ? formData.genres : undefined,
         totalMovies: formData.totalMovies ? parseInt(formData.totalMovies) : undefined,
         firstMovie: formData.firstMovie || undefined,
         lastMovie: formData.lastMovie || undefined,
@@ -319,15 +329,31 @@ export function ActorForm() {
 
                   <div className="col-12">
                     <div className="sign__group">
-                      <label className="sign__label">Genres (comma-separated)</label>
-                      <input
-                        type="text"
-                        name="genres"
-                        value={formData.genres}
-                        onChange={handleInputChange}
-                        placeholder="e.g., Action, Sci-Fi, Thriller"
-                        className="sign__input"
-                      />
+                      <label className="sign__label">Genres (Click to select/deselect)</label>
+                      <div className="d-flex flex-wrap gap-2">
+                        {genres?.map((genre) => {
+                          const isSelected = formData.genres.includes(genre.name);
+                          return (
+                            <span
+                              key={genre._id}
+                              onClick={() => toggleGenre(genre.name)}
+                              className="badge d-flex align-items-center gap-1"
+                              style={{
+                                fontSize: '14px',
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                backgroundColor: isSelected ? '#ff1493' : '#2b2b31',
+                                color: '#fff',
+                                border: isSelected ? '2px solid #ff1493' : '2px solid #404040',
+                                transition: 'all 0.2s ease'
+                              }}
+                            >
+                              {isSelected && <i className="ti ti-check" style={{ fontSize: '12px' }}></i>}
+                              {genre.name}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
 

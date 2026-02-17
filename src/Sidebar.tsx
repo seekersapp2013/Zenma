@@ -26,7 +26,7 @@ export function Sidebar({ currentPage }: SidebarProps) {
   
   // Get counts for sidebar
   const categories = useQuery(api.categories.getCategories);
-  const allItems = useQuery(api.items.getAllItemsWithCategories);
+  const allMovies = useQuery(api.items.getAllItems);
   const allComments = useQuery(api.comments.getAllComments);
   const allReviews = useQuery(api.reviews.getAllReviews);
   const allActors = useQuery(api.actors.getAllActors);
@@ -35,7 +35,7 @@ export function Sidebar({ currentPage }: SidebarProps) {
   const allUsers = useQuery(api.auth.getAllUsers);
   const blogStats = useQuery(api.pages.getBlogStats);
 
-  const totalItems = allItems?.reduce((total, category) => total + category.items.length, 0) || 0;
+  const totalItems = allMovies?.length || 0;
 
   const navigationItems = [
     { 
@@ -43,6 +43,13 @@ export function Sidebar({ currentPage }: SidebarProps) {
       icon: "ti-layout-grid", 
       label: "Dashboard", 
       key: "dashboard" 
+    },
+    { 
+      href: "/admin/movies", 
+      icon: "ti-movie", 
+      label: "Movies", 
+      key: "movies",
+      count: totalItems || 0
     },
     { 
       href: "/admin/categories", 

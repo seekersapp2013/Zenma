@@ -2,24 +2,36 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
-// Query to get all items for a specific category
+// Query to get all items for a specific category (using junction table)
 export const getItemsByCategory = query({
   args: { categoryId: v.id("categories") },
   handler: async (ctx, args) => {
-    const items = await ctx.db
-      .query("items")
+    // Get category-item relationships
+    const categoryItems = await ctx.db
+      .query("categoryItems")
       .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
       .collect();
 
-    // Get image URLs for all items
+    // Get the actual items
+    const items = await Promise.all(
+      categoryItems.map(async (ci) => {
+        const item = await ctx.db.get(ci.itemId);
+        return item ? { ...item, categoryItemOrder: ci.order } : null;
+      })
+    );
+
+    // Filter out null items and get image URLs
+    const validItems = items.filter((item): item is NonNullable<typeof item> => item !== null);
+    
     const itemsWithImages = await Promise.all(
-      items.map(async (item) => ({
+      validItems.map(async (item) => ({
         ...item,
         imageUrl: await ctx.storage.getUrl(item.imageId),
       }))
     );
 
-    return itemsWithImages;
+    // Sort by order
+    return itemsWithImages.sort((a, b) => a.categoryItemOrder - b.categoryItemOrder);
   },
 });
 
@@ -35,7 +47,8 @@ export const getItemBySlug = query({
     if (!item) return null;
 
     // Also get the category information and resolve all storage URLs
-    const category = await ctx.db.get(item.categoryId);
+    // Note: categoryId is now optional (movies can exist without categories)
+    const category = item.categoryId ? await ctx.db.get(item.categoryId) : null;
     const imageUrl = await ctx.storage.getUrl(item.imageId);
     
     // Resolve poster image URL - use storage ID if available, else use direct URL
@@ -152,10 +165,9 @@ export const getItemBySlug = query({
   },
 });
 
-// Create a new item
+// Create a new item (without category assignment)
 export const createItem = mutation({
   args: {
-    categoryId: v.id("categories"),
     title: v.string(),
     imageId: v.id("_storage"),
     genres: v.array(v.string()),
@@ -213,7 +225,6 @@ export const createItem = mutation({
     }
 
     return await ctx.db.insert("items", {
-      categoryId: args.categoryId,
       title: args.title,
       slug: finalSlug,
       imageId: args.imageId,
@@ -448,14 +459,26 @@ export const getAllItemsWithCategories = query({
     const result = [];
     
     for (const category of categories) {
-      const items = await ctx.db
-        .query("items")
+      // Get category-item relationships
+      const categoryItems = await ctx.db
+        .query("categoryItems")
         .withIndex("by_category", (q) => q.eq("categoryId", category._id))
         .collect();
+
+      // Get the actual items
+      const items = await Promise.all(
+        categoryItems.map(async (ci) => {
+          const item = await ctx.db.get(ci.itemId);
+          return item ? { ...item, categoryItemOrder: ci.order } : null;
+        })
+      );
+
+      // Filter out null items
+      const validItems = items.filter((item): item is NonNullable<typeof item> => item !== null);
       
       // Get image URLs and counts for all items
       const itemsWithImages = await Promise.all(
-        items.map(async (item) => {
+        validItems.map(async (item) => {
           // Count reviews for this item (reviews include ratings)
           const reviews = await ctx.db
             .query("reviews")
@@ -482,10 +505,13 @@ export const getAllItemsWithCategories = query({
           };
         })
       );
+
+      // Sort by order
+      const sortedItems = itemsWithImages.sort((a, b) => a.categoryItemOrder - b.categoryItemOrder);
       
       result.push({
         ...category,
-        items: itemsWithImages,
+        items: sortedItems,
       });
     }
 
@@ -535,6 +561,19 @@ export const getAllItems = query({
           .collect();
         
         const commentCount = comments.length;
+
+        // Get categories this item belongs to
+        const categoryItems = await ctx.db
+          .query("categoryItems")
+          .withIndex("by_item", (q) => q.eq("itemId", item._id))
+          .collect();
+        
+        const categories = await Promise.all(
+          categoryItems.map(async (ci) => {
+            const category = await ctx.db.get(ci.categoryId);
+            return category;
+          })
+        );
         
         return {
           ...item,
@@ -542,10 +581,99 @@ export const getAllItems = query({
           ratingCount,
           reviewCount,
           commentCount,
+          categories: categories.filter((c): c is NonNullable<typeof c> => c !== null),
         };
       })
     );
 
     return itemsWithImages;
+  },
+});
+
+// Add item to category
+export const addItemToCategory = mutation({
+  args: {
+    itemId: v.id("items"),
+    categoryId: v.id("categories"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Check if relationship already exists
+    const existing = await ctx.db
+      .query("categoryItems")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .filter((q) => q.eq(q.field("categoryId"), args.categoryId))
+      .first();
+
+    if (existing) {
+      throw new Error("Item already in this category");
+    }
+
+    // Get the highest order number in this category
+    const categoryItems = await ctx.db
+      .query("categoryItems")
+      .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+      .collect();
+    
+    const maxOrder = Math.max(...categoryItems.map(ci => ci.order), 0);
+
+    return await ctx.db.insert("categoryItems", {
+      categoryId: args.categoryId,
+      itemId: args.itemId,
+      order: maxOrder + 1,
+      addedAt: Date.now(),
+      addedBy: userId,
+    });
+  },
+});
+
+// Remove item from category
+export const removeItemFromCategory = mutation({
+  args: {
+    itemId: v.id("items"),
+    categoryId: v.id("categories"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Find the relationship
+    const relationship = await ctx.db
+      .query("categoryItems")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .filter((q) => q.eq(q.field("categoryId"), args.categoryId))
+      .first();
+
+    if (!relationship) {
+      throw new Error("Item not in this category");
+    }
+
+    return await ctx.db.delete(relationship._id);
+  },
+});
+
+// Get categories for a specific item
+export const getCategoriesForItem = query({
+  args: { itemId: v.id("items") },
+  handler: async (ctx, args) => {
+    const categoryItems = await ctx.db
+      .query("categoryItems")
+      .withIndex("by_item", (q) => q.eq("itemId", args.itemId))
+      .collect();
+
+    const categories = await Promise.all(
+      categoryItems.map(async (ci) => {
+        const category = await ctx.db.get(ci.categoryId);
+        return category;
+      })
+    );
+
+    return categories.filter((c): c is NonNullable<typeof c> => c !== null);
   },
 });

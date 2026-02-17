@@ -27,6 +27,7 @@ export function ItemWizardPage() {
     navigate("/admin/categories");
   };
 
+  // CategoryId is now optional - if not provided, it's a standalone item creation
   if (!categoryId) {
     return (
       <AdminLayout currentPage="categories" pageTitle="Item Management">
@@ -35,7 +36,7 @@ export function ItemWizardPage() {
             <div className="row">
               <div className="col-12">
                 <div className="alert alert-danger">
-                  Category ID is required
+                  Category ID is required for this route. Use /admin/movies for standalone movie creation.
                 </div>
               </div>
             </div>

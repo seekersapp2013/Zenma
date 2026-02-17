@@ -9,6 +9,7 @@ import "./wizard.css";
 interface ItemFormData {
   title: string;
   imageId: Id<"_storage"> | null;
+  imageUrl?: string; // Add imageUrl for displaying existing image
   genres: string[];
   description: string;
   director: string[];
@@ -37,7 +38,7 @@ interface ItemFormData {
 }
 
 interface ItemWizardProps {
-  categoryId: Id<"categories">;
+  categoryId?: Id<"categories">; // Made optional for standalone movie creation
   editingItem?: Id<"items"> | null;
   initialData?: Partial<ItemFormData>;
   onClose: () => void;
@@ -65,9 +66,7 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
   });
 
   // Input states for dynamic arrays
-  const [genreInput, setGenreInput] = useState("");
-  const [directorInput, setDirectorInput] = useState("");
-  const [castInput, setCastInput] = useState({ castName: "", actorName: "" });
+  const [selectedActors, setSelectedActors] = useState<string[]>([]);
   const [videoSourceInput, setVideoSourceInput] = useState({ 
     videoId: null as Id<"_storage"> | null, 
     url: "",
@@ -92,58 +91,54 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
   ];
 
   // Helper functions
-  const addGenre = () => {
-    if (genreInput.trim() && !itemForm.genres.includes(genreInput.trim())) {
-      setItemForm(prev => ({
-        ...prev,
-        genres: [...prev.genres, genreInput.trim()]
-      }));
-      setGenreInput("");
-    }
-  };
-
-  const removeGenre = (genre: string) => {
+  const toggleGenre = (genre: string) => {
     setItemForm(prev => ({
       ...prev,
-      genres: prev.genres.filter(g => g !== genre)
+      genres: prev.genres.includes(genre)
+        ? prev.genres.filter(g => g !== genre)
+        : [...prev.genres, genre]
     }));
   };
 
-  const addDirector = () => {
-    if (directorInput.trim() && !itemForm.director.includes(directorInput.trim())) {
-      setItemForm(prev => ({
-        ...prev,
-        director: [...prev.director, directorInput.trim()]
-      }));
-      setDirectorInput("");
-    }
-  };
-
-  const removeDirector = (director: string) => {
+  const toggleDirector = (director: string) => {
     setItemForm(prev => ({
       ...prev,
-      director: prev.director.filter(d => d !== director)
+      director: prev.director.includes(director)
+        ? prev.director.filter(d => d !== director)
+        : [...prev.director, director]
     }));
   };
 
-  const addCast = () => {
-    if (castInput.castName.trim() && castInput.actorName.trim()) {
-      // Check if this combination already exists
-      const exists = itemForm.cast.some(c => 
-        c.castName === castInput.castName.trim() && c.actorName === castInput.actorName.trim()
-      );
-      
-      if (!exists) {
-        setItemForm(prev => ({
-          ...prev,
-          cast: [...prev.cast, { 
-            castName: castInput.castName.trim(), 
-            actorName: castInput.actorName.trim() 
-          }]
-        }));
-        setCastInput({ castName: "", actorName: "" });
-      }
+  const toggleActorSelection = (actorName: string) => {
+    setSelectedActors(prev =>
+      prev.includes(actorName)
+        ? prev.filter(a => a !== actorName)
+        : [...prev, actorName]
+    );
+  };
+
+  const addSelectedActorsToCast = () => {
+    const newCastMembers = selectedActors
+      .filter(actorName => !itemForm.cast.some(c => c.actorName === actorName))
+      .map(actorName => ({
+        castName: "",
+        actorName: actorName
+      }));
+    
+    if (newCastMembers.length > 0) {
+      setItemForm(prev => ({
+        ...prev,
+        cast: [...prev.cast, ...newCastMembers]
+      }));
+      setSelectedActors([]);
     }
+  };
+
+  const updateCastCharacterName = (index: number, castName: string) => {
+    setItemForm(prev => ({
+      ...prev,
+      cast: prev.cast.map((c, i) => i === index ? { ...c, castName } : c)
+    }));
   };
 
   const removeCast = (index: number) => {
@@ -241,23 +236,44 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
           captions: itemForm.captions.length > 0 ? itemForm.captions : undefined,
         });
       } else {
-        await createItem({
-          categoryId,
-          title: itemForm.title,
-          imageId: itemForm.imageId,
-          genres: itemForm.genres,
-          description: itemForm.description || undefined,
-          director: itemForm.director.length > 0 ? itemForm.director : undefined,
-          cast: itemForm.cast.length > 0 ? itemForm.cast : undefined,
-          premiereYear: itemForm.premiereYear || undefined,
-          runningTime: itemForm.runningTime || undefined,
-          country: itemForm.country || undefined,
-          rating: itemForm.rating || undefined,
-          posterImageId: itemForm.posterImageId || undefined,
-          posterImageUrl: itemForm.posterImageUrl || undefined,
-          videoSources: processedVideoSources.length > 0 ? processedVideoSources : undefined,
-          captions: itemForm.captions.length > 0 ? itemForm.captions : undefined,
-        });
+        // Create item - with or without category
+        if (categoryId) {
+          // Old flow: create with category (will be added to junction table via backend)
+          await createItem({
+            title: itemForm.title,
+            imageId: itemForm.imageId,
+            genres: itemForm.genres,
+            description: itemForm.description || undefined,
+            director: itemForm.director.length > 0 ? itemForm.director : undefined,
+            cast: itemForm.cast.length > 0 ? itemForm.cast : undefined,
+            premiereYear: itemForm.premiereYear || undefined,
+            runningTime: itemForm.runningTime || undefined,
+            country: itemForm.country || undefined,
+            rating: itemForm.rating || undefined,
+            posterImageId: itemForm.posterImageId || undefined,
+            posterImageUrl: itemForm.posterImageUrl || undefined,
+            videoSources: processedVideoSources.length > 0 ? processedVideoSources : undefined,
+            captions: itemForm.captions.length > 0 ? itemForm.captions : undefined,
+          });
+        } else {
+          // New flow: create without category (orphaned movie)
+          await createItem({
+            title: itemForm.title,
+            imageId: itemForm.imageId,
+            genres: itemForm.genres,
+            description: itemForm.description || undefined,
+            director: itemForm.director.length > 0 ? itemForm.director : undefined,
+            cast: itemForm.cast.length > 0 ? itemForm.cast : undefined,
+            premiereYear: itemForm.premiereYear || undefined,
+            runningTime: itemForm.runningTime || undefined,
+            country: itemForm.country || undefined,
+            rating: itemForm.rating || undefined,
+            posterImageId: itemForm.posterImageId || undefined,
+            posterImageUrl: itemForm.posterImageUrl || undefined,
+            videoSources: processedVideoSources.length > 0 ? processedVideoSources : undefined,
+            captions: itemForm.captions.length > 0 ? itemForm.captions : undefined,
+          });
+        }
       }
       console.log("Item saved successfully");
       onSuccess();
@@ -308,6 +324,34 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
             <div className="col-12">
               <div className="sign__group" style={{ marginBottom: '12px' }}>
                 <label className="sign__label">Cover Image *</label>
+                {editingItem && itemForm.imageId && itemForm.imageUrl && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <div style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#222028', 
+                      borderRadius: '8px',
+                      border: '1px solid #404040'
+                    }}>
+                      <p style={{ color: '#b3b3b3', fontSize: '0.9rem', marginBottom: '10px' }}>
+                        Current cover image:
+                      </p>
+                      <img 
+                        src={itemForm.imageUrl} 
+                        alt="Current cover"
+                        style={{ 
+                          maxWidth: '200px', 
+                          maxHeight: '300px', 
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          display: 'block'
+                        }}
+                      />
+                      <p style={{ color: '#ff9800', fontSize: '0.85rem', marginTop: '10px', marginBottom: 0 }}>
+                        Upload a new image below to replace it
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <FileUpload
                   onUploadComplete={(storageId) => setItemForm(prev => ({ ...prev, imageId: storageId }))}
                 />
@@ -316,49 +360,36 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
             
             <div className="col-12">
               <div className="sign__group" style={{ marginBottom: '12px' }}>
-                <label className="sign__label">Genres *</label>
-                <div className="d-flex gap-2 mb-2">
-                  <select
-                    value={genreInput}
-                    onChange={(e) => setGenreInput(e.target.value)}
-                    className="sign__input flex-grow-1"
-                  >
-                    <option value="">Select a genre</option>
-                    {genres?.map((genre) => (
-                      <option key={genre._id} value={genre.name}>
-                        {genre.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={addGenre}
-                    disabled={!genreInput}
-                    className="sign__btn"
-                    style={{ width: 'auto', padding: '0 20px', marginTop: 0 }}
-                  >
-                    Add
-                  </button>
-                </div>
+                <label className="sign__label">Genres * (Click to select/deselect)</label>
                 <div className="d-flex flex-wrap gap-2">
-                  {itemForm.genres.map((genre) => (
-                    <span
-                      key={genre}
-                      className="badge bg-primary d-flex align-items-center gap-1"
-                      style={{ fontSize: '14px', padding: '8px 12px' }}
-                    >
-                      {genre}
-                      <button
-                        type="button"
-                        onClick={() => removeGenre(genre)}
-                        className="btn-close btn-close-white"
-                        style={{ fontSize: '10px', padding: '0', marginLeft: '5px' }}
-                        aria-label="Remove"
+                  {genres?.map((genre) => {
+                    const isSelected = itemForm.genres.includes(genre.name);
+                    return (
+                      <span
+                        key={genre._id}
+                        onClick={() => toggleGenre(genre.name)}
+                        className="badge d-flex align-items-center gap-1"
+                        style={{
+                          fontSize: '14px',
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          backgroundColor: isSelected ? '#ff1493' : '#2b2b31',
+                          color: '#fff',
+                          border: isSelected ? '2px solid #ff1493' : '2px solid #404040',
+                          transition: 'all 0.2s ease'
+                        }}
                       >
-                      </button>
-                    </span>
-                  ))}
+                        {isSelected && <i className="ti ti-check" style={{ fontSize: '12px' }}></i>}
+                        {genre.name}
+                      </span>
+                    );
+                  })}
                 </div>
+                {itemForm.genres.length === 0 && (
+                  <small style={{ color: '#ff9800', marginTop: '8px', display: 'block' }}>
+                    Please select at least one genre
+                  </small>
+                )}
               </div>
             </div>
           </div>
@@ -386,107 +417,106 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
             <div className="col-12">
               <div className="sign__group" style={{ marginBottom: '12px' }}>
-                <label className="sign__label">Directors</label>
-                <div className="d-flex gap-2 mb-2">
-                  <select
-                    value={directorInput}
-                    onChange={(e) => setDirectorInput(e.target.value)}
-                    className="sign__input flex-grow-1"
-                  >
-                    <option value="">Select a director</option>
-                    {directors?.map((director) => (
-                      <option key={director._id} value={director.name}>
-                        {director.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={addDirector}
-                    disabled={!directorInput}
-                    className="sign__btn"
-                    style={{ width: 'auto', padding: '0 20px', marginTop: 0 }}
-                  >
-                    Add
-                  </button>
-                </div>
-                <div className="d-flex flex-wrap gap-2">
-                  {itemForm.director.map((director) => (
-                    <span
-                      key={director}
-                      className="badge bg-primary d-flex align-items-center gap-1"
-                      style={{ fontSize: '14px', padding: '8px 12px' }}
-                    >
-                      {director}
-                      <button
-                        type="button"
-                        onClick={() => removeDirector(director)}
-                        className="btn-close btn-close-white"
-                        style={{ fontSize: '10px', padding: '0', marginLeft: '5px' }}
-                        aria-label="Remove"
+                <label className="sign__label">Directors (Click to select/deselect)</label>
+                <div className="d-flex flex-wrap gap-2 mb-3">
+                  {directors?.map((director) => {
+                    const isSelected = itemForm.director.includes(director.name);
+                    return (
+                      <span
+                        key={director._id}
+                        onClick={() => toggleDirector(director.name)}
+                        className="badge d-flex align-items-center gap-1"
+                        style={{
+                          fontSize: '14px',
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          backgroundColor: isSelected ? '#ff1493' : '#2b2b31',
+                          color: '#fff',
+                          border: isSelected ? '2px solid #ff1493' : '2px solid #404040',
+                          transition: 'all 0.2s ease'
+                        }}
                       >
-                      </button>
-                    </span>
-                  ))}
+                        {isSelected && <i className="ti ti-check" style={{ fontSize: '12px' }}></i>}
+                        {director.name}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
             <div className="col-12">
               <div className="sign__group" style={{ marginBottom: '12px' }}>
-                <label className="sign__label">Cast</label>
-                <div className="row g-2 mb-2">
-                  <div className="col-5">
-                    <input
-                      type="text"
-                      value={castInput.castName}
-                      onChange={(e) => setCastInput(prev => ({ ...prev, castName: e.target.value }))}
-                      placeholder="Cast Name (Character/Role)"
-                      className="sign__input"
-                    />
-                  </div>
-                  <div className="col-6">
-                    <select
-                      value={castInput.actorName}
-                      onChange={(e) => setCastInput(prev => ({ ...prev, actorName: e.target.value }))}
-                      className="sign__input"
-                    >
-                      <option value="">Select an actor</option>
-                      {actors?.map((actor) => (
-                        <option key={actor._id} value={actor.name}>
-                          {actor.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-1">
-                    <button
-                      type="button"
-                      onClick={addCast}
-                      disabled={!castInput.castName.trim() || !castInput.actorName.trim()}
-                      className="sign__btn"
-                      style={{ width: '100%', padding: '0' }}
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <div className="d-flex flex-column gap-2">
-                  {itemForm.cast.map((castMember, index) => (
-                    <div key={index} className="d-flex align-items-center gap-2 p-2" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
-                      <span className="flex-grow-1" style={{ fontSize: '14px' }}>
-                        <strong>{castMember.castName}</strong> - {castMember.actorName}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeCast(index)}
-                        className="btn-close btn-close-white"
-                        aria-label="Remove"
+                <label className="sign__label">Cast - Select Actors (Click to select/deselect)</label>
+                <div className="d-flex flex-wrap gap-2 mb-3">
+                  {actors?.map((actor) => {
+                    const isSelected = selectedActors.includes(actor.name);
+                    const isAlreadyInCast = itemForm.cast.some(c => c.actorName === actor.name);
+                    return (
+                      <span
+                        key={actor._id}
+                        onClick={() => !isAlreadyInCast && toggleActorSelection(actor.name)}
+                        className="badge d-flex align-items-center gap-1"
+                        style={{
+                          fontSize: '14px',
+                          padding: '8px 12px',
+                          cursor: isAlreadyInCast ? 'not-allowed' : 'pointer',
+                          backgroundColor: isAlreadyInCast ? '#1a1a1a' : (isSelected ? '#ff1493' : '#2b2b31'),
+                          color: isAlreadyInCast ? '#666' : '#fff',
+                          border: isAlreadyInCast ? '2px solid #333' : (isSelected ? '2px solid #ff1493' : '2px solid #404040'),
+                          transition: 'all 0.2s ease',
+                          opacity: isAlreadyInCast ? 0.5 : 1
+                        }}
                       >
-                      </button>
-                    </div>
-                  ))}
+                        {isSelected && <i className="ti ti-check" style={{ fontSize: '12px' }}></i>}
+                        {isAlreadyInCast && <i className="ti ti-check" style={{ fontSize: '12px' }}></i>}
+                        {actor.name}
+                      </span>
+                    );
+                  })}
                 </div>
+                {selectedActors.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={addSelectedActorsToCast}
+                    className="sign__btn"
+                    style={{ width: 'auto', padding: '8px 20px', marginBottom: '15px' }}
+                  >
+                    Add {selectedActors.length} Selected Actor{selectedActors.length > 1 ? 's' : ''} to Cast
+                  </button>
+                )}
+                
+                {itemForm.cast.length > 0 && (
+                  <>
+                    <label className="sign__label" style={{ marginTop: '15px' }}>Cast List (Edit character names)</label>
+                    <div className="d-flex flex-column gap-2">
+                      {itemForm.cast.map((castMember, index) => (
+                        <div key={index} className="d-flex align-items-center gap-2 p-2" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
+                          <div className="flex-grow-1 d-flex align-items-center gap-2">
+                            <input
+                              type="text"
+                              value={castMember.castName}
+                              onChange={(e) => updateCastCharacterName(index, e.target.value)}
+                              placeholder="Character name (optional)"
+                              className="sign__input"
+                              style={{ marginBottom: 0, flex: 1 }}
+                            />
+                            <span style={{ fontSize: '14px', color: '#b3b3b3', minWidth: '150px' }}>
+                              {castMember.actorName}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeCast(index)}
+                            className="btn-close btn-close-white"
+                            aria-label="Remove"
+                          >
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -568,6 +598,51 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
 
             <div className="col-12">
               <div className="sign__group" style={{ marginBottom: '12px' }}>
+                <label className="sign__label">Poster Image (for video player)</label>
+                {editingItem && (itemForm.posterImageId || itemForm.posterImageUrl) && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <div style={{ 
+                      padding: '10px', 
+                      backgroundColor: '#222028', 
+                      borderRadius: '8px',
+                      border: '1px solid #404040'
+                    }}>
+                      <p style={{ color: '#b3b3b3', fontSize: '0.9rem', marginBottom: '10px' }}>
+                        Current poster image:
+                      </p>
+                      <div style={{ 
+                        maxWidth: '300px', 
+                        maxHeight: '200px', 
+                        overflow: 'hidden',
+                        borderRadius: '8px',
+                        backgroundColor: '#1a1a1a'
+                      }}>
+                        {itemForm.posterImageUrl ? (
+                          <img 
+                            src={itemForm.posterImageUrl} 
+                            alt="Current poster"
+                            style={{ 
+                              width: '100%',
+                              height: 'auto',
+                              display: 'block'
+                            }}
+                          />
+                        ) : (
+                          <div style={{ 
+                            padding: '20px', 
+                            textAlign: 'center',
+                            color: '#666'
+                          }}>
+                            Poster image uploaded (ID: {itemForm.posterImageId?.slice(0, 8)}...)
+                          </div>
+                        )}
+                      </div>
+                      <p style={{ color: '#ff9800', fontSize: '0.85rem', marginTop: '10px', marginBottom: 0 }}>
+                        Upload a new image below to replace it
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <HybridUpload
                   label="Poster Image"
                   onUploadComplete={(storageId) => setItemForm(prev => ({ ...prev, posterImageId: storageId, posterImageUrl: "" }))}
@@ -581,6 +656,36 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
             <div className="col-12">
               <div className="sign__group" style={{ marginBottom: '12px' }}>
                 <label className="sign__label">Video Sources</label>
+                
+                {/* Show existing video sources */}
+                {itemForm.videoSources.length > 0 && (
+                  <div style={{ marginBottom: '15px' }}>
+                    <p style={{ color: '#b3b3b3', fontSize: '0.9rem', marginBottom: '10px' }}>
+                      Current video sources:
+                    </p>
+                    <div className="d-flex flex-column gap-2">
+                      {itemForm.videoSources.map((source, index) => (
+                        <div key={index} className="d-flex align-items-center gap-2 p-2" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
+                          <span className="flex-grow-1" style={{ fontSize: '14px' }}>
+                            <strong>{source.quality}</strong> - {source.videoId ? 'Uploaded Video' : source.url ? `URL: ${source.url.substring(0, 40)}...` : 'No source'} ({source.type})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeVideoSource(index)}
+                            className="btn-close btn-close-white"
+                            aria-label="Remove"
+                          >
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Add new video source */}
+                <p style={{ color: '#ff9800', fontSize: '0.9rem', marginBottom: '10px' }}>
+                  Add new video source:
+                </p>
                 <div className="row g-2 mb-2">
                   <div className="col-6">
                     <HybridUpload
@@ -621,22 +726,6 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
                       +
                     </button>
                   </div>
-                </div>
-                <div className="d-flex flex-column gap-2">
-                  {itemForm.videoSources.map((source, index) => (
-                    <div key={index} className="d-flex align-items-center gap-2 p-2" style={{ backgroundColor: '#222028', borderRadius: '8px' }}>
-                      <span className="flex-grow-1" style={{ fontSize: '14px' }}>
-                        <strong>{source.quality}</strong> - {source.videoId ? 'Uploaded Video' : 'URL Video'} ({source.type})
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => removeVideoSource(index)}
-                        className="btn-close btn-close-white"
-                        aria-label="Remove"
-                      >
-                      </button>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>

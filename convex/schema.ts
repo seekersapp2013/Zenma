@@ -68,7 +68,7 @@ const applicationTables = {
     .index("by_type", ["type"]),
 
   items: defineTable({
-    categoryId: v.id("categories"),
+    categoryId: v.optional(v.id("categories")), // Made optional for backward compatibility - deprecated, use categoryItems instead
     title: v.string(),
     slug: v.string(),
     imageId: v.id("_storage"),
@@ -118,6 +118,18 @@ const applicationTables = {
     .index("by_rating", ["dynamicRating"])
     .index("by_popularity", ["popularityScore"])
     .index("by_added_date", ["addedDate"]),
+
+  // Junction table for many-to-many relationship between categories and items
+  categoryItems: defineTable({
+    categoryId: v.id("categories"),
+    itemId: v.id("items"),
+    order: v.number(), // Order within the category
+    addedAt: v.number(), // Timestamp
+    addedBy: v.id("users"),
+  })
+    .index("by_category", ["categoryId"])
+    .index("by_item", ["itemId"])
+    .index("by_category_and_order", ["categoryId", "order"]),
 
   comments: defineTable({
     itemId: v.optional(v.id("items")), // Legacy field, kept for backward compatibility

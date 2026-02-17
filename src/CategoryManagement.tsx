@@ -36,17 +36,18 @@ export function CategoryManagement() {
     type: "featured",
     title: "",
   });
-  const [isTestLoading, setIsTestLoading] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Id<"categories"> | null>(null);
+  const [selectedMovies, setSelectedMovies] = useState<Id<"items">[]>([]);
 
   const categories = useQuery(api.categories.getCategories);
+  const allMovies = useQuery(api.items.getAllItems);
   const createCategory = useMutation(api.categories.createCategory);
   const deleteCategory = useMutation(api.categories.deleteCategory);
   const updateCategoryOrder = useMutation(api.categories.updateCategoryOrder);
   const deleteItem = useMutation(api.items.deleteItem);
-  const duplicateItemsTo100 = useMutation(api.seed.duplicateItemsTo100);
-  const deleteDuplicatedItems = useMutation(api.seed.deleteDuplicatedItems);
-  const populateNewCategories = useMutation(api.seed.populateNewCategories);
-  const deletePopulatedCategoryItems = useMutation(api.seed.deletePopulatedCategoryItems);
+  const addItemToCategory = useMutation(api.items.addItemToCategory);
+  const removeItemFromCategory = useMutation(api.items.removeItemFromCategory);
 
   // Add custom CSS for dropdown and form elements
   useEffect(() => {
@@ -150,6 +151,37 @@ export function CategoryManagement() {
     }, [] as React.ReactNode[]);
   };
 
+  const handleImportMovies = async () => {
+    if (!selectedCategory || selectedMovies.length === 0) return;
+
+    try {
+      for (const movieId of selectedMovies) {
+        try {
+          await addItemToCategory({ itemId: movieId, categoryId: selectedCategory });
+        } catch (error) {
+          // Skip if already exists
+          console.log(`Skipping movie ${movieId}: ${error}`);
+        }
+      }
+      setShowImportModal(false);
+      setSelectedMovies([]);
+      setSelectedCategory(null);
+      alert("Movies imported successfully!");
+    } catch (error) {
+      alert(`Error: ${error}`);
+    }
+  };
+
+  const handleRemoveFromCategory = async (itemId: Id<"items">, categoryId: Id<"categories">) => {
+    if (!confirm("Remove this movie from the category? The movie will not be deleted.")) return;
+
+    try {
+      await removeItemFromCategory({ itemId, categoryId });
+    } catch (error) {
+      alert(`Error: ${error}`);
+    }
+  };
+
   const getTypeDescription = (type: string) => {
     switch (type) {
       case "featured":
@@ -169,71 +201,7 @@ export function CategoryManagement() {
     }
   };
 
-  const handleDuplicateItems = async () => {
-    if (!confirm("This will duplicate your existing items to reach 100 items for testing. Continue?")) {
-      return;
-    }
-    
-    setIsTestLoading(true);
-    try {
-      const result = await duplicateItemsTo100();
-      alert(result);
-    } catch (error) {
-      alert(`Error: ${error}`);
-    } finally {
-      setIsTestLoading(false);
-    }
-  };
-
-  const handleDeleteDuplicates = async () => {
-    if (!confirm("This will delete all duplicated items (items with 'Copy' in title). Continue?")) {
-      return;
-    }
-    
-    setIsTestLoading(true);
-    try {
-      const result = await deleteDuplicatedItems();
-      alert(result);
-    } catch (error) {
-      alert(`Error: ${error}`);
-    } finally {
-      setIsTestLoading(false);
-    }
-  };
-
-  const handlePopulateNewCategories = async () => {
-    if (!confirm("This will populate the new categories (Trending, Top Rated, New Releases) with sample data. Continue?")) {
-      return;
-    }
-    
-    setIsTestLoading(true);
-    try {
-      const result = await populateNewCategories();
-      alert(result);
-    } catch (error) {
-      alert(`Error: ${error}`);
-    } finally {
-      setIsTestLoading(false);
-    }
-  };
-
-  const handleDeletePopulatedItems = async () => {
-    if (!confirm("This will delete all items created by 'Populate New Categories' and remove the new category types. Continue?")) {
-      return;
-    }
-    
-    setIsTestLoading(true);
-    try {
-      const result = await deletePopulatedCategoryItems();
-      alert(result);
-    } catch (error) {
-      alert(`Error: ${error}`);
-    } finally {
-      setIsTestLoading(false);
-    }
-  };
-
-  if (categories === undefined) {
+  if (categories === undefined || allMovies === undefined) {
     return (
       <div className="d-flex align-items-center justify-content-center p-4">
         <div className="spinner-border text-primary" role="status">
@@ -259,101 +227,6 @@ export function CategoryManagement() {
         </>
       }
     >
-      {/* Test Buttons for Lazy Loading */}
-      <div style={{ 
-        marginBottom: '20px', 
-        padding: '15px', 
-        backgroundColor: '#2b2b31', 
-        borderRadius: '8px',
-        border: '2px solid #ff9800'
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '15px',
-          flexWrap: 'wrap'
-        }}>
-          <span style={{ 
-            color: '#ff9800', 
-            fontWeight: 'bold',
-            fontSize: '14px'
-          }}>
-            ⚠️ TEST TOOLS:
-          </span>
-          <button
-            onClick={handlePopulateNewCategories}
-            disabled={isTestLoading}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#9c27b0',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: isTestLoading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: '500',
-              opacity: isTestLoading ? 0.6 : 1
-            }}
-          >
-            {isTestLoading ? 'Processing...' : '🚀 Populate New Categories'}
-          </button>
-          <button
-            onClick={handleDeletePopulatedItems}
-            disabled={isTestLoading}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#ff5722',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: isTestLoading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: '500',
-              opacity: isTestLoading ? 0.6 : 1
-            }}
-          >
-            {isTestLoading ? 'Processing...' : '🗑️ Delete Populated Items'}
-          </button>
-          <button
-            onClick={handleDuplicateItems}
-            disabled={isTestLoading}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#4caf50',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: isTestLoading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: '500',
-              opacity: isTestLoading ? 0.6 : 1
-            }}
-          >
-            {isTestLoading ? 'Processing...' : 'Duplicate to 100 Items'}
-          </button>
-          <button
-            onClick={handleDeleteDuplicates}
-            disabled={isTestLoading}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#f44336',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: isTestLoading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: '500',
-              opacity: isTestLoading ? 0.6 : 1
-            }}
-          >
-            {isTestLoading ? 'Processing...' : 'Delete Duplicates'}
-          </button>
-        </div>
-        <div style={{ marginTop: '10px', fontSize: '12px', color: '#b3b3b3', fontStyle: 'italic' }}>
-          Click "Populate New Categories" to create Trending, Top Rated & New Releases sections. Use "Delete Populated Items" to remove them.
-        </div>
-      </div>
-
       {/* Categories Table */}
       <div className="catalog catalog--1">
         <DndContext
@@ -383,6 +256,11 @@ export function CategoryManagement() {
                     index={index}
                     onDelete={() => deleteCategory({ categoryId: category._id })}
                     onAddItem={() => navigate(`/admin/categories/${category._id}/items/new`)}
+                    onImportMovies={() => {
+                      setSelectedCategory(category._id);
+                      setShowImportModal(true);
+                    }}
+                    onRemoveFromCategory={(itemId) => handleRemoveFromCategory(itemId, category._id)}
                     onEditItem={(item) => {
                       const initialData = {
                         title: item.title,
@@ -487,6 +365,123 @@ export function CategoryManagement() {
         </div>
       )}
 
+      {/* Import Movies Modal */}
+      {showImportModal && selectedCategory && allMovies && (
+        <div className="modal fade show" style={{ display: 'block' }} tabIndex={-1}>
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content">
+              <div className="modal__content">
+                <div className="modal__form">
+                  <h4 className="modal__title">Import Movies to Category</h4>
+                  
+                  <div className="row">
+                    <div className="col-12">
+                      <div className="sign__group">
+                        <label className="sign__label">Select Movies</label>
+                        <div style={{ 
+                          maxHeight: '400px', 
+                          overflowY: 'auto',
+                          backgroundColor: '#2b2b2b',
+                          padding: '10px',
+                          borderRadius: '4px'
+                        }}>
+                          {allMovies.map((movie) => {
+                            const isInCategory = movie.categories?.some(c => c._id === selectedCategory);
+                            const isSelected = selectedMovies.includes(movie._id);
+                            
+                            return (
+                              <div 
+                                key={movie._id}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '8px',
+                                  marginBottom: '8px',
+                                  backgroundColor: isInCategory ? '#1a4d1a' : isSelected ? '#404040' : '#1a1a1a',
+                                  borderRadius: '4px',
+                                  cursor: isInCategory ? 'not-allowed' : 'pointer',
+                                  opacity: isInCategory ? 0.6 : 1
+                                }}
+                                onClick={() => {
+                                  if (isInCategory) return;
+                                  setSelectedMovies(prev => 
+                                    prev.includes(movie._id)
+                                      ? prev.filter(id => id !== movie._id)
+                                      : [...prev, movie._id]
+                                  );
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isInCategory || isSelected}
+                                  disabled={isInCategory}
+                                  onChange={() => {}}
+                                  style={{ marginRight: '12px' }}
+                                />
+                                <img 
+                                  src={movie.imageUrl} 
+                                  alt={movie.title}
+                                  style={{ 
+                                    width: '40px', 
+                                    height: '60px', 
+                                    objectFit: 'cover',
+                                    borderRadius: '4px',
+                                    marginRight: '12px'
+                                  }}
+                                />
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ color: '#fff', fontWeight: '500' }}>
+                                    {movie.title}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: '#b3b3b3' }}>
+                                    {movie.genres.slice(0, 2).join(', ')}
+                                    {movie.genres.length > 2 && ` +${movie.genres.length - 2}`}
+                                  </div>
+                                </div>
+                                {isInCategory && (
+                                  <span style={{ color: '#4caf50', fontSize: '0.8rem' }}>
+                                    Already in category
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div style={{ marginTop: '10px', color: '#b3b3b3', fontSize: '0.9rem' }}>
+                          Selected: {selectedMovies.length} movies
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="modal__btns">
+                    <button 
+                      className="modal__btn modal__btn--apply" 
+                      type="button"
+                      onClick={handleImportMovies}
+                      disabled={selectedMovies.length === 0}
+                    >
+                      <span>Import Movies</span>
+                    </button>
+                    <button 
+                      className="modal__btn modal__btn--dismiss" 
+                      type="button" 
+                      onClick={() => {
+                        setShowImportModal(false);
+                        setSelectedMovies([]);
+                        setSelectedCategory(null);
+                      }}
+                    >
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </AdminLayout>
   );
 }
@@ -497,7 +492,9 @@ function SortableCategoryRow({
   onDelete, 
   onAddItem, 
   onEditItem, 
-  onDeleteItem, 
+  onDeleteItem,
+  onImportMovies,
+  onRemoveFromCategory,
   formatTitle, 
   getTypeDescription 
 }: {
@@ -507,6 +504,8 @@ function SortableCategoryRow({
   onAddItem: () => void;
   onEditItem: (item: any) => void;
   onDeleteItem: (itemId: Id<"items">) => void;
+  onImportMovies: () => void;
+  onRemoveFromCategory: (itemId: Id<"items">) => void;
   formatTitle: (title: string) => React.ReactNode[];
   getTypeDescription: (type: string) => string;
 }) {
@@ -590,8 +589,17 @@ function SortableCategoryRow({
             <button 
               type="button" 
               className="catalog__btn catalog__btn--edit"
+              onClick={onImportMovies}
+              title="Import Movies"
+              style={{ backgroundColor: '#9c27b0' }}
+            >
+              <i className="ti ti-download"></i>
+            </button>
+            <button 
+              type="button" 
+              className="catalog__btn catalog__btn--edit"
               onClick={onAddItem}
-              title="Add Item"
+              title="Add New Item"
             >
               <i className="ti ti-plus"></i>
             </button>
@@ -676,6 +684,19 @@ function SortableCategoryRow({
                           </div>
                           <div className="d-flex gap-1">
                             <button
+                              onClick={() => onRemoveFromCategory(item._id)}
+                              className="btn btn-sm flex-fill"
+                              style={{ 
+                                fontSize: '0.75rem',
+                                backgroundColor: '#ff9800',
+                                borderColor: '#ff9800',
+                                color: '#fff'
+                              }}
+                              title="Remove from category"
+                            >
+                              <i className="ti ti-x"></i>
+                            </button>
+                            <button
                               onClick={() => onEditItem(item)}
                               className="btn btn-sm flex-fill"
                               style={{ 
@@ -696,6 +717,7 @@ function SortableCategoryRow({
                                 borderColor: '#dc3545',
                                 color: '#fff'
                               }}
+                              title="Delete movie permanently"
                             >
                               <i className="ti ti-trash"></i>
                             </button>

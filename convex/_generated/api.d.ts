@@ -22,6 +22,7 @@ import type * as files from "../files.js";
 import type * as genres from "../genres.js";
 import type * as http from "../http.js";
 import type * as items from "../items.js";
+import type * as migrateCategoryItems from "../migrateCategoryItems.js";
 import type * as migrateRatings from "../migrateRatings.js";
 import type * as migrations from "../migrations.js";
 import type * as migrations_migrateComments from "../migrations/migrateComments.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   genres: typeof genres;
   http: typeof http;
   items: typeof items;
+  migrateCategoryItems: typeof migrateCategoryItems;
   migrateRatings: typeof migrateRatings;
   migrations: typeof migrations;
   "migrations/migrateComments": typeof migrations_migrateComments;
