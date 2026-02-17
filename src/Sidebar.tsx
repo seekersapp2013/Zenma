@@ -31,6 +31,7 @@ export function Sidebar({ currentPage }: SidebarProps) {
   const allReviews = useQuery(api.reviews.getAllReviews);
   const allActors = useQuery(api.actors.getAllActors);
   const allDirectors = useQuery(api.directors.getAllDirectors);
+  const allGenres = useQuery(api.genres.getAllGenres);
   const allUsers = useQuery(api.auth.getAllUsers);
   const blogStats = useQuery(api.pages.getBlogStats);
 
@@ -49,6 +50,13 @@ export function Sidebar({ currentPage }: SidebarProps) {
       label: "Categories", 
       key: "categories",
       count: categories?.length || 0
+    },
+    { 
+      href: "/admin/genres", 
+      icon: "ti-tag", 
+      label: "Genres", 
+      key: "genres",
+      count: allGenres?.length || 0
     },
     { 
       href: "/admin/actors", 

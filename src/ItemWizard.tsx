@@ -79,9 +79,10 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
   const createItem = useMutation(api.items.createItem);
   const updateItem = useMutation(api.items.updateItem);
   
-  // Fetch actors and directors from database
+  // Fetch actors, directors, and genres from database
   const actors = useQuery(api.actors.getActors);
   const directors = useQuery(api.directors.getDirectors);
+  const genres = useQuery(api.genres.getGenres);
 
   const steps = [
     { id: 1, title: "Basic Info", description: "Title, image, and genres" },
@@ -317,17 +318,22 @@ export function ItemWizard({ categoryId, editingItem, initialData, onClose, onSu
               <div className="sign__group" style={{ marginBottom: '12px' }}>
                 <label className="sign__label">Genres *</label>
                 <div className="d-flex gap-2 mb-2">
-                  <input
-                    type="text"
+                  <select
                     value={genreInput}
                     onChange={(e) => setGenreInput(e.target.value)}
-                    placeholder="Add genre"
                     className="sign__input flex-grow-1"
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addGenre())}
-                  />
+                  >
+                    <option value="">Select a genre</option>
+                    {genres?.map((genre) => (
+                      <option key={genre._id} value={genre.name}>
+                        {genre.name}
+                      </option>
+                    ))}
+                  </select>
                   <button
                     type="button"
                     onClick={addGenre}
+                    disabled={!genreInput}
                     className="sign__btn"
                     style={{ width: 'auto', padding: '0 20px', marginTop: 0 }}
                   >

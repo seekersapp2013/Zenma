@@ -30,6 +30,8 @@ import { BlogPostEditor } from "./BlogPostEditor";
 import { Blog } from "./Blog";
 import { BlogPost } from "./BlogPost";
 import { SearchResults } from "./SearchResults";
+import { GenresManagement } from "./components/GenresManagement";
+import { Genre } from "./Genre";
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignInForm } from "./SignInForm";
@@ -55,6 +57,7 @@ export default function App() {
         <Route path="/admin/categories" element={<AdminRoute><CategoryManagement /></AdminRoute>} />
         <Route path="/admin/categories/:categoryId/items/new" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
         <Route path="/admin/categories/:categoryId/items/edit" element={<AdminRoute><ItemWizardPage /></AdminRoute>} />
+        <Route path="/admin/genres" element={<AdminRoute><GenresManagement /></AdminRoute>} />
         <Route path="/admin/catalog" element={<AdminRoute><Catalog /></AdminRoute>} />
         <Route path="/admin/actors" element={<AdminRoute><Actors /></AdminRoute>} />
         <Route path="/actors" element={<PublicActors />} />
@@ -81,6 +84,8 @@ export default function App() {
         <Route path="/actor" element={<Actor />} />
         <Route path="/director/:slug" element={<Director />} />
         <Route path="/director" element={<Director />} />
+        <Route path="/genre/:slug" element={<Genre />} />
+        <Route path="/genre" element={<Genre />} />
         <Route path="/details/:slug" element={<ItemDetails />} />
         <Route path="/:slug" element={<DynamicPageRoute />} />
       </Routes>

@@ -246,6 +246,17 @@ const applicationTables = {
     .index("by_slug", ["slug"])
     .index("by_name", ["name"]),
 
+  // Genres table
+  genres: defineTable({
+    name: v.string(),
+    slug: v.string(), // URL-friendly version
+    description: v.optional(v.string()),
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_slug", ["slug"]),
+
   // Contact form submissions
   contactSubmissions: defineTable({
     name: v.string(),

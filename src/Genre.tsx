@@ -1,11 +1,14 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
+import { useParams } from "react-router-dom";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import './sign.css';
 
-export function Movies() {
+export function Genre() {
+  const { slug } = useParams<{ slug: string }>();
+  const genre = useQuery(api.genres.getGenreBySlug, { slug: slug || "" });
   const allItems = useQuery(api.items.getAllItems);
   const actors = useQuery(api.actors.getActors);
   const directors = useQuery(api.directors.getDirectors);
@@ -17,9 +20,13 @@ export function Movies() {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
   };
+  
+  // Filter items by genre name
+  const genreMovies = allItems?.filter(item => 
+    genre && item.genres && item.genres.includes(genre.name)
+  );
 
   // Filter states
-  const [filterGenre, setFilterGenre] = useState<string>("All");
   const [filterActor, setFilterActor] = useState<string>("All");
   const [filterDirector, setFilterDirector] = useState<string>("All");
   const [displayedItemsCount, setDisplayedItemsCount] = useState<number>(10);
@@ -28,21 +35,32 @@ export function Movies() {
   const ITEMS_PER_LOAD = 10;
   const sentinelRef = useRef<HTMLDivElement>(null);
 
+  // Non-essential CSS files that can load after
+  const nonEssentialCssFiles = [
+    '/css/splide.min.css',
+    '/css/slimselect.css',
+    '/css/plyr.css',
+    '/css/photoswipe.css',
+    '/css/default-skin.css'
+  ];
+
+  const jsFiles = [
+    '/js/bootstrap.bundle.min.js',
+    '/js/splide.min.js',
+    '/js/slimselect.min.js',
+    '/js/smooth-scrollbar.js',
+    '/js/plyr.min.js',
+    '/js/photoswipe.min.js',
+    '/js/photoswipe-ui-default.min.js',
+    '/js/main.js'
+  ];
+
+  // Check if CSS files are already loaded to avoid duplicates
+  const isStylesheetLoaded = (href: string) => {
+    return document.querySelector(`link[href="${href}"]`) !== null;
+  };
+
   useEffect(() => {
-    // Check if CSS files are already loaded to avoid duplicates
-    const isStylesheetLoaded = (href: string) => {
-      return document.querySelector(`link[href="${href}"]`) !== null;
-    };
-
-    // Non-essential CSS files that can load after
-    const nonEssentialCssFiles = [
-      '/css/splide.min.css',
-      '/css/slimselect.css',
-      '/css/plyr.css',
-      '/css/photoswipe.css',
-      '/css/default-skin.css'
-    ];
-
     // Load non-essential CSS files after a short delay
     setTimeout(() => {
       nonEssentialCssFiles.forEach(href => {
@@ -56,20 +74,7 @@ export function Movies() {
     }, 100);
 
     // Load JavaScript files with better error handling
-    const jsFiles = [
-      '/js/bootstrap.bundle.min.js',
-      '/js/splide.min.js',
-      '/js/slimselect.min.js',
-      '/js/smooth-scrollbar.js',
-      '/js/plyr.min.js',
-      '/js/photoswipe.min.js',
-      '/js/photoswipe-ui-default.min.js',
-      '/js/main.js'
-    ];
-
-    // Load scripts with better performance
-    jsFiles.forEach((src, index) => {
-      // Check if script is already loaded
+    const loadScript = (src: string, index: number) => {
       if (!document.querySelector(`script[src="${src}"]`)) {
         const script = document.createElement('script');
         script.src = src;
@@ -77,14 +82,16 @@ export function Movies() {
         script.defer = true;
         script.onerror = () => console.warn(`Failed to load script: ${src}`);
         
-        // Add small delay between script loads to prevent blocking
         setTimeout(() => {
           document.body.appendChild(script);
         }, index * 50);
       }
+    };
+
+    jsFiles.forEach((src, index) => {
+      loadScript(src, index);
     });
 
-    // Cleanup function
     return () => {
       const links = document.querySelectorAll('link[href^="/css/"], link[href^="/webfont/"]');
       links.forEach(link => {
@@ -102,28 +109,11 @@ export function Movies() {
     };
   }, []);
 
-  // Extract unique genres from all items
-  const allGenres = useMemo(() => {
-    if (!allItems) return [];
-    const genres = new Set<string>();
-    allItems.forEach((item: any) => {
-      item.genres.forEach((genre: string) => genres.add(genre));
-    });
-    return Array.from(genres).sort();
-  }, [allItems]);
-
   // Get filtered items
   const getFilteredItems = () => {
-    if (!allItems) return [];
+    if (!genreMovies) return [];
 
-    let filtered = [...allItems];
-
-    // Apply Genre filter
-    if (filterGenre !== "All") {
-      filtered = filtered.filter((item: any) => 
-        item.genres && item.genres.includes(filterGenre)
-      );
-    }
+    let filtered = [...genreMovies];
 
     // Apply Actor filter
     if (filterActor !== "All") {
@@ -150,7 +140,6 @@ export function Movies() {
   const loadMoreItems = () => {
     if (hasMoreItems && !isLoadingMore) {
       setIsLoadingMore(true);
-      // Simulate a small delay for better UX
       setTimeout(() => {
         setDisplayedItemsCount(prev => prev + ITEMS_PER_LOAD);
         setIsLoadingMore(false);
@@ -161,7 +150,7 @@ export function Movies() {
   // Reset displayed items when filters change
   useEffect(() => {
     setDisplayedItemsCount(10);
-  }, [filterGenre, filterActor, filterDirector]);
+  }, [filterActor, filterDirector]);
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -186,10 +175,33 @@ export function Movies() {
     };
   }, [hasMoreItems, isLoadingMore, displayedItemsCount]);
 
-  if (allItems === undefined) {
+  // Show loading state
+  if (genre === undefined || allItems === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ff1493]"></div>
+      </div>
+    );
+  }
+
+  // Show not found state
+  if (!slug || genre === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            {!slug ? "No Genre Selected" : "Genre Not Found"}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {!slug 
+              ? "Please select a genre to view movies." 
+              : "The genre you're looking for doesn't exist."
+            }
+          </p>
+          <a href="/" className="bg-[#ff1493] text-white px-4 py-2 rounded-md hover:bg-[#d91a72] transition-colors">
+            Go to Homepage
+          </a>
+        </div>
       </div>
     );
   }
@@ -198,7 +210,6 @@ export function Movies() {
     <div>
       {/* Critical CSS for immediate rendering */}
       <style>{`
-        /* Prevent FOUC for title */
         .home__title {
           color: #fff !important;
           text-transform: uppercase !important;
@@ -212,7 +223,6 @@ export function Movies() {
           font-weight: 600 !important;
         }
         
-        /* Responsive title sizes */
         @media (min-width: 768px) {
           .home__title {
             font-size: 36px !important;
@@ -225,7 +235,6 @@ export function Movies() {
           }
         }
         
-        /* Card styles */
         .item {
           opacity: 1 !important;
           visibility: visible !important;
@@ -248,6 +257,11 @@ export function Movies() {
           object-position: center;
           display: block;
         }
+        
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
       `}</style>
       
       <Header />
@@ -257,10 +271,15 @@ export function Movies() {
         <div className="container">
           <div className="row">
             <div className="col-12">
-              <div className="section__title-wrap" style={{ marginBottom: '40px' }}>
+              <div className="section__title-wrap" style={{ marginBottom: '20px' }}>
                 <h1 className="home__title">
-                  All <b>Movies</b>
+                  {genre.name} <b>Movies</b>
                 </h1>
+                {genre.description && (
+                  <p style={{ color: '#b3b3b3', marginTop: '10px', fontSize: '16px' }}>
+                    {genre.description}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -274,39 +293,6 @@ export function Movies() {
                 flexWrap: 'wrap',
                 marginBottom: '40px'
               }}>
-                {/* Genre Filter */}
-                <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
-                  <label style={{ 
-                    display: 'block', 
-                    color: '#fff', 
-                    marginBottom: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}>
-                    Filter by Genre
-                  </label>
-                  <select 
-                    value={filterGenre}
-                    onChange={(e) => setFilterGenre(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 15px',
-                      backgroundColor: '#28282d',
-                      color: '#fff',
-                      border: '1px solid #3d3d42',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      cursor: 'pointer',
-                      outline: 'none'
-                    }}
-                  >
-                    <option value="All">All Genres</option>
-                    {allGenres.map((genre) => (
-                      <option key={genre} value={genre}>{genre}</option>
-                    ))}
-                  </select>
-                </div>
-
                 {/* Actor Filter */}
                 <div style={{ flex: '1 1 200px', minWidth: '200px' }}>
                   <label style={{ 
@@ -514,13 +500,6 @@ export function Movies() {
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
 
       <Footer />
     </div>

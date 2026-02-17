@@ -14,6 +14,14 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
   const actors = useQuery(api.actors.getActors);
   const directors = useQuery(api.directors.getDirectors);
 
+  // Helper function to convert genre name to slug
+  const genreToSlug = (genreName: string) => {
+    return genreName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  };
+
   // Filter states
   const [filterType, setFilterType] = useState<string>("All");
   const [filterGenre, setFilterGenre] = useState<string>("All");
@@ -246,7 +254,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                             </h3>
                             <span className="item__category">
                               {item.genres.map((genre: string) => (
-                                <a key={genre} href="#">{genre}</a>
+                                <a key={genre} href={`/genre/${genreToSlug(genre)}`}>{genre}</a>
                               ))}
                             </span>
                           </div>
@@ -602,7 +610,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                     </h3>
                     <span className="item__category">
                       {item.genres.map((genre: string) => (
-                        <a key={genre} href="#">{genre}</a>
+                        <a key={genre} href={`/genre/${genreToSlug(genre)}`}>{genre}</a>
                       ))}
                     </span>
                     {/* Quick Stats */}
@@ -805,7 +813,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                           </h3>
                           <span className="item__category">
                             {item.genres.map((genre: string) => (
-                              <a key={genre} href="#">{genre}</a>
+                              <a key={genre} href={`/genre/${genreToSlug(genre)}`}>{genre}</a>
                             ))}
                           </span>
                           {/* Quick Stats */}
@@ -912,7 +920,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                           </h3>
                           <span className="item__category">
                             {item.genres.map((genre: string) => (
-                              <a key={genre} href="#">{genre}</a>
+                              <a key={genre} href={`/genre/${genreToSlug(genre)}`}>{genre}</a>
                             ))}
                           </span>
                           {/* Quick Stats */}
@@ -1002,7 +1010,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                           </h3>
                           <span className="item__category">
                             {item.genres.map((genre: string) => (
-                              <a key={genre} href="#">{genre}</a>
+                              <a key={genre} href={`/genre/${genreToSlug(genre)}`}>{genre}</a>
                             ))}
                           </span>
                           {/* Quick Stats */}
@@ -1108,7 +1116,7 @@ export function DynamicHomePage({ background = true }: HomePageProps) {
                           </h3>
                           <span className="item__category">
                             {item.genres.map((genre: string) => (
-                              <a key={genre} href="#">{genre}</a>
+                              <a key={genre} href={`/genre/${genreToSlug(genre)}`}>{genre}</a>
                             ))}
                           </span>
                           {/* Quick Stats */}

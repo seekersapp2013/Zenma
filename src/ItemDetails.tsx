@@ -381,7 +381,7 @@ export function ItemDetails() {
                         <li><span>Genre:</span> 
                           {item.genres.map((genre, index) => (
                             <span key={genre}>
-                              <a href="catalog.html">{genre}</a>
+                              <a href={`/genre/${genre.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`}>{genre}</a>
                               {index < item.genres.length - 1 && ' '}
                             </span>
                           ))}
@@ -615,7 +615,7 @@ export function ItemDetails() {
                           <span className="item__category">
                             {relatedItem.genres.slice(0, 2).map((genre, index) => (
                               <span key={genre}>
-                                <a href="#">{genre}</a>
+                                <a href={`/genre/${genre.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`}>{genre}</a>
                                 {index < Math.min(relatedItem.genres.length, 2) - 1 && ' '}
                               </span>
                             ))}
